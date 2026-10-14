@@ -1,0 +1,76 @@
+package git
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+)
+
+// Fetch fetches a remote and prunes deleted branches.
+func (r *Runner) Fetch(ctx context.Context, dir, remote string) error {
+	_, err := r.Run(ctx, dir, "fetch", "--prune", "--quiet", remote)
+	return err
+}
+
+// RefreshRemoteHead points <remote>/HEAD at the remote's current default
+// branch. It is set at clone time and goes stale when the default changes
+// on the forge; git before 2.48 never refreshes it on fetch.
+func (r *Runner) RefreshRemoteHead(ctx context.Context, dir, remote string) error {
+	_, err := r.Run(ctx, dir, "remote", "set-head", remote, "--auto")
+	return err
+}
+
+// FastForward moves the current branch to its upstream; git refuses anything
+// but a fast-forward.
+func (r *Runner) FastForward(ctx context.Context, dir string) error {
+	_, err := r.Run(ctx, dir, "merge", "--ff-only", "--quiet", "@{u}")
+	return err
+}
+
+// UpdateBranch moves a branch that is not checked out to
+// <remote>/<branch>, from the already-fetched remote ref. git refuses a
+// non-fast-forward and refuses to touch the checked-out branch.
+func (r *Runner) UpdateBranch(ctx context.Context, dir, remote, branch string) error {
+	spec := fmt.Sprintf("refs/remotes/%s/%s:refs/heads/%s", remote, branch, branch)
+	_, err := r.Run(ctx, dir, "fetch", "--quiet", "--no-write-fetch-head", ".", spec)
+	return err
+}
+
+// Switch checks out an existing (or remote-tracking) branch.
+func (r *Runner) Switch(ctx context.Context, dir, branch string) error {
+	_, err := r.Run(ctx, dir, "switch", "--quiet", branch)
+	return err
+}
+
+// IsAncestor reports whether commit a is an ancestor of b.
+func (r *Runner) IsAncestor(ctx context.Context, dir, a, b string) (bool, error) {
+	_, err := r.Run(ctx, dir, "merge-base", "--is-ancestor", a, b)
+	if err == nil {
+		return true, nil
+	}
+	var ge *Error
+	if errors.As(err, &ge) && ge.ExitCode == 1 {
+		return false, nil
+	}
+	return false, err
+}
+
+// AheadBehind counts commits in a not in b (ahead) and in b not in a (behind).
+func (r *Runner) AheadBehind(ctx context.Context, dir, a, b string) (int, int, error) {
+	out, err := r.Run(ctx, dir, "rev-list", "--left-right", "--count", a+"..."+b)
+	if err != nil {
+		return 0, 0, err
+	}
+	var ahead, behind int
+	if _, err := fmt.Sscanf(strings.TrimSpace(out), "%d\t%d", &ahead, &behind); err != nil {
+		return 0, 0, fmt.Errorf("parse rev-list output %q: %w", out, err)
+	}
+	return ahead, behind, nil
+}
+
+// TopLevel returns the root of the repo containing dir.
+func (r *Runner) TopLevel(ctx context.Context, dir string) (string, error) {
+	out, err := r.Run(ctx, dir, "rev-parse", "--show-toplevel")
+	return strings.TrimSpace(out), err
+}
