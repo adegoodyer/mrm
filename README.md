@@ -49,7 +49,7 @@ mrm completion zsh > "$(brew --prefix)/share/zsh/site-functions/_mrm"  # macOS
 mrm completion fish > ~/.config/fish/completions/mrm.fish
 ```
 
-Open a new shell to pick it up, and re-run after upgrading mrm so new commands and flags complete too. `mrm completion <shell> --help` has the details for each shell.
+Open a new shell to pick it up (bash: or `source` the file; a shell where you pressed Tab after `mrm` before installing it has already decided there is no completion), then press Tab - twice to list the options. Re-run after upgrading mrm so new commands and flags complete too. `mrm completion <shell> --help` has the details for each shell.
 
 ```
 ↓ api                     main     ·        2d  on main, default develop 12↓
