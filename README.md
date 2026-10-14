@@ -7,6 +7,7 @@ Mass repo manager - find every git repo under your folders, keep them all curren
 - [mrm](#mrm)
   - [Install](#install)
   - [Quick Start](#quick-start)
+    - [Shell Completion](#shell-completion)
   - [What Sync Does](#what-sync-does)
   - [Filters](#filters)
   - [Config](#config)
@@ -31,6 +32,24 @@ mrm open api --pr          # api's pull requests on its forge
 ```
 
 With no config, the current directory is the only root.
+
+### Shell Completion
+`mrm completion` prints a completion script for bash, zsh, fish or PowerShell. Subcommands and flags complete; workspace, repo and filter values don't yet.
+
+```bash
+# bash (needs the bash-completion package, loaded by most distros' default .bashrc)
+mkdir -p ~/.local/share/bash-completion/completions
+mrm completion bash > ~/.local/share/bash-completion/completions/mrm
+
+# zsh (needs `autoload -U compinit; compinit` in ~/.zshrc)
+mrm completion zsh > "${fpath[1]}/_mrm"                          # Linux
+mrm completion zsh > "$(brew --prefix)/share/zsh/site-functions/_mrm"  # macOS
+
+# fish
+mrm completion fish > ~/.config/fish/completions/mrm.fish
+```
+
+Open a new shell to pick it up, and re-run after upgrading mrm so new commands and flags complete too. `mrm completion <shell> --help` has the details for each shell.
 
 ```
 ↓ api                     main     ·        2d  on main, default develop 12↓

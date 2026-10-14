@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`mrm open [repo]`**: the repo, `--pr`, `--ci` or `--branch` on GitHub, GitLab, Bitbucket or Gitea/Codeberg, worked out from the remote; `--print` for the URL; `wslview` on WSL. Self-hosted hosts map to a forge under `forges:`.
 - **Notifications** after a headless sync: Gotify and ntfy, `notify.on: attention | always | never`; tokens only from `token_cmd` or `token_env`, sent in headers.
 - **`mrm doctor`**: git version, config validity and permissions, roots, repos with no `origin/HEAD`, broken repos, ssh agent, notify endpoints, browser opener.
+- **Shell completion** for subcommands and flags: `mrm completion bash|zsh|fish|powershell`, with install steps in the README.
 - Status cache (`$XDG_CACHE_HOME/mrm/status.json`), run history (`$XDG_STATE_HOME/mrm/runs.jsonl`) and a JSON log (`mrm.log`).
 - Git is run with prompts off (`GIT_TERMINAL_PROMPT=0`, ssh `BatchMode`), a per-command timeout and a process-group kill, so nothing can hang; remote failures get a plain reason ("remote repo not found, or no access", "ssh key rejected", "offline?").
 - Tests on real git fixtures (`internal/gittest`, isolated from the developer's git config) for every sync rule and nasty case; `task check` runs gofmt, vet and race tests.
