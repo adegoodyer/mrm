@@ -1,0 +1,76 @@
+version: "3"
+
+vars:
+  BINARY: bin/mrm
+  PKG: .
+
+# Single Taskfile is enough at this size; namespaced groups (test:*) keep
+# related commands discoverable without includes.
+
+tasks:
+  default:
+    desc: Show available tasks (list)
+    cmds:
+      - task --list
+
+  deps:
+    desc: Download and tidy Go module dependencies (modules)
+    cmds:
+      - go mod tidy
+
+  fmt:
+    desc: Format Go source (gofmt)
+    cmds:
+      - gofmt -w .
+
+  vet:
+    desc: Run go vet (static checks)
+    cmds:
+      - go vet ./...
+
+  test:
+    desc: Run the tests - real git fixtures in temp dirs (offline)
+    cmds:
+      - go test ./...
+
+  test:unit:
+    desc: Run the tests with race detector and coverage (race+cover)
+    cmds:
+      - go test -race -count=1 -cover ./...
+
+  check:
+    desc: fmt check + vet + test:unit (pre-merge)
+    cmds:
+      - 'test -z "$(gofmt -l .)" || (gofmt -l . && echo "unformatted - run task fmt" && exit 1)'
+      - task: vet
+      - task: test:unit
+
+  build:
+    desc: Build the mrm binary into bin/ (compile)
+    cmds:
+      - mkdir -p bin
+      - go build -o {{.BINARY}} {{.PKG}}
+
+  install:
+    desc: Install mrm into GOBIN (go install)
+    cmds:
+      - go install {{.PKG}}
+
+  test:smoke:
+    desc: Build and run doctor, status and a dry-run sync in ROOT (default the current dir) - fetches, changes no branches
+    deps: [build]
+    dir: '{{.ROOT | default .USER_WORKING_DIR}}'
+    cmds:
+      - '{{.TASKFILE_DIR}}/{{.BINARY}} doctor'
+      - '{{.TASKFILE_DIR}}/{{.BINARY}} status'
+      - '{{.TASKFILE_DIR}}/{{.BINARY}} sync --dry-run || test $? -eq 2'
+
+  run:
+    desc: Run mrm from source (pass args after --)
+    cmds:
+      - go run . {{.CLI_ARGS}}
+
+  clean:
+    desc: Remove build artifacts (bin/dist)
+    cmds:
+      - rm -rf bin dist
