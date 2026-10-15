@@ -78,6 +78,7 @@ func (a *app) repos(ctx context.Context) ([]model.Repo, map[string]model.Status,
 	if err != nil {
 		return nil, nil, err
 	}
+	f = f.WithForges(a.cfg.Forges)
 	repos, errs := discover.All(a.cfg, a.workspaces)
 	for _, e := range errs {
 		fmt.Fprintln(os.Stderr, a.style.Yellow("warning: ")+e.Error())

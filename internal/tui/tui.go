@@ -118,7 +118,7 @@ func newUI(ctx context.Context, opts Options) (*ui, error) {
 		opts: opts, cfg: opts.Config, eng: opts.Engine, ctx: ctx,
 		results: map[string]model.Result{}, running: map[string]bool{},
 		marks: map[string]bool{}, collapsed: map[string]bool{},
-		ws: opts.Workspace, query: opts.Query, filt: f,
+		ws: opts.Workspace, query: opts.Query, filt: f.WithForges(opts.Config.Forges),
 	}
 	u.build()
 	u.load()
@@ -664,7 +664,7 @@ func (u *ui) onFilterChanged(text string) {
 		return
 	}
 	u.input.SetLabelStyle(stAccent)
-	u.query, u.filt = strings.TrimSpace(text), f
+	u.query, u.filt = strings.TrimSpace(text), f.WithForges(u.cfg.Forges)
 	u.refresh()
 }
 
@@ -681,7 +681,7 @@ func (u *ui) setFilter(q string) {
 		u.warn(err.Error())
 		return
 	}
-	u.query, u.filt = q, f
+	u.query, u.filt = q, f.WithForges(u.cfg.Forges)
 	u.refresh()
 }
 

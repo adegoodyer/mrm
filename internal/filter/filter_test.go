@@ -74,3 +74,14 @@ func TestQuotes(t *testing.T) {
 		t.Fatalf("%+v", f.terms)
 	}
 }
+
+func TestForgeUsesSelfHostedMapping(t *testing.T) {
+	r := model.Repo{Name: "x", Path: "/x"}
+	st := model.Status{RemoteURL: "git@git.example.com:team/x.git", ReadAt: time.Now()}
+	if MustParse("forge:gitlab").Match(r, st) {
+		t.Fatal("unmapped self-hosted host should not be gitlab")
+	}
+	if !MustParse("forge:gitlab").WithForges(map[string]string{"git.example.com": "gitlab"}).Match(r, st) {
+		t.Fatal("mapped self-hosted host should be gitlab")
+	}
+}

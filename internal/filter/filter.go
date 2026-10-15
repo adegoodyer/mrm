@@ -19,7 +19,15 @@ import (
 
 // Filter is a parsed query. The zero value matches everything.
 type Filter struct {
-	terms []term
+	terms  []term
+	forges map[string]string // self-hosted host -> forge kind, from config
+}
+
+// WithForges makes forge: terms recognise self-hosted hosts mapped under
+// `forges:` in the config.
+func (f Filter) WithForges(hosts map[string]string) Filter {
+	f.forges = hosts
+	return f
 }
 
 type term struct {
@@ -111,14 +119,14 @@ func (f Filter) NeedsStatus() bool {
 // NeedsStatus is false) matches every term.
 func (f Filter) Match(r model.Repo, st model.Status) bool {
 	for _, t := range f.terms {
-		if t.match(r, st) == t.neg {
+		if t.match(r, st, f.forges) == t.neg {
 			return false
 		}
 	}
 	return true
 }
 
-func (t term) match(r model.Repo, st model.Status) bool {
+func (t term) match(r model.Repo, st model.Status, forges map[string]string) bool {
 	switch t.key {
 	case "":
 		// Substring, not fuzzy: an unranked filter has to be predictable.
@@ -147,7 +155,7 @@ func (t term) match(r model.Repo, st model.Status) bool {
 		ok, _ := filepath.Match(t.value, st.Branch)
 		return ok
 	case "forge":
-		return string(forge.Parse(st.RemoteURL, nil).Kind) == strings.ToLower(t.value)
+		return string(forge.Parse(st.RemoteURL, forges).Kind) == strings.ToLower(t.value)
 	case "age":
 		if st.LastCommit.IsZero() {
 			return false
