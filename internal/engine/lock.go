@@ -66,3 +66,18 @@ func readPID(f *os.File) string {
 	n, _ := f.ReadAt(buf, 0)
 	return strings.TrimSpace(string(buf[:n]))
 }
+
+// LockHolder reports whether another process holds a workspace's sync
+// lock, and its pid, without taking the lock.
+func LockHolder(dir, name string) (string, bool) {
+	f, err := os.Open(filepath.Join(dir, name+".lock"))
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_SH|syscall.LOCK_NB); err != nil {
+		return readPID(f), true
+	}
+	_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+	return "", false
+}

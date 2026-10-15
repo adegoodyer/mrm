@@ -97,6 +97,30 @@ func AppendRun(path string, run Run) error {
 	return err
 }
 
+// Runs returns up to n runs from the history file, newest first (dry runs
+// included, so the Activity page shows them).
+func Runs(path string, n int) []Run {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+	var all []Run
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 64*1024), 16*1024*1024)
+	for sc.Scan() {
+		var r Run
+		if json.Unmarshal(sc.Bytes(), &r) == nil {
+			all = append(all, r)
+		}
+	}
+	out := make([]Run, 0, n)
+	for i := len(all) - 1; i >= 0 && len(out) < n; i-- {
+		out = append(out, all[i])
+	}
+	return out
+}
+
 // LastRun returns the most recent run of op (dry runs excluded) from the
 // history file.
 func LastRun(path, op string) (Run, bool) {

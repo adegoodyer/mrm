@@ -407,7 +407,13 @@ func TestLock(t *testing.T) {
 	if _, err := LockWorkspaces(dir, []string{"personal"}); !errors.Is(err, ErrLocked) {
 		t.Fatalf("second lock: %v, want ErrLocked", err)
 	}
+	if pid, held := LockHolder(dir, "personal"); !held || pid == "" {
+		t.Fatalf("LockHolder while held: %q %v", pid, held)
+	}
 	l1.Release()
+	if _, held := LockHolder(dir, "personal"); held {
+		t.Fatal("LockHolder after release: still held")
+	}
 	l2, err := LockWorkspaces(dir, []string{"personal"})
 	if err != nil {
 		t.Fatalf("after release: %v", err)
