@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"sort"
 	"strings"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/forge"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
-	"github.com/adegoodyer/mrm/internal/store"
+	"github.com/adegoodyer/mrm/internal/runner"
 )
 
 // act runs a sync or fetch on repos, clearing the marks once it starts.
@@ -37,31 +36,9 @@ func (u *ui) startOp(op engine.Op, repos []model.Repo, fetch bool, verb string) 
 		u.warn(u.busy + " is still running")
 		return false
 	}
-	var lock *engine.Lock
-	if op == engine.OpSync {
-		var err error
-		lock, err = engine.LockWorkspaces(paths.LockDir(), workspacesOf(repos))
-		if err != nil {
-			u.warn(err.Error())
-			return false
-		}
-	}
-	u.busy, u.progress = verb, [2]int{0, len(repos)}
-	u.busyFlag.Store(true)
-	for _, r := range repos {
-		u.running[r.Path] = true
-	}
-	u.drawChrome()
-
-	started := time.Now()
-	go func() {
-		results := make([]model.Result, len(repos))
-		for ev := range u.eng.Run(u.ctx, repos, engine.Options{Op: op, Fetch: fetch}) {
-			if ev.Kind != engine.EventDone {
-				continue
-			}
-			results[ev.Index] = ev.Result
-			res := ev.Result
+	run := &runner.Runner{Eng: u.eng, CachePath: u.opts.CachePath, HistPath: u.opts.HistPath, LockDir: paths.LockDir()}
+	err := run.Start(u.ctx, op, repos, fetch,
+		func(res model.Result) {
 			u.app.QueueUpdateDraw(func() {
 				delete(u.running, res.Repo.Path)
 				u.results[res.Repo.Path] = res
@@ -74,15 +51,20 @@ func (u *ui) startOp(op engine.Op, repos []model.Repo, fetch bool, verb string) 
 					u.updateDetail()
 				}
 			})
-		}
-		_ = store.UpdateCache(u.opts.CachePath, results)
-		if op != engine.OpStatus {
-			names := workspacesOf(repos)
-			_ = store.AppendRun(u.opts.HistPath, store.NewRun(string(op), false, started, names, results))
-		}
-		lock.Release()
-		u.app.QueueUpdateDraw(func() { u.finishOp(op, results) })
-	}()
+		},
+		func(results []model.Result) {
+			u.app.QueueUpdateDraw(func() { u.finishOp(op, results) })
+		})
+	if err != nil {
+		u.warn(err.Error())
+		return false
+	}
+	u.busy, u.progress = verb, [2]int{0, len(repos)}
+	u.busyFlag.Store(true)
+	for _, r := range repos {
+		u.running[r.Path] = true
+	}
+	u.drawChrome()
 	return true
 }
 
@@ -121,19 +103,6 @@ func (u *ui) finishOp(op engine.Op, results []model.Result) {
 		}
 	}
 	u.refresh()
-}
-
-func workspacesOf(repos []model.Repo) []string {
-	seen := map[string]bool{}
-	var out []string
-	for _, r := range repos {
-		if !seen[r.Workspace] {
-			seen[r.Workspace] = true
-			out = append(out, r.Workspace)
-		}
-	}
-	sort.Strings(out)
-	return out
 }
 
 type openKind int
