@@ -56,13 +56,13 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 
 ## Phase 3 - Web UI
 
-| ✓   | #   | Step                                                                              |
-| --- | --- | --------------------------------------------------------------------------------- |
-| ⬜   | 3.1 | HTML mockups of Overview and Repo (desktop and phone), agreed before building     |
-| ⬜   | 3.2 | server: 127.0.0.1 bind, token, Host check, CSRF; embedded templates, htmx and CSS |
-| ⬜   | 3.3 | SSE stream from engine events; one engine shared by `web` and actions             |
-| ⬜   | 3.4 | Overview, Repo, Activity, Settings pages                                          |
-| ⬜   | 3.5 | Playwright checks at 360/768/1440 px; UAT walkthrough                             |
+| ✓   | #   | Step                                                                                                                                                                       |
+| --- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⬜   | 3.1 | HTML mockups of Overview and Repo (desktop and phone), agreed before building - drafted 2026-10-15 (Overview, Repo, Activity, Settings; light and dark), awaiting approval |
+| ⬜   | 3.2 | server: 127.0.0.1 bind, token, Host check, CSRF; embedded templates, htmx and CSS                                                                                          |
+| ⬜   | 3.3 | SSE stream from engine events; one engine shared by `web` and actions                                                                                                      |
+| ⬜   | 3.4 | Overview, Repo, Activity, Settings pages                                                                                                                                   |
+| ⬜   | 3.5 | Playwright checks at 360/768/1440 px; UAT walkthrough                                                                                                                      |
 
 ## Phase 4 - Extras
 
