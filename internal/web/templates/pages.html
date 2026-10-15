@@ -1,0 +1,164 @@
+{{define "head"}}<!doctype html>
+<html lang="en" data-text-size="{{.TextSize}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mrm-token" content="{{.Token}}">
+<title>{{.Title}} · mrm</title>
+<link rel="stylesheet" href="/static/mrm.css">
+<script src="/static/boot.js"></script>
+<script src="/static/mrm.js" defer></script>
+</head>
+<body data-page="{{.Page}}"{{if .Repo.ID}} data-repo="{{.Repo.ID}}"{{end}}>
+<div class="app">
+  <header class="topbar">
+    <a class="wordmark" href="/"><i>m</i>mrm</a>
+    <nav class="nav" aria-label="Pages">
+      <a href="/"{{if eq .Page "overview"}} aria-current="page"{{end}}>Overview</a>
+      <a href="/activity"{{if eq .Page "activity"}} aria-current="page"{{end}}>Activity</a>
+      <a href="/settings"{{if eq .Page "settings"}} aria-current="page"{{end}}>Settings</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="busy mono{{if .Busy.Busy}} on{{end}}" id="busy">{{.Busy.Text}}</span>
+    <button class="btn primary" data-action="sync" data-scope="all"{{if .Busy.Busy}} disabled{{end}}>Sync all</button>
+  </header>
+  <main class="main">
+{{end}}
+
+{{define "foot"}}
+  </main>
+</div>
+</body>
+</html>
+{{end}}
+
+{{define "overview"}}{{template "head" .}}
+<div class="ws-list" id="ws">{{template "ws" .}}</div>
+<div class="panels">
+  <section class="panel" id="attention">{{template "attention" .}}</section>
+  <section class="panel" id="risk">{{template "risk" .}}</section>
+</div>
+<section class="tools-wrap" aria-label="Repos">
+  <div class="tools">
+    <label class="query" for="q"><span>/</span><input id="q" value="{{.Query}}" placeholder="filter: is:dirty ws:work tag:terraform -is:clean" autocomplete="off" spellcheck="false" aria-label="Filter repos"></label>
+    <button class="btn" data-action="sync" data-scope="shown"{{if .Busy.Busy}} disabled{{end}}>Sync shown</button>
+    <button class="btn" data-action="fetch" data-scope="shown"{{if .Busy.Busy}} disabled{{end}}>Fetch shown</button>
+  </div>
+  <div class="chips" role="group" aria-label="Quick filters">
+    {{range .Chips}}<button class="chip" data-chip="{{.}}" aria-pressed="false">{{.}}</button>{{end}}
+  </div>
+  <div id="rows">{{template "rows" .Rows}}</div>
+</section>
+{{template "foot" .}}{{end}}
+
+{{define "ws"}}{{range .WS}}
+<div class="ws">
+  <div class="ws-name">{{.Name}} <small>{{.Count}} repos · {{.Roots}}</small></div>
+  <div>
+    <svg class="bar" viewBox="0 0 100 10" preserveAspectRatio="none" width="100%" height="10" role="img" aria-label="state of {{.Name}}">{{range .Bar}}<rect class="b-{{.State}}" x="{{.X}}" y="0" width="{{.W}}" height="10"><title>{{.N}} {{.State}}</title></rect>{{end}}</svg>
+    <div class="legend">{{range .Legend}}<span><span class="g s-{{.State}}">{{.Glyph}}</span><b>{{.N}}</b> {{.State}}</span>{{end}}</div>
+  </div>
+  <div class="ws-act"><span class="count">{{.Synced}}</span><button class="btn" data-action="sync" data-ws="{{.Name}}"{{if $.Busy.Busy}} disabled{{end}}>Sync {{.Name}}</button></div>
+</div>
+{{end}}{{end}}
+
+{{define "attention"}}<h2>Needs attention <span>{{.AttentionCount}} repos</span></h2>
+{{range .Attention}}<div class="group"><h3>{{.Title}} · {{.Count}}</h3>{{range .Items}}{{template "item" .}}{{end}}{{template "more" .}}</div>
+{{else}}<p class="empty">Nothing needs attention.</p>{{end}}{{end}}
+
+{{define "risk"}}<h2>Work at risk <span>only on this machine</span></h2>
+{{range .Risk}}<div class="group"><h3>{{.Title}} · {{.Count}}</h3>{{range .Items}}{{template "item" .}}{{end}}{{template "more" .}}</div>
+{{else}}<p class="empty">No unpushed commits, stashes, long-dirty trees or stale branches.</p>{{end}}{{end}}
+
+{{define "more"}}{{if .More}}<p class="more">{{if .Query}}<a href="/?q={{.Query}}#rows">+ {{.More}} more</a>{{else}}+ {{.More}} more{{end}}</p>{{end}}{{end}}
+
+{{define "item"}}<div class="item"><span class="g s-{{.State}}">{{.Glyph}}</span><a class="name" href="/repo/{{.ID}}">{{.Name}}</a><span class="why">{{.Why}}</span></div>{{end}}
+
+{{define "rows"}}<p class="count">{{.Shown}} of {{.Total}} repos</p>
+<div class="tablewrap repos"><table>
+<thead><tr><th><span hidden>State</span></th><th>Repo</th><th>Workspace</th><th>Branch</th><th>↑↓</th><th>Changes</th><th>Last commit</th><th>Notes</th></tr></thead>
+<tbody>{{range .Rows}}{{template "row" .}}{{end}}</tbody>
+</table></div>
+<div class="cards">{{range .Rows}}{{template "card" .}}{{end}}</div>{{end}}
+
+{{define "glyph"}}{{if .Running}}<span class="g"><span class="spin" aria-label="running">◐</span></span>{{else}}<span class="g s-{{.State}}" title="{{.State}}">{{.Glyph}}</span>{{end}}{{end}}
+
+{{define "row"}}<tr id="row-{{.ID}}">
+<td>{{template "glyph" .}}</td>
+<td><a class="name" href="/repo/{{.ID}}">{{if .Group}}<span class="grp">{{.Group}}/</span>{{end}}{{.Name}}</a>{{range .Tags}}<span class="tag">{{.}}</span>{{end}}</td>
+<td class="mono">{{.WS}}</td>
+<td class="mono">{{.Branch}}</td>
+<td class="mono">{{.AB}}</td>
+<td class="mono chg">{{.Changes}}</td>
+<td class="mono dim">{{.Age}}</td>
+<td class="notes{{if .NoteClass}} {{.NoteClass}}{{end}}">{{if .Running}}{{.Busy}}…{{else}}{{.Notes}}{{end}}</td>
+</tr>{{end}}
+
+{{define "card"}}<div class="card" id="card-{{.ID}}">
+<div class="top">{{template "glyph" .}}<a class="name" href="/repo/{{.ID}}">{{if .Group}}{{.Group}}/{{end}}{{.Name}}</a><span class="mono dim">{{.Age}}</span></div>
+<div class="sub mono"><span>{{.Branch}}</span><span>{{.AB}}</span><span class="chg">{{.Changes}}</span></div>
+<div class="sub{{if .NoteClass}} {{.NoteClass}}{{end}}">{{if .Running}}{{.Busy}}…{{else}}{{.Notes}}{{end}}</div>
+</div>{{end}}
+
+{{define "repo"}}{{template "head" .}}{{with .Repo}}
+<div class="crumbs"><a href="/">Overview</a><span>/</span><span>{{.WS}}</span><span>/</span><span>{{.Display}}</span></div>
+<div class="repo-head">
+  <h1><span class="g s-{{.State}}">{{.Glyph}}</span>{{.Name}}</h1>
+  <span class="path mono">{{.Path}}</span>
+  <div class="spacer"></div>
+  {{if .Web}}<a class="btn" href="{{.Web}}" target="_blank" rel="noopener noreferrer">Open on forge</a>{{end}}
+  {{if .PRs}}<a class="btn" href="{{.PRs}}" target="_blank" rel="noopener noreferrer">Pull requests</a>{{end}}
+  {{if .CI}}<a class="btn" href="{{.CI}}" target="_blank" rel="noopener noreferrer">CI</a>{{end}}
+  <button class="btn" data-action="fetch" data-repo="{{.ID}}"{{if $.Busy.Busy}} disabled{{end}}>Fetch</button>
+  <button class="btn primary" data-action="sync" data-repo="{{.ID}}"{{if $.Busy.Busy}} disabled{{end}}>Sync</button>
+</div>
+<dl class="kv">
+  <div><dt>State</dt><dd class="s-{{.State}}">{{.State}}{{if .Error}} - {{.Error}}{{end}}</dd></div>
+  <div><dt>Branch</dt><dd class="mono">{{.Branch}}{{if .Upstream}} → {{.Upstream}}{{end}} {{.AB}}</dd></div>
+  <div><dt>Default</dt><dd class="mono">{{.Default}}</dd></div>
+  <div><dt>Last run</dt><dd class="{{.LastRunClass}}">{{.LastRun}}</dd></div>
+</dl>
+<div class="two">
+  <section class="panel"><h2>Branches <span>{{len .Branches}}</span></h2>
+    <ul class="list">{{range .Branches}}<li><span class="mono">{{if .Current}}*{{else}}&nbsp;{{end}} {{.Name}}</span><span class="track mono">{{.Track}}</span></li>{{end}}</ul>
+    {{if .Stashes}}<h2>Stashes <span>{{len .Stashes}}</span></h2>
+    <ul class="list">{{range .Stashes}}<li><span class="msg mono">{{.}}</span></li>{{end}}</ul>{{end}}
+  </section>
+  <section class="panel"><h2>Commits <span>last {{len .Commits}}</span></h2>
+    <ul class="list">{{range .Commits}}<li><span class="sha mono">{{.SHA}}</span><span class="msg">{{.Subject}}</span><span class="when mono">{{.Age}}</span></li>{{end}}</ul>
+  </section>
+</div>
+{{end}}{{template "foot" .}}{{end}}
+
+{{define "activity"}}{{template "head" .}}
+<p class="count">Runs from <span class="mono">{{.HistPath}}</span> - the CLI, the interactive view and this page alike.</p>
+{{range .Runs}}<details class="run"{{if .Open}} open{{end}}>
+  <summary><b>{{.Op}}</b><span class="meta">{{.When}} · {{.WS}} · {{.Took}}</span>{{range .Pills}}<span class="pill {{.Class}}">{{.N}} {{.Label}}</span>{{end}}</summary>
+  {{if .Items}}<ul class="list">{{range .Items}}<li><span class="mono">{{.Name}}</span><span class="msg {{.Class}}">{{.Text}}</span></li>{{end}}</ul>
+  {{else}}<p class="empty">Every repo synced or already current.</p>{{end}}
+</details>
+{{else}}<p class="empty">No runs yet. Sync from here, <code>mrm sync</code> or the interactive view, and they appear here.</p>{{end}}
+{{template "foot" .}}{{end}}
+
+{{define "settings"}}{{template "head" .}}
+<div class="settings">
+  <section class="panel"><h2>Appearance <span>this browser</span></h2>
+    <div class="setting">
+      <div class="label"><b>Text size</b><span>Scales all text. Saved in this browser; <code>web.text_size</code> in the config sets the default ({{.DefaultSize}}).</span></div>
+      <div class="seg" role="group" aria-label="Text size">{{range .Sizes}}<button data-size="{{.PX}}" aria-pressed="false">{{.Label}}</button>{{end}}</div>
+    </div>
+    <div class="setting">
+      <div class="label"><b>Theme</b><span>Follows your system unless you pick one.</span></div>
+      <div class="seg" role="group" aria-label="Theme"><button data-theme-pick="system" aria-pressed="false">System</button><button data-theme-pick="light" aria-pressed="false">Light</button><button data-theme-pick="dark" aria-pressed="false">Dark</button></div>
+    </div>
+  </section>
+  <section class="panel"><h2>Config <span>read-only</span></h2>
+    <p class="count empty">{{if .ConfigPath}}<span class="mono">{{.ConfigPath}}</span> - edit with <code>mrm config edit</code>. Secrets are hidden.{{else}}No config file: the current directory is the only root. <code>mrm config init</code> writes one.{{end}}</p>
+    {{if .ConfigText}}<pre class="config mono">{{.ConfigText}}</pre>{{end}}
+  </section>
+</div>
+{{template "foot" .}}{{end}}
+
+{{define "denied"}}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mrm</title><link rel="stylesheet" href="/static/mrm.css"></head>
+<body><div class="app"><main class="main"><h1>mrm web needs its link</h1><p>Open the address <code>mrm web</code> printed in your terminal - it carries this session's access token. Each run of <code>mrm web</code> makes a new one.</p></main></div></body></html>{{end}}
