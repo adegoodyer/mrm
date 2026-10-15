@@ -63,6 +63,7 @@ tui:
 
 web:
   port: 7420
+  text_size: medium       # small | medium | large | extra-large (each browser can change it)
 `))
 
 type initRoot struct{ Name, Root string }

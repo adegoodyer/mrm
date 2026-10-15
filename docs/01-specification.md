@@ -230,14 +230,14 @@ Every command that changes something outside `.git` (`prune`, `schedule`, `exec`
 Colours are the terminal's own ANSI palette on its default background, so light and dark themes both read; tcell drops colour under `NO_COLOR` (or `--no-color`) and bold, dim and reverse still carry the meaning.
 
 ## Web UI
-`mrm web` serves `http://127.0.0.1:7420/?token=<random>`, printed and opened with `--open`. Go templates + htmx, live updates over SSE, hand-written CSS with light/dark/system themes, responsive from 360 px.
+`mrm web` serves `http://127.0.0.1:7420/?token=<random>`, printed and opened with `--open`. Go templates + htmx, live updates over SSE, hand-written CSS with light/dark/system themes, responsive from 360 px. Every font size is in `rem`, so one root size scales all text: Small 14 px, Medium 16 px (default), Large 18 px, Extra large 20 px - picked on the Settings page and saved per browser, with `web.text_size` as the default. Mockups: drafted 2026-10-15, text enlarged and the size setting added on review.
 
 | Page                | Shows                                                                                                                                                                                     | Actions                                           |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | **Overview** (home) | state counts per workspace; **needs attention** list; **work at risk** (unpushed commits, stashes, dirty trees older than a day); filterable table of every repo; last sync per workspace | sync / fetch all, a workspace or the filtered set |
 | **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, forge links                                                                                              | sync, fetch, open on forge                        |
 | **Activity**        | sync runs from `runs.jsonl`: when, what, duration, outcome per repo                                                                                                                       | -                                                 |
-| **Settings**        | config as loaded, its path and validation errors                                                                                                                                          | - (edit with `mrm config edit`)                   |
+| **Settings**        | Appearance (this browser): text size and theme. Config as loaded, its path and validation errors                                                                                          | - (edit with `mrm config edit`)                   |
 
 The web UI offers only what the engine offers - no `exec`, no hooks, no `prune`.
 
@@ -309,6 +309,7 @@ tui:
 
 web:
   port: 7420
+  text_size: medium               # small | medium | large | extra-large; each browser can change it in Settings
 ```
 
 `mrm config init` writes this file commented, with one workspace per common clone folder that exists (`~/src`, `~/code`, `~/projects`, `~/repos`, `~/work`, `~/dev`, `~/git`), named after the folder - or the current directory if none do.

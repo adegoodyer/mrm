@@ -55,6 +55,7 @@ tui:
 
 web:
   port: 7420
+  text_size: large
 `
 
 func TestParseSpecExample(t *testing.T) {
@@ -84,6 +85,7 @@ func TestParseErrors(t *testing.T) {
 		"no workspaces":  "concurrency: 4\n",
 		"bad duration":   "timeout: soon\nworkspaces:\n  work:\n    roots: [/tmp]\n",
 		"bad notify.on":  "notify:\n  on: sometimes\nworkspaces:\n  work:\n    roots: [/tmp]\n",
+		"bad text size":  "web:\n  text_size: huge\nworkspaces:\n  work:\n    roots: [/tmp]\n",
 		"bad forge kind": "forges:\n  git.example.com: sourcehut\nworkspaces:\n  work:\n    roots: [/tmp]\n",
 	}
 	for name, yaml := range cases {

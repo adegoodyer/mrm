@@ -103,8 +103,12 @@ type TUI struct {
 
 // Web settings (phase 3).
 type Web struct {
-	Port int `yaml:"port"`
+	Port     int    `yaml:"port"`
+	TextSize string `yaml:"text_size"` // small | medium | large | extra-large; default for every browser
 }
+
+// TextSizes maps web.text_size to the root font size in px.
+var TextSizes = map[string]int{"small": 14, "medium": 16, "large": 18, "extra-large": 20}
 
 // Duration reads "2m", "90s" and so on.
 type Duration struct{ time.Duration }
@@ -202,6 +206,9 @@ func (c *Config) applyDefaults() {
 	if c.Web.Port == 0 {
 		c.Web.Port = DefaultWebPort
 	}
+	if c.Web.TextSize == "" {
+		c.Web.TextSize = "medium"
+	}
 	if c.Workspaces == nil {
 		c.Workspaces = map[string]*Workspace{}
 	}
@@ -253,6 +260,9 @@ func (c *Config) Validate() error {
 		if ep != nil && ep.URL == "" {
 			errs = append(errs, fmt.Sprintf("notify.%s.url is required", name))
 		}
+	}
+	if _, ok := TextSizes[c.Web.TextSize]; !ok {
+		errs = append(errs, fmt.Sprintf("web.text_size must be small, medium, large or extra-large, not %q", c.Web.TextSize))
 	}
 	for host, kind := range c.Forges {
 		switch kind {
