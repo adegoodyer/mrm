@@ -81,7 +81,7 @@ Recorded so they are not argued again. Revisit only if the reason stops holding.
 | Language                              | **Go**, one static binary                                                                                                                                  | fast, single binary, easy to install                                                                                                                                          | Python, Rust                           |
 | Stack                                 | **cobra, adrg/xdg, zap, yaml.v3**; plain ANSI for CLI colour                                                                                               | small, well-known dependencies                                                                                                                                                | kong, urfave/cli                       |
 | No viper                              | config decoded with **yaml.v3 into typed structs**, strict (unknown keys are errors); mrm never rewrites the file (decided 2026-10-14)                     | viper lowercases keys and splits them on `.`, which breaks repo keys that are paths and globs; writing the file back would drop comments                                      | viper                                  |
-| TUI library                           | **not Bubble Tea** (decided 2026-10-14); see [Q2](#open-questions)                                                                                         | maintainer preference                                                                                                                                                         | Bubble Tea                             |
+| TUI library                           | **tview on tcell**, never Bubble Tea (decided 2026-10-14/15); the repo list is a custom tview primitive, overlays use tview's input, list and pages        | maintainer preference                                                                                                                                                         | Bubble Tea                             |
 | Git access                            | **shell out to `git -C <repo>`**, `GIT_TERMINAL_PROMPT=0`, `ssh -o BatchMode=yes`, a timeout per repo                                                      | uses the ssh-agent, credential helpers and config already set up; nothing can hang on a prompt                                                                                | go-git (slower, auth is separate work) |
 | Repo list                             | **discovered**, not declared; config holds exceptions only                                                                                                 | hand-kept lists drift: repos get cloned and never added                                                                                                                       | a declared list                        |
 | Default branch                        | from **`origin/HEAD`**, **refreshed on every fetch** (`git remote set-head --auto`), overridable per repo; fall back to `main` then `master` on the remote | `origin/HEAD` is set at clone time and goes stale when a forge's default changes (seen on real repos: `develop` locally, `master` on the forge); `doctor` flags a missing one | always configured                      |
@@ -118,23 +118,25 @@ Read with `git status --porcelain=v2 --branch --show-stash` plus `for-each-ref` 
 | identity     | name, path, workspace, group, tags, remote URL, forge                                                                         |
 | branch       | current branch (or detached), default branch, upstream, ahead/behind upstream, default branch ahead/behind `origin/<default>` |
 | working tree | staged, modified, untracked, conflicted counts; merge/rebase/cherry-pick in progress                                          |
-| work at risk | stash count; local branches with commits on no remote                                                                         |
+| work at risk | stash count; unpushed commits (on branches never pushed, or ahead of a live upstream); stale branches (upstream gone)         |
 | history      | last commit time, author, subject; last fetch time                                                                            |
 | result       | last sync outcome and reason                                                                                                  |
 
 **Primary state**, first match wins. Glyphs are single-width in common terminal fonts so columns stay aligned (an emoji like `⚡` renders double-width):
 
-| Glyph | State    | When                                                                        |
-| ----- | -------- | --------------------------------------------------------------------------- |
-| `✗`   | error    | fetch failed, not a repo any more, timeout                                  |
-| `≠`   | conflict | merge, rebase, cherry-pick or revert in progress                            |
-| `⇅`   | diverged | ahead and behind its upstream                                               |
-| `●`   | dirty    | staged, modified or conflicted files (untracked alone is a flag, not dirty) |
-| `↑`   | unpushed | commits on no remote (any local branch), or ahead of upstream               |
-| `↓`   | behind   | behind upstream, or default branch behind `origin/<default>`                |
-| `✓`   | clean    | none of the above                                                           |
+| Glyph | State    | When                                                                                            |
+| ----- | -------- | ----------------------------------------------------------------------------------------------- |
+| `✗`   | error    | fetch failed, not a repo any more, timeout                                                      |
+| `≠`   | conflict | merge, rebase, cherry-pick or revert in progress                                                |
+| `⇅`   | diverged | ahead and behind its upstream                                                                   |
+| `●`   | dirty    | staged, modified or conflicted files (untracked alone is a flag, not dirty)                     |
+| `↑`   | unpushed | commits only here: on a branch that was never pushed, or ahead of an upstream that still exists |
+| `↓`   | behind   | behind upstream, or default branch behind `origin/<default>`                                    |
+| `✓`   | clean    | none of the above                                                                               |
 
-Flags shown alongside: `stash`, `untracked`, `detached`, `no-remote`, `upstream-gone`, `not-default` (on a branch other than the default).
+Flags shown alongside: `stash`, `untracked`, `detached`, `no-remote`, `upstream-gone`, `no-upstream`, `not-default` (on a branch other than the default), `stale-branches`.
+
+A branch whose upstream is gone - deleted on the forge after a merge, then pruned by a fetch - is **stale**, not unpushed: its commits were pushed once. Counting them as unpushed flagged 28 of 86 real repos as work at risk after the first `fetch --prune`, all of them old `develop` branches. Stale branches are a flag (listed by `prune` in phase 4); a stale branch with commits added after its last push can't be told apart once pruned.
 
 ## Sync
 Per repo, in the worker pool:
@@ -186,38 +188,46 @@ Global flags: `-w/--workspace`, `-t/--tag`, `-f/--filter "<query>"`, `--json`, `
 Every command that changes something outside `.git` (`prune`, `schedule`, `exec`) asks first unless `--yes`.
 
 ## TUI
-tview on tcell ([Q2](#open-questions)). Opens from the cache at once, then refreshes status (no fetch unless `tui.fetch_on_start: true`).
+`mrm` on a terminal (stdin and stdout both TTYs, no `--json`); piped, it prints `mrm status`. `-w <one workspace>` and `-f` / `-t` set the starting view. tview on tcell (decided 2026-10-15). The list is a custom widget drawn cell by cell, so group headers span the full width and every column truncates with `…`. Opens from the cache at once (first frame 13 ms for 86 repos), then refreshes status in the background (no fetch unless `tui.fetch_on_start: true`).
 
 ```
- mrm  work · 78 repos    ✓ 71   ↓ 3   ● 2   ↑ 1   ✗ 1      synced 4m ago   ctrl+k
- ─ services ───────────────────────────────────────────────────────────────────────
- ✓  api                    develop        ·          2h   fix: rounding in invoices
- ●  web                    feature/x      2↑    3M   1d   wip: checkout layout   stash
- ⠋  docs                   main           fetching…
- ─ platform ───────────────────────────────────────────────────────────────────────
- ↓  billing-api            master         4↓         3d   chore: bump deps
- ─ terraform ──────────────────────────────────────────────────────────────────────
- ✗  terraform-modules      master         fetch failed: ssh key rejected
- ──────────────────────────────────────────────────────────────────────────────────
- / filter  space mark  s sync  f fetch  o open  enter lazygit  ? help
+ mrm  all · 78 repos    ● 2  ↑ 1  ↓ 3  ✓ 71  ✗ 1                     synced 4m ago   ctrl+k
+─ ▾ services · 3 ─────────────────────────────────────────────────────────────────────────
+  ✓  api                 develop    ·          2h  fix: rounding in invoices
+▌ ●  web                 feature/x  2↑   3M    1d  wip: checkout layout
+  ⠋  docs                main       ·          5d  syncing…
+─ ▾ platform · 1 ─────────────────────────────────────────────────────────────────────────
+  ↓  billing-api         master     4↓         3d  chore: bump deps
+─ ▸ terraform · 6 ────────────────────────────────────────────────────────────────────────
+ 1 marked  s sync  f fetch  A clear marks  ctrl+k more
 ```
 
-| Key                 | Action                                                                          |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `j/k` `↑/↓` `g/G`   | move; `tab` collapse/expand group                                               |
-| `/`                 | filter ([Filters](#filters)); `esc` clears                                      |
-| `ctrl+k`            | command palette - fuzzy search over every action and workspace                  |
-| `space` · `a` · `A` | mark one, mark all visible, clear marks                                         |
-| `s` · `f`           | sync / fetch marked (or the current repo; `S` everything visible)               |
-| `o` · `O`           | open on forge / open PRs                                                        |
-| `enter`             | hand off to `tui.open_cmd` (default `lazygit`) in the repo; back to mrm on exit |
-| `e` · `t`           | `$EDITOR` / a shell in the repo                                                 |
-| `l`                 | detail pane: branches, stashes, last commits, last sync result                  |
-| `!`                 | needs-attention view: everything not clean, grouped by reason                   |
-| `w`                 | switch workspace                                                                |
-| `?` · `q`           | help, quit                                                                      |
+- **Rows**: mark (`▌`), state glyph (a spinner while an operation runs), name, branch, ahead/behind, changes, last commit age, then the outcome of the last run if it needs attention, else notes, else the last commit subject.
+- **Groups**: workspace, then group folder (`work · platform` when more than one workspace is shown); `▸` collapsed, `▾` open, with a count. The cursor can sit on a header: actions there apply to the whole group.
+- **Targets**: an action applies to the marked repos, else the group under the cursor, else the repo under it. Marks clear once an action starts.
+- **Operations** run one at a time through the engine, streaming a live row per repo; a sync takes the same workspace lock as `mrm sync` and writes the same cache and run history. A sync that leaves anything skipped or failed ends on the needs-attention view.
+- **Quit** while an operation runs needs `q` twice; git finishes what it started.
 
-Rows update as engine events arrive; a sync ends on the needs-attention view if anything was skipped or failed. Light/dark follows the terminal; `NO_COLOR` gives glyphs only.
+| Key                            | Action                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `j/k` `↑/↓` `g/G` `PgUp/PgDn`  | move                                                                                                               |
+| `tab` (or `enter` on a header) | collapse / expand the group                                                                                        |
+| `/`                            | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                        |
+| `ctrl+k`                       | command palette - ranked fuzzy search over every action, workspace and common filter                               |
+| `space` · `a` · `A`            | mark the repo (or the whole group on a header), mark everything shown, clear marks                                 |
+| `s` · `S`                      | sync the targets / everything shown                                                                                |
+| `f` · `F`                      | fetch the targets / everything shown                                                                               |
+| `r`                            | refresh status                                                                                                     |
+| `o` · `O`                      | open on forge / open PRs (the palette has CI and branch too)                                                       |
+| `enter`                        | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                            |
+| `e` · `t`                      | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                         |
+| `l`                            | detail pane: path, forge URL, upstream, default branch, last run, branches with tracking, stashes, last 12 commits |
+| `!`                            | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states            |
+| `w`                            | switch workspace                                                                                                   |
+| `esc`                          | clear the filter, else leave the attention view, else clear marks                                                  |
+| `?` · `q`                      | help, quit                                                                                                         |
+
+Colours are the terminal's own ANSI palette on its default background, so light and dark themes both read; tcell drops colour under `NO_COLOR` (or `--no-color`) and bold, dim and reverse still carry the meaning.
 
 ## Web UI
 `mrm web` serves `http://127.0.0.1:7420/?token=<random>`, printed and opened with `--open`. Go templates + htmx, live updates over SSE, hand-written CSS with light/dark/system themes, responsive from 360 px.
@@ -345,8 +355,8 @@ After a headless `mrm sync` (also from the timer), per `notify.on`: `attention` 
 - native Windows
 
 ## Open Questions
-| #   | Question                                                                                                                    | Leaning                                                                                                                                  |
-| --- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Q1  | forge PR/CI counts (phase 4) need an API token per forge. Share forge clients with the maintainer's repo-stats as a module? | yes, extract a shared module when phase 4 starts                                                                                         |
-| Q2  | TUI library, now that Bubble Tea is out: tview (widgets on tcell, as k9s) or tcell directly (own rendering)                 | tview - tables, flex layout, inputs and modals cover the fleet view, palette and detail pane; drop to tcell only if it fights the design |
-| Q3  | should `switch_merged` default to true?                                                                                     | decide after a few weeks of phase 1 use                                                                                                  |
+| #      | Question                                                                                                                    | Leaning                                                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Q1     | forge PR/CI counts (phase 4) need an API token per forge. Share forge clients with the maintainer's repo-stats as a module? | yes, extract a shared module when phase 4 starts                                                                            |
+| ~~Q2~~ | ~~TUI library~~                                                                                                             | closed 2026-10-15: tview, with the list drawn as a custom primitive (tview's table can't span group headers across columns) |
+| Q3     | should `switch_merged` default to true?                                                                                     | decide after a few weeks of phase 1 use                                                                                     |

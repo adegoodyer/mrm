@@ -42,14 +42,16 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 
 ## Phase 2 - TUI
 
-| ✓   | #   | Step                                                                                                               |
-| --- | --- | ------------------------------------------------------------------------------------------------------------------ |
-| ⬜   | 2.1 | confirm the TUI library - tview or tcell, never Bubble Tea (open question Q2)                                      |
-| ⬜   | 2.2 | list model: grouped rows, glyphs, column layout and truncation, cache-first paint, live updates from engine events |
-| ⬜   | 2.3 | filter, marks, sync/fetch actions, needs-attention view                                                            |
-| ⬜   | 2.4 | command palette (ranked fuzzy search), detail pane, workspace switcher, help                                       |
-| ⬜   | 2.5 | hand-off to lazygit, `$EDITOR`, shell (suspend the screen, run, resume)                                            |
-| ⬜   | 2.6 | themes, `NO_COLOR`, 80 x 24; UAT walkthrough                                                                       |
+| ✓            | #   | Step                                                                                                                                                                                    |
+| ------------ | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ 2026-10-15 | 2.1 | TUI library: tview on tcell, never Bubble Tea (Q2 closed); the list is a custom primitive                                                                                               |
+| ✅ 2026-10-15 | 2.2 | list model: grouped rows, glyphs, column layout and truncation, cache-first paint (13 ms for 86 repos), live updates from engine events; shared row text with the CLI (`internal/view`) |
+| ✅ 2026-10-15 | 2.3 | filter, marks, sync/fetch actions (workspace lock, cache, history), needs-attention view                                                                                                |
+| ✅ 2026-10-15 | 2.4 | command palette (ranked fuzzy search), detail pane (branches, stashes, commits), workspace switcher, help                                                                               |
+| ✅ 2026-10-15 | 2.5 | hand-off to lazygit, `$EDITOR`, shell (suspend the screen, run, resume, refresh the row)                                                                                                |
+| ✅ 2026-10-15 | 2.6 | themes (terminal palette), `NO_COLOR` / `--no-color`, 80 x 24; tests on a simulated screen, race-clean                                                                                  |
+| ✅ 2026-10-15 | 2.7 | unpushed counts only work that exists only here; stale branches (upstream gone) get their own flag - found on the first real TUI run                                                    |
+| ⬜            | 2.8 | UAT walkthrough of phase 2 in a real terminal (light and dark themes, lazygit hand-off)                                                                                                 |
 
 ## Phase 3 - Web UI
 

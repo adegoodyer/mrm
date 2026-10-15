@@ -41,18 +41,18 @@
 
 ## 2 - TUI
 
-| ✓   | #    | Criterion                                                                                                      |
-| --- | ---- | -------------------------------------------------------------------------------------------------------------- |
-| ⬜   | 2.1  | `mrm` on a terminal opens the TUI from the cache in under 150 ms, then refreshes rows in place                 |
-| ⬜   | 2.2  | Rows are grouped (workspace, then group); `tab` collapses and expands a group                                  |
-| ⬜   | 2.3  | `/` filters as you type with the same language as `--filter`; `esc` clears                                     |
-| ⬜   | 2.4  | `ctrl+k` opens the palette; every action and workspace is reachable from it by fuzzy search                    |
-| ⬜   | 2.5  | `space` marks, `a` marks all visible, `s` syncs the marked repos with a spinner per row and live result glyphs |
-| ⬜   | 2.6  | A sync with skipped or failed repos ends on the needs-attention view, grouped by reason; `!` opens it any time |
-| ⬜   | 2.7  | `enter` opens lazygit in the repo; quitting lazygit returns to mrm with that row refreshed                     |
-| ⬜   | 2.8  | `e`, `t`, `o`, `O`, `l`, `w`, `?` and `q` do what the key table says                                           |
-| ⬜   | 2.9  | Usable at 80 x 24: no wrapped rows, columns truncate with `…`                                                  |
-| ⬜   | 2.10 | `NO_COLOR=1` gives a readable glyph-only view; light and dark terminals are both readable                      |
+| ✓   | #    | Criterion                                                                                                                                                     |
+| --- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⬜   | 2.1  | `mrm` on a terminal opens the TUI from the cache in under 150 ms, then refreshes rows in place (measured 13 ms for 86 repos; `mrm -v` logs "tui first frame") |
+| ⬜   | 2.2  | Rows are grouped (workspace, then group); `tab` collapses and expands a group `[A] tui.TestRender, TestCollapse`                                              |
+| ⬜   | 2.3  | `/` filters as you type with the same language as `--filter`; `esc` clears `[A] tui.TestFilter`                                                               |
+| ⬜   | 2.4  | `ctrl+k` opens the palette; every action and workspace is reachable from it by fuzzy search `[A] tui.TestPaletteAndWorkspaces, TestFuzzyRank`                 |
+| ⬜   | 2.5  | `space` marks, `a` marks all visible, `s` syncs the marked repos with a spinner per row and live result glyphs `[A] tui.TestMarks, TestSyncFromTUI`           |
+| ⬜   | 2.6  | A sync with skipped or failed repos ends on the needs-attention view, grouped by reason; `!` opens it any time `[A] tui.TestAttentionView`                    |
+| ⬜   | 2.7  | `enter` opens lazygit in the repo; quitting lazygit returns to mrm with that row refreshed                                                                    |
+| ⬜   | 2.8  | `e`, `t`, `o`, `O`, `l`, `w`, `?` and `q` do what the key table says                                                                                          |
+| ⬜   | 2.9  | Usable at 80 x 24: no wrapped rows, columns truncate with `…` `[A] tui.TestRender`                                                                            |
+| ⬜   | 2.10 | `NO_COLOR=1` gives a readable glyph-only view; light and dark terminals are both readable                                                                     |
 
 ## 3 - Web UI
 
@@ -89,23 +89,24 @@
 
 ## The Nasty Cases
 
-| ✓   | #    | Case                                                                                                       | Expected                                                                                                                                                                               |
-| --- | ---- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ⬜   | N.1  | Dirty tree on the default branch, remote ahead                                                             | skipped `dirty`; working tree and index identical after `[A] engine.TestSyncSkipsDirty`                                                                                                |
-| ⬜   | N.2  | Local default branch has commits not on the remote, remote also moved                                      | skipped `diverged`; no merge commit, no reset `[A] engine.TestSyncSkipsDiverged`                                                                                                       |
-| ⬜   | N.3  | Rebase or merge in progress                                                                                | fetch only, state `conflict` `[A] engine.TestSyncSkipsMergeInProgress`                                                                                                                 |
-| ⬜   | N.4  | Detached `HEAD`                                                                                            | fetch only, flag `detached` `[A] engine.TestSyncSkipsDetached`                                                                                                                         |
-| ⬜   | N.5  | No `origin/HEAD`                                                                                           | falls back to `main` then `master`; `doctor` lists the repo                                                                                                                            |
-| ⬜   | N.6  | ssh key not loaded / Bitbucket rejects the key                                                             | each affected repo fails within the timeout with a plain reason (e.g. "remote repo not found, or no access"); no prompt, no hang `[A] engine.TestFetchFailsFast, git.TestErrorMessage` |
-| ⬜   | N.7  | Network offline                                                                                            | every fetch fails fast; the summary says "offline?" once instead of 80 identical errors                                                                                                |
-| ⬜   | N.8  | Upstream branch deleted on the remote                                                                      | flag `upstream-gone`; fast-forward skipped; listed by `prune` `[A] engine.TestUpstreamGone`                                                                                            |
-| ⬜   | N.9  | Repo with no remote                                                                                        | status works, flag `no-remote`, sync skips it quietly `[A] engine.TestSyncNoRemote`                                                                                                    |
-| ⬜   | N.10 | A scheduled sync and a manual sync of one workspace at once                                                | the second exits at once with "sync already running for workspace … (pid …)" `[A] engine.TestLock`                                                                                     |
-| ⬜   | N.11 | One huge repo with a slow fetch                                                                            | it times out alone; the other repos finish on time `[A] engine.TestTimeout`                                                                                                            |
-| ⬜   | N.12 | A repo deleted or moved while the TUI or web UI is open                                                    | its row shows `error: missing` and drops on the next refresh                                                                                                                           |
-| ⬜   | N.13 | Repo path with spaces or non-ASCII characters                                                              | listed, synced and opened correctly `[A] engine.TestSyncOddPath`                                                                                                                       |
-| ⬜   | N.14 | Untracked files on a clean default branch that is behind                                                   | fast-forwarded; untracked files untouched (unless the incoming commit adds the same path, then failed with git's message and the file kept) `[A] engine.TestSyncUntracked`             |
-| ⬜   | N.15 | `switch_merged: true` and a brand-new branch with no commits yet (an ancestor of the default, so "merged") | left alone: only a branch that was pushed is switched away from `[A] engine.TestSwitchMerged`                                                                                          |
+| ✓   | #    | Case                                                                                                       | Expected                                                                                                                                                                                   |
+| --- | ---- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ⬜   | N.1  | Dirty tree on the default branch, remote ahead                                                             | skipped `dirty`; working tree and index identical after `[A] engine.TestSyncSkipsDirty`                                                                                                    |
+| ⬜   | N.2  | Local default branch has commits not on the remote, remote also moved                                      | skipped `diverged`; no merge commit, no reset `[A] engine.TestSyncSkipsDiverged`                                                                                                           |
+| ⬜   | N.3  | Rebase or merge in progress                                                                                | fetch only, state `conflict` `[A] engine.TestSyncSkipsMergeInProgress`                                                                                                                     |
+| ⬜   | N.4  | Detached `HEAD`                                                                                            | fetch only, flag `detached` `[A] engine.TestSyncSkipsDetached`                                                                                                                             |
+| ⬜   | N.5  | No `origin/HEAD`                                                                                           | falls back to `main` then `master`; `doctor` lists the repo                                                                                                                                |
+| ⬜   | N.6  | ssh key not loaded / Bitbucket rejects the key                                                             | each affected repo fails within the timeout with a plain reason (e.g. "remote repo not found, or no access"); no prompt, no hang `[A] engine.TestFetchFailsFast, git.TestErrorMessage`     |
+| ⬜   | N.7  | Network offline                                                                                            | every fetch fails fast; the summary says "offline?" once instead of 80 identical errors                                                                                                    |
+| ⬜   | N.8  | Upstream branch deleted on the remote                                                                      | flag `upstream-gone`; fast-forward skipped; listed by `prune` `[A] engine.TestUpstreamGone`                                                                                                |
+| ⬜   | N.9  | Repo with no remote                                                                                        | status works, flag `no-remote`, sync skips it quietly `[A] engine.TestSyncNoRemote`                                                                                                        |
+| ⬜   | N.10 | A scheduled sync and a manual sync of one workspace at once                                                | the second exits at once with "sync already running for workspace … (pid …)" `[A] engine.TestLock`                                                                                         |
+| ⬜   | N.11 | One huge repo with a slow fetch                                                                            | it times out alone; the other repos finish on time `[A] engine.TestTimeout`                                                                                                                |
+| ⬜   | N.12 | A repo deleted or moved while the TUI or web UI is open                                                    | its row shows `error: missing` and drops on the next refresh                                                                                                                               |
+| ⬜   | N.13 | Repo path with spaces or non-ASCII characters                                                              | listed, synced and opened correctly `[A] engine.TestSyncOddPath`                                                                                                                           |
+| ⬜   | N.14 | Untracked files on a clean default branch that is behind                                                   | fast-forwarded; untracked files untouched (unless the incoming commit adds the same path, then failed with git's message and the file kept) `[A] engine.TestSyncUntracked`                 |
+| ⬜   | N.15 | `switch_merged: true` and a brand-new branch with no commits yet (an ancestor of the default, so "merged") | left alone: only a branch that was pushed is switched away from `[A] engine.TestSwitchMerged`                                                                                              |
+| ⬜   | N.16 | A local branch whose upstream was deleted on the forge and pruned by a fetch (an old `develop`)            | not counted as unpushed; flag `stale-branches`, "1 stale branch" in the row; a never-pushed branch still counts `[A] engine.TestStaleBranchIsNotUnpushed, TestNeverPushedBranchIsUnpushed` |
 
 ## Sign-Off
 mrm is done for a phase when every box in that phase and the cross-cutting rows it touches are ticked or annotated.
@@ -117,4 +118,4 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 | 3 - web UI          | 3.1 - 3.7  | 0 / 7  | ⬜              |
 | 4 - extras          | 4.1 - 4.6  | 0 / 6  | ⬜              |
 | cross-cutting       | X.1 - X.5  | 0 / 5  | ⬜              |
-| nasty cases         | N.1 - N.15 | 0 / 15 | ⬜              |
+| nasty cases         | N.1 - N.16 | 0 / 16 | ⬜              |
