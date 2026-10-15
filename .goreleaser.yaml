@@ -1,0 +1,48 @@
+# GoReleaser config for mrm: `task release:check`, `task release:snapshot`,
+# and `task release` on a pushed vX.Y.Z tag (needs GITHUB_TOKEN).
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: mrm
+    main: .
+    binary: mrm
+    env:
+      - CGO_ENABLED=0
+    # Linux and macOS only (WSL counts as Linux): the sync lock uses flock.
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  # The release notes come from CHANGELOG.md, not the commit list.
+  disable: true
+
+release:
+  draft: true
+  prerelease: auto

@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-15
+
+First release: the CLI (phase 1) and the interactive view (phase 2). Linux and macOS (amd64, arm64), including WSL.
+
 ### Added
 - Spec, user acceptance tests and roadmap (`docs/`).
+- Release archives for linux/darwin amd64/arm64 built with GoReleaser (`task release:snapshot`, `task release`); `mrm version` reports the tag, commit and build date.
 - **Discovery**: repos are found under each workspace's roots (depth limit, ignore globs, hidden folders skipped); nested group folders (`platform/`, `services/`) become a repo's group; the walk stops at a repo, so submodules and `.worktrees/` aren't listed separately. With no config, the current directory is the only root.
 - **Config** at `$XDG_CONFIG_HOME/mrm/config.yaml`: workspaces with their own sync policy, per-repo exceptions keyed by name, name glob or path glob (branch override, tags, `sync: false`), notify, forges. Read with `yaml.v3` into typed structs and never rewritten; strict - unknown keys are errors and literal secrets are refused with a hint. `mrm config init` writes a commented default with a workspace per common clone folder that exists (`~/src`, `~/code`, `~/projects`, `~/repos`, `~/work`, `~/dev`, `~/git`); `config edit` validates after saving; `config path` prints every XDG path.
 - **Interactive view**: `mrm` on a terminal opens a grouped, live list of every repo (tview). Paints from the cache at once, then refreshes; `/` filters as you type, `space`/`a` mark, `s`/`f` sync or fetch the marked repos (or the group or repo under the cursor) with a live row each, `!` shows what needs attention grouped by reason, `l` a detail pane (branches, stashes, commits), `w` switches workspace, `ctrl+k` a fuzzy command palette, `enter` hands off to lazygit and back. Same engine, lock, cache and history as the CLI; works at 80 x 24 and under `NO_COLOR`.

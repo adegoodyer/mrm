@@ -70,6 +70,28 @@ tasks:
     cmds:
       - go run . {{.CLI_ARGS}}
 
+  release:check:
+    desc: Validate the GoReleaser config (config)
+    cmds:
+      - mise exec goreleaser@2.18.2 -- goreleaser check
+
+  release:snapshot:
+    desc: Build every release archive into dist/ without publishing (snapshot)
+    cmds:
+      - mise exec goreleaser@2.18.2 -- goreleaser release --snapshot --clean
+
+  release:
+    desc: Publish a draft GitHub release for the current vX.Y.Z tag (needs GITHUB_TOKEN)
+    cmds:
+      # Notes are this version's CHANGELOG section; bin/, as --clean empties dist/.
+      - mkdir -p bin
+      - awk '/^## \[/{p=index($0,"[{{.VERSION}}]")>0; next} p' CHANGELOG.md > bin/release-notes.md
+      - test -s bin/release-notes.md || (echo "no CHANGELOG section for {{.VERSION}}" && exit 1)
+      - mise exec goreleaser@2.18.2 -- goreleaser release --clean --release-notes bin/release-notes.md
+    vars:
+      VERSION:
+        sh: git describe --tags --exact-match | sed 's/^v//'
+
   clean:
     desc: Remove build artifacts (bin/dist)
     cmds:

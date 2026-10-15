@@ -7,6 +7,7 @@
   - [Phase 2 - TUI](#phase-2---tui)
   - [Phase 3 - Web UI](#phase-3---web-ui)
   - [Phase 4 - Extras](#phase-4---extras)
+  - [Releases](#releases)
   - [Follow-Ups](#follow-ups)
 
 ## How to Use This
@@ -65,14 +66,20 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 
 ## Phase 4 - Extras
 
-| ✓   | #   | Step                                                                                                                   |
-| --- | --- | ---------------------------------------------------------------------------------------------------------------------- |
-| ⬜   | 4.1 | `exec` (parallel, prefixed output, `--serial`)                                                                         |
-| ⬜   | 4.2 | `post_sync` hooks                                                                                                      |
-| ⬜   | 4.3 | `prune`                                                                                                                |
-| ⬜   | 4.4 | `schedule install/list/remove` (systemd user timers)                                                                   |
-| ⬜   | 4.5 | forge clients (shared with repo-stats, Q1): PR count, CI status; `drift` against an org                                |
-| ⬜   | 4.6 | release: goreleaser binaries, `go install` check, `[Unreleased]` -> a dated version in `CHANGELOG.md`; UAT walkthrough |
+| ✓   | #   | Step                                                                                                                               |
+| --- | --- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| ⬜   | 4.1 | `exec` (parallel, prefixed output, `--serial`)                                                                                     |
+| ⬜   | 4.2 | `post_sync` hooks                                                                                                                  |
+| ⬜   | 4.3 | `prune`                                                                                                                            |
+| ⬜   | 4.4 | `schedule install/list/remove` (systemd user timers)                                                                               |
+| ⬜   | 4.5 | forge clients (shared with repo-stats, Q1): PR count, CI status; `drift` against an org                                            |
+| ⬜   | 4.6 | release 0.2.0 (the GoReleaser config and `task release` exist since 0.1.0); `go install` check on a clean machine; UAT walkthrough |
+
+## Releases
+
+| Version | Date       | Contains                                                                                                         |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| 0.1.0   | 2026-10-15 | phases 1-2: CLI and interactive view; release archives for linux/darwin amd64/arm64 (GoReleaser, `task release`) |
 
 ## Follow-Ups
 
@@ -83,5 +90,5 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 | ~~F3~~ | ~~sync of 86 repos took 31.9 s against the 30 s target~~ - done 2026-10-15: `origin/HEAD` re-checked at most once a day (the ref file's age decides); the same sync now takes 15.6 s. With git >= 2.48, `remote.origin.followRemoteHEAD` could replace the check |
 | ~~F4~~ | ~~`forge:` in filters ignores the `forges:` host mapping~~ - done 2026-10-15                                                                                                                                                                                     |
 | ~~F5~~ | ~~status names truncate at 44 characters~~ - done 2026-10-15: sized from the terminal width; piped output is never cut                                                                                                                                           |
-| F6     | before going public: rebuild history from the generic docs (done 2026-10-14), recreate the GitHub repo so no old objects survive (done 2026-10-14), tag `v0.1.0`                                                                                                 |
+| F6     | before going public: rebuild history from the generic docs (done 2026-10-14), recreate the GitHub repo so no old objects survive (done 2026-10-14), tag `v0.1.0` (done 2026-10-15); then make the repo public                                                    |
 | ~~F7~~ | ~~shell completion for values~~ - done 2026-10-15: `-w`, `-t`, `-f` terms and `mrm open` repo names                                                                                                                                                              |

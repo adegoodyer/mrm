@@ -2,7 +2,7 @@
 
 Mass repo manager - find every git repo under your folders, keep them all current safely and in parallel, and see the state of all of them at once.
 
-> **Status:** the CLI (phase 1) and the interactive view (phase 2) are built; the web UI (phase 3) is not yet - see the [roadmap](docs/03-roadmap.md).
+> **Status:** 0.1.0 - the CLI (phase 1) and the interactive view (phase 2). The web UI (phase 3) is not built yet - see the [roadmap](docs/03-roadmap.md).
 
 - [mrm](#mrm)
   - [Install](#install)
@@ -19,8 +19,10 @@ Mass repo manager - find every git repo under your folders, keep them all curren
 ```bash
 go install github.com/adegoodyer/mrm@latest
 # or from a checkout
-task build   # bin/mrm
+task install   # go install . (task build for ./bin/mrm)
 ```
+
+Release archives for Linux and macOS (amd64, arm64) are attached to each [GitHub release](https://github.com/adegoodyer/mrm/releases). Windows is not supported; use WSL.
 
 ## Quick Start
 ```bash
