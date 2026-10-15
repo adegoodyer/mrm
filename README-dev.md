@@ -26,6 +26,9 @@ internal/
   browser/              open a URL (browser_cmd, wslview, xdg-open, open)
   view/                 a repo as plain text (row cells, notes, attention reason, ages) - shared by CLI and TUI
   tui/                  interactive fleet view (tview): list.go custom list primitive, actions.go engine ops + hand-off, overlays.go palette/help/workspaces/detail
+  runner/               one operation the safe way: workspace lock, engine run, cache + history - used by the TUI and the web UI
+  web/                  web UI: server.go (routes, host check, token, CSP), state.go (pages, actions, watcher), sse.go (live events),
+                        templates/pages.html, static/ (mrm.css, mrm.js, boot.js, fonts)
   term/                 ANSI colour, padding, live progress line
   logger/               zap JSON log in the state dir
   gittest/              test fixtures: bare remote + seed + clones
@@ -38,7 +41,9 @@ docs/                   spec, UAT, roadmap
 - **No secrets in config or logs.** Endpoints take `token_cmd` / `token_env`; never log their output.
 - **The TUI is tview, never Bubble Tea.** UI state is only touched on the UI goroutine: background work (engine runs, detail reads) hands results back with `app.QueueUpdateDraw`.
 - **Never call `QueueUpdate`, `QueueUpdateDraw` or `Draw` from the UI goroutine** - in key handlers or inside a queued update. They wait for the UI loop that is running them: the terminal freezes and Ctrl+C dies with it (it did, 6 s after start-up, when a footer message expired). On the UI goroutine, change state and return; tview redraws after every event and queued update.
-- **CLI and TUI show the same text** for a repo: build it in `internal/view`, colour it in the front end.
+- **CLI, TUI and web show the same text** for a repo: build it in `internal/view`, colour it in the front end.
+- **Web: no inline script or style.** The CSP allows only `'self'`; put CSS in `static/mrm.css`, behaviour in `static/mrm.js`, and size things with classes or SVG attributes (the state bars are SVG for this reason). Templates escape everything; keep it that way.
+- **Web grids need `minmax(0, 1fr)`**, not `1fr`: a long repo name or URL otherwise widens the column past the screen (it did, at every width).
 - Docs: tables are aligned with `markdown-table-prettify` (the VS Code extension's formatter).
 - **Every user-visible change gets a line under `[Unreleased]` in [CHANGELOG.md](CHANGELOG.md)** ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/): Added / Changed / Fixed / Removed), in the same commit as the change. A release moves `[Unreleased]` into a dated version section.
 

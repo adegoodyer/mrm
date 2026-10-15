@@ -58,15 +58,15 @@
 
 ## 3 - Web UI
 
-| ✓   | #   | Criterion                                                                                                                    |
-| --- | --- | ---------------------------------------------------------------------------------------------------------------------------- |
-| ⬜   | 3.1 | `mrm web --open` opens the Overview in the browser (Windows browser on WSL)                                                  |
-| ⬜   | 3.2 | The Overview shows state counts per workspace, the needs-attention list, work at risk and the filterable table               |
-| ⬜   | 3.3 | Starting a sync from the web updates rows live over SSE; a sync started from the TUI or CLI at the same time also shows live |
-| ⬜   | 3.4 | The Repo page shows branches, stashes, last 20 commits, last sync results and working forge links                            |
-| ⬜   | 3.5 | The Activity page lists past runs from `runs.jsonl` with outcome per repo                                                    |
-| ⬜   | 3.6 | The Settings page shows the loaded config with secrets redacted                                                              |
-| ⬜   | 3.7 | Light, dark and system themes; every page at 360, 768 and 1440 px with no horizontal page scroll `[A]` (Playwright)          |
+| ✓   | #   | Criterion                                                                                                                                                                                                                                           |
+| --- | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⬜   | 3.1 | `mrm web --open` opens the Overview in the browser (Windows browser on WSL)                                                                                                                                                                         |
+| ⬜   | 3.2 | The Overview shows state counts per workspace, the needs-attention list, work at risk (long groups capped with a "+ N more" filter link) and the filterable table `[A] web.TestOverview`                                                            |
+| ⬜   | 3.3 | Starting a sync from the web updates rows live over SSE in every open tab; a sync started from the TUI or CLI shows in the top bar while it runs and its results appear when it finishes `[A] web.TestSyncStreamsAndRecords, TestExternalLockShown` |
+| ⬜   | 3.4 | The Repo page shows branches, stashes, last 20 commits, last sync results and working forge links `[A] web.TestRepoPage`                                                                                                                            |
+| ⬜   | 3.5 | The Activity page lists past runs from `runs.jsonl` with outcome per repo `[A] web.TestSyncStreamsAndRecords`                                                                                                                                       |
+| ⬜   | 3.6 | The Settings page shows the loaded config with secrets hidden, and text size and theme apply at once and stick per browser `[A] web.TestSettingsHidesSecrets` for the config                                                                        |
+| ⬜   | 3.7 | Light, dark and system themes; every page at 360, 768 and 1440 px with no horizontal page scroll (checked 2026-10-15 in Chrome at 1440, 768 and 518 px - Chrome's minimum window; below that the same layout applies)                               |
 
 ## 4 - Extras
 
@@ -84,7 +84,7 @@
 | ✓   | #   | Criterion                                                                                                                                                                                                                  |
 | --- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⬜   | X.1 | No secret appears in config, logs, `--verbose` output or the web UI; config only accepts `*_cmd` / `*_env` for secrets `[A] config.TestLiteralTokenRefusedWithHint, notify.TestTokenErrorsDontLeakOutput, notify.TestSend` |
-| ⬜   | X.2 | The web UI refuses requests without the token, with a `Host` other than `127.0.0.1`/`localhost`, and POSTs without the token header `[A]`                                                                                  |
+| ⬜   | X.2 | The web UI refuses requests without the token, with a `Host` other than `127.0.0.1`/`localhost`, and POSTs without the token header `[A] web.TestSecurity`                                                                 |
 | ⬜   | X.3 | The web UI is not reachable from another machine on the LAN                                                                                                                                                                |
 | ⬜   | X.4 | `task check` (fmt, vet, race tests) is clean; release binaries for linux/darwin amd64/arm64 build                                                                                                                          |
 | ⬜   | X.5 | `go install github.com/adegoodyer/mrm@latest` works on a clean machine                                                                                                                                                     |

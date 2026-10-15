@@ -2,12 +2,13 @@
 
 Mass repo manager - find every git repo under your folders, keep them all current safely and in parallel, and see the state of all of them at once.
 
-> **Status:** 0.1.0 - the CLI (phase 1) and the interactive view (phase 2). The web UI (phase 3) is not built yet - see the [roadmap](docs/03-roadmap.md).
+> **Status:** 0.1.0 has the CLI and the interactive view; the web UI is on `next-release` for the next release. Extras (`exec`, hooks, `prune`, scheduling) come later - see the [roadmap](docs/03-roadmap.md).
 
 - [mrm](#mrm)
   - [Install](#install)
   - [Quick Start](#quick-start)
   - [Interactive View](#interactive-view)
+  - [Web UI](#web-ui)
   - [What Sync Does](#what-sync-does)
   - [Filters](#filters)
   - [Shell Completion](#shell-completion)
@@ -29,6 +30,7 @@ Release archives for Linux and macOS (amd64, arm64) are attached to each [GitHub
 mrm config init            # commented config with a workspace per clone folder found (~/src, ~/code, ~/work, ...)
 mrm doctor                 # check git, config, roots, repos, ssh
 mrm                        # interactive view (on a terminal)
+mrm web --open             # web UI in your browser
 mrm status -w work         # one line per repo
 mrm sync --dry-run -w work # what sync would do
 mrm sync -w work           # fetch + fast-forward what is safe to
@@ -92,6 +94,16 @@ A branch whose upstream was deleted on the forge (an old `develop` after a merge
 | `?` `q`         | help, quit                                                                             |
 
 A sync that leaves anything skipped or failed ends on the needs-attention view. Colours follow your terminal's palette; `NO_COLOR` (or `--no-color`) keeps bold, dim and reverse only.
+
+## Web UI
+`mrm web --open` serves the web UI on this machine only and opens it; Ctrl+C stops it. The address it prints carries a new access token each run, so only you can use it.
+
+- **Overview**: a state bar per workspace, what needs attention (grouped by reason), work at risk - unpushed commits, stashes, long-dirty trees and stale branches - and every repo, filtered as you type.
+- **Repo page**: branches with tracking, stashes, the last 20 commits, links to the repo, its pull requests and CI.
+- **Activity**: every run, from the CLI, the interactive view or the page.
+- **Settings**: text size (Small, Medium, Large, Extra large) and theme for this browser; `web.text_size` in the config sets the default.
+
+Sync or fetch one repo, a workspace, the filtered set or everything; rows update live in every open tab. A sync running in a terminal shows in the top bar, and its results appear when it finishes.
 
 ## What Sync Does
 Per repo, in parallel: fetch (and refresh `origin/HEAD`), then fast-forward the default branch **only if the tree is clean and the branch is strictly behind**. On another branch, the default branch is updated in place and your branch is left alone. mrm **never** stashes, resets, rebases, merges or forces - anything unsafe is skipped and listed under "Needs attention".

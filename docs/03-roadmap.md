@@ -56,13 +56,14 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 
 ## Phase 3 - Web UI
 
-| ✓   | #   | Step                                                                                                                                                                       |
-| --- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ⬜   | 3.1 | HTML mockups of Overview and Repo (desktop and phone), agreed before building - drafted 2026-10-15 (Overview, Repo, Activity, Settings; light and dark), awaiting approval |
-| ⬜   | 3.2 | server: 127.0.0.1 bind, token, Host check, CSRF; embedded templates, htmx and CSS                                                                                          |
-| ⬜   | 3.3 | SSE stream from engine events; one engine shared by `web` and actions                                                                                                      |
-| ⬜   | 3.4 | Overview, Repo, Activity, Settings pages                                                                                                                                   |
-| ⬜   | 3.5 | Playwright checks at 360/768/1440 px; UAT walkthrough                                                                                                                      |
+| ✓            | #   | Step                                                                                                                                                                                 |
+| ------------ | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ✅ 2026-10-15 | 3.1 | HTML mockups of Overview, Repo, Activity and Settings (desktop and phone, light and dark); text enlarged and a text-size setting added on review; approved                           |
+| ✅ 2026-10-15 | 3.2 | server: 127.0.0.1 bind, token to HttpOnly cookie, Host check, token header on POST, strict CSP; embedded templates, plain JS (not htmx), CSS and fonts                               |
+| ✅ 2026-10-15 | 3.3 | SSE stream of rows, panels and busy state; the shared runner (`internal/runner`) used by the TUI and the web UI; other mrm processes noticed through their lock and the status cache |
+| ✅ 2026-10-15 | 3.4 | Overview, Repo, Activity, Settings pages; long groups capped with a filter link                                                                                                      |
+| ✅ 2026-10-15 | 3.5 | tests: security, pages, filter, a sync streamed over SSE on a fixture repo, history, secrets hidden, external lock; layout checked in Chrome at 1440/768/518 px                      |
+| ⬜            | 3.6 | UAT walkthrough of phase 3 in your browser (light and dark, text sizes, a real sync from the page)                                                                                   |
 
 ## Phase 4 - Extras
 

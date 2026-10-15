@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Web UI**: `mrm web` (`--open`, `--port`, `-w`) serves an overview of every repo on 127.0.0.1 - a state bar per workspace, what needs attention and what is at risk (unpushed commits, stashes, long-dirty trees, stale branches), and every repo, filtered as you type with the same language as `-f`. A page per repo (branches, stashes, last 20 commits, forge links), the run history, and settings: text size (Small to Extra large) and theme per browser, the config with secrets hidden. Sync or fetch a repo, a workspace, the filtered set or everything; rows update live in every open tab, and syncs run by other mrm processes show while they run.
+- Web security: this machine only, a new access token each run (kept in an HttpOnly cookie), Host check against DNS rebinding, a token header on every action, and a strict content security policy - no inline or third-party code. Fonts are embedded, so it works offline.
+- `web.text_size` in the config: the default text size for every browser.
+
+### Changed
+- The TUI runs its operations through the same runner as the web UI (lock, cache, history), so both behave identically.
+
 ## [0.1.0] - 2026-10-15
 
 First release: the CLI (phase 1) and the interactive view (phase 2). Linux and macOS (amd64, arm64), including WSL.
