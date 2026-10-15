@@ -325,6 +325,38 @@ func TestUpstreamGone(t *testing.T) {
 	}
 }
 
+// A branch whose upstream was deleted on the forge (and pruned) is stale,
+// not unpushed work: its commits were pushed once.
+func TestStaleBranchIsNotUnpushed(t *testing.T) {
+	f := gittest.New(t)
+	f.Branch("develop")
+	f.Push("develop", "d.txt", "on develop only\n")
+	dir := f.Clone("app")
+	gittest.Git(t, dir, "branch", "-q", "--track", "develop", "origin/develop")
+	gittest.Git(t, f.Remote, "branch", "-D", "develop")
+
+	res := newEngine().Collect(context.Background(), []model.Repo{repo(dir)}, Options{Op: OpFetch})[0]
+	st := res.Status
+	if st.Unpushed != 0 || st.StaleBranches != 1 || st.State() != model.StateClean || !st.HasFlag(model.FlagStale) {
+		t.Fatalf("unpushed %d stale %d state %s flags %v", st.Unpushed, st.StaleBranches, st.State(), st.Flags())
+	}
+}
+
+// Commits on a branch that was never pushed are unpushed work.
+func TestNeverPushedBranchIsUnpushed(t *testing.T) {
+	f := gittest.New(t)
+	dir := f.Clone("app")
+	gittest.Git(t, dir, "switch", "-q", "-c", "local-only")
+	gittest.Commit(t, dir, "a.txt", "a\n", "a")
+	gittest.Commit(t, dir, "b.txt", "b\n", "b")
+	gittest.Git(t, dir, "switch", "-q", "master")
+
+	st := newEngine().Collect(context.Background(), []model.Repo{repo(dir)}, Options{Op: OpStatus})[0].Status
+	if st.Unpushed != 2 || st.State() != model.StateUnpushed {
+		t.Fatalf("unpushed %d state %s", st.Unpushed, st.State())
+	}
+}
+
 // N.6 / N.11: an unreachable remote fails within the timeout without prompting.
 func TestFetchFailsFast(t *testing.T) {
 	f := gittest.New(t)

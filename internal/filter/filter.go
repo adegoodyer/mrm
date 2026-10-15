@@ -39,7 +39,7 @@ var isValues = func() map[string]bool {
 		m[string(s)] = true
 	}
 	for _, f := range []string{model.FlagStash, model.FlagUntracked, model.FlagDetached, model.FlagNoRemote,
-		model.FlagUpstreamGone, model.FlagNotDefault, model.FlagNoUpstream} {
+		model.FlagUpstreamGone, model.FlagNotDefault, model.FlagNoUpstream, model.FlagStale} {
 		m[f] = true
 	}
 	return m

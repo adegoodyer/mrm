@@ -76,6 +76,7 @@ const (
 	FlagUpstreamGone = "upstream-gone"
 	FlagNotDefault   = "not-default"
 	FlagNoUpstream   = "no-upstream"
+	FlagStale        = "stale-branches"
 )
 
 // Status is everything mrm reads from a repo without touching the network.
@@ -101,7 +102,8 @@ type Status struct {
 	Stashes    int    `json:"stashes"`
 	Operation  string `json:"operation,omitempty"` // merge, rebase, cherry-pick, revert
 
-	Unpushed int `json:"unpushed"` // commits on local branches that are on no remote
+	Unpushed      int `json:"unpushed"`       // commits only here: never-pushed branches, or ahead of a live upstream
+	StaleBranches int `json:"stale_branches"` // local branches whose upstream is gone
 
 	RemoteURL string `json:"remote_url,omitempty"`
 	HasRemote bool   `json:"has_remote"`
@@ -163,6 +165,9 @@ func (s Status) Flags() []string {
 	}
 	if !s.Detached && s.DefaultBranch != "" && s.Branch != s.DefaultBranch {
 		f = append(f, FlagNotDefault)
+	}
+	if s.StaleBranches > 0 {
+		f = append(f, FlagStale)
 	}
 	return f
 }

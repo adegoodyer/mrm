@@ -65,10 +65,7 @@ func (r *Runner) readStatus(ctx context.Context, dir, remote, branchOverride str
 	st.DefaultBranch, st.HasOriginHead = defaultBranch(refs, remote, branchOverride, st.Branch)
 
 	if st.HasRemote {
-		out, err := r.Run(ctx, dir, "rev-list", "--count", "--branches", "--not", "--remotes")
-		if err == nil {
-			st.Unpushed, _ = strconv.Atoi(strings.TrimSpace(out))
-		}
+		r.countUnpushed(ctx, dir, refs, st)
 	}
 
 	def := st.DefaultBranch
@@ -182,6 +179,11 @@ type refSet struct {
 	remote     map[string]bool // short names under refs/remotes/<remote>, minus HEAD
 	remoteHead string          // target of refs/remotes/<remote>/HEAD, short
 	head       *commitInfo     // tip of the checked-out branch
+	branches   []localBranch
+}
+
+type localBranch struct {
+	name, upstream, track string
 }
 
 type commitInfo struct {
@@ -192,22 +194,24 @@ type commitInfo struct {
 func (r *Runner) refs(ctx context.Context, dir, remote string) (refSet, error) {
 	rs := refSet{local: map[string]bool{}, remote: map[string]bool{}}
 	prefix := "refs/remotes/" + remote + "/"
-	format := "--format=%(refname)%00%(symref)%00%(HEAD)%00%(committerdate:unix)%00%(authorname)%00%(subject)"
+	format := "--format=%(refname)%00%(symref)%00%(HEAD)%00%(upstream)%00%(upstream:track,nobracket)%00%(committerdate:unix)%00%(authorname)%00%(subject)"
 	out, err := r.Run(ctx, dir, "for-each-ref", format, "refs/heads", strings.TrimSuffix(prefix, "/"))
 	if err != nil {
 		return rs, err
 	}
 	for _, line := range strings.Split(out, "\n") {
-		f := strings.SplitN(line, "\x00", 6)
-		if len(f) < 6 {
+		f := strings.SplitN(line, "\x00", 8)
+		if len(f) < 8 {
 			continue
 		}
 		name, symref := f[0], f[1]
 		switch {
 		case strings.HasPrefix(name, "refs/heads/"):
-			rs.local[strings.TrimPrefix(name, "refs/heads/")] = true
+			short := strings.TrimPrefix(name, "refs/heads/")
+			rs.local[short] = true
+			rs.branches = append(rs.branches, localBranch{name: short, upstream: f[3], track: f[4]})
 			if f[2] == "*" {
-				rs.head = &commitInfo{when: unix(f[3]), author: f[4], subject: f[5]}
+				rs.head = &commitInfo{when: unix(f[5]), author: f[6], subject: f[7]}
 			}
 		case name == prefix+"HEAD":
 			rs.remoteHead = strings.TrimPrefix(symref, prefix)
@@ -240,4 +244,40 @@ func defaultBranch(rs refSet, remote, override, current string) (string, bool) {
 		}
 	}
 	return current, false
+}
+
+// countUnpushed counts work that exists only here: commits on branches that
+// were never pushed, plus commits ahead of an upstream that still exists.
+// A branch whose upstream is gone (deleted on the forge, then pruned) is
+// stale, not unpushed: its commits were pushed once.
+func (r *Runner) countUnpushed(ctx context.Context, dir string, rs refSet, st *model.Status) {
+	var never []string
+	for _, b := range rs.branches {
+		switch {
+		case strings.Contains(b.track, "gone"):
+			st.StaleBranches++
+		case b.upstream == "":
+			never = append(never, "refs/heads/"+b.name)
+		default:
+			st.Unpushed += aheadOf(b.track)
+		}
+	}
+	if len(never) == 0 {
+		return
+	}
+	args := append([]string{"rev-list", "--count"}, never...)
+	args = append(args, "--not", "--remotes")
+	if out, err := r.Run(ctx, dir, args...); err == nil {
+		n, _ := strconv.Atoi(strings.TrimSpace(out))
+		st.Unpushed += n
+	}
+}
+
+// aheadOf reads N from "ahead N" or "ahead N, behind M".
+func aheadOf(track string) int {
+	var n int
+	if i := strings.Index(track, "ahead "); i >= 0 {
+		fmt.Sscanf(track[i:], "ahead %d", &n)
+	}
+	return n
 }
