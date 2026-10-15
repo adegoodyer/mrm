@@ -35,7 +35,9 @@ var rootCmd = &cobra.Command{
 	Long: `mrm finds every git repo under your workspace roots, keeps them current
 safely and in parallel (fetch + fast-forward only, never touching work in
 progress), and shows the state of all of them at once.`,
-	Example: `  mrm status -w work            # every repo in the work workspace
+	Example: `  mrm                           # interactive fleet view (on a terminal; ? for keys)
+  mrm -w work -f "is:dirty"     # ...starting on a workspace and filter
+  mrm status -w work            # every repo in the work workspace
   mrm status -f "is:dirty"      # only repos with uncommitted changes
   mrm sync -w work              # fetch + fast-forward what is safe to
   mrm sync --dry-run            # say what sync would do
@@ -43,8 +45,12 @@ progress), and shows the state of all of them at once.`,
   mrm config init               # write a commented config`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
-	// The TUI lands in phase 2; until then the bare command is status.
+	// On a terminal the bare command is the TUI; piped, or with --json, it
+	// is status.
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if interactive() {
+			return runTUI(cmd.Context())
+		}
 		return runStatus(cmd.Context(), false)
 	},
 }

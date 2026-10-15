@@ -3,6 +3,7 @@
 package store
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"io/fs"
@@ -94,6 +95,27 @@ func AppendRun(path string, run Run) error {
 	}
 	_, err = f.Write(append(line, '\n'))
 	return err
+}
+
+// LastRun returns the most recent run of op (dry runs excluded) from the
+// history file.
+func LastRun(path, op string) (Run, bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return Run{}, false
+	}
+	defer f.Close()
+	var last Run
+	found := false
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 64*1024), 16*1024*1024) // a run line holds every repo
+	for sc.Scan() {
+		var r Run
+		if json.Unmarshal(sc.Bytes(), &r) == nil && r.Op == op && !r.DryRun {
+			last, found = r, true
+		}
+	}
+	return last, found
 }
 
 func writeJSON(path string, v any) error {
