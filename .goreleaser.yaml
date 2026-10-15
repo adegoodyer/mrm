@@ -39,9 +39,11 @@ archives:
 checksum:
   name_template: checksums.txt
 
+# Release notes come from CHANGELOG.md via --release-notes (task release),
+# which replaces the generated commit list. Don't set changelog.disable: it
+# drops the --release-notes file too (0.1.0 went out with an empty body).
 changelog:
-  # The release notes come from CHANGELOG.md, not the commit list.
-  disable: true
+  sort: asc
 
 release:
   draft: true
