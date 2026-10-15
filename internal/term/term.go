@@ -133,28 +133,6 @@ func VisibleLen(text string) int {
 	return n
 }
 
-// Age renders a duration since t as 45s, 12m, 3h, 5d, 7w, 2y.
-func Age(t time.Time) string {
-	if t.IsZero() {
-		return "-"
-	}
-	d := time.Since(t)
-	switch {
-	case d < time.Minute:
-		return fmt.Sprintf("%ds", int(d.Seconds()))
-	case d < time.Hour:
-		return fmt.Sprintf("%dm", int(d.Minutes()))
-	case d < 48*time.Hour:
-		return fmt.Sprintf("%dh", int(d.Hours()))
-	case d < 14*24*time.Hour:
-		return fmt.Sprintf("%dd", int(d.Hours()/24))
-	case d < 365*24*time.Hour:
-		return fmt.Sprintf("%dw", int(d.Hours()/(24*7)))
-	default:
-		return fmt.Sprintf("%dy", int(d.Hours()/(24*365)))
-	}
-}
-
 // Progress is a single status line redrawn in place on a terminal (stderr).
 // Lines printed through it go to out, above the status line. Without a
 // terminal it only passes lines through.

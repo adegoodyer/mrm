@@ -11,6 +11,7 @@ import (
 
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/term"
+	"github.com/adegoodyer/mrm/internal/view"
 )
 
 const (
@@ -24,67 +25,18 @@ type statusRow struct {
 }
 
 func (a *app) statusRow(r model.Result) statusRow {
-	s, st := a.style, r.Status
-	row := statusRow{glyph: s.State(st.State()), name: r.Repo.Display()}
-	if st.Error != "" {
-		row.notes = s.Red(st.Error)
+	s, v := a.style, view.Build(r)
+	row := statusRow{glyph: s.State(v.State), name: v.Name}
+	if v.Error != "" {
+		row.notes = s.Red(v.Error)
 		return row
 	}
-	row.branch = st.Branch
-	if st.Detached {
-		row.branch = "(" + shortSHA(st.Head) + ")"
-	}
-	switch {
-	case st.Ahead > 0 && st.Behind > 0:
-		row.ab = fmt.Sprintf("%d↑ %d↓", st.Ahead, st.Behind)
-	case st.Ahead > 0:
-		row.ab = fmt.Sprintf("%d↑", st.Ahead)
-	case st.Behind > 0:
-		row.ab = fmt.Sprintf("%d↓", st.Behind)
-	default:
+	row.branch, row.changes, row.age, row.ab = v.Branch, v.Changes, v.Age, v.AB
+	if row.ab == "" {
 		row.ab = s.Dim("·")
 	}
-	var ch []string
-	for _, c := range []struct {
-		n   int
-		tag string
-	}{{st.Staged, "S"}, {st.Modified, "M"}, {st.Conflicted, "U"}, {st.Untracked, "?"}} {
-		if c.n > 0 {
-			ch = append(ch, fmt.Sprintf("%d%s", c.n, c.tag))
-		}
-	}
-	row.changes = strings.Join(ch, " ")
-	row.age = term.Age(st.LastCommit)
-
-	var notes []string
-	for _, f := range st.Flags() {
-		if f == model.FlagNotDefault {
-			continue // shown with the default branch below
-		}
-		notes = append(notes, f)
-	}
-	if st.Branch != st.DefaultBranch && st.DefaultBranch != "" && !st.Detached {
-		n := "on " + st.Branch + ", default " + st.DefaultBranch
-		if st.DefaultBehind > 0 {
-			n += fmt.Sprintf(" %d↓", st.DefaultBehind)
-		}
-		notes = append(notes, n)
-	}
-	if st.Unpushed > 0 && st.HasRemote && st.Ahead == 0 {
-		notes = append(notes, fmt.Sprintf("%d unpushed", st.Unpushed))
-	}
-	if r.Outcome.NeedsAttention() {
-		notes = append(notes, r.Summary())
-	}
-	row.notes = s.Dim(strings.Join(notes, " · "))
+	row.notes = s.Dim(strings.Join(v.Notes, " · "))
 	return row
-}
-
-func shortSHA(h string) string {
-	if len(h) > 7 {
-		return h[:7]
-	}
-	return h
 }
 
 // printStatus prints the status table, with a heading per workspace when

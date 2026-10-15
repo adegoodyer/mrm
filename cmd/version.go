@@ -5,6 +5,8 @@ import (
 	"runtime/debug"
 
 	"github.com/spf13/cobra"
+
+	"github.com/adegoodyer/mrm/internal/view"
 )
 
 var flagShortVersion bool
@@ -36,7 +38,7 @@ var versionCmd = &cobra.Command{
 			fmt.Println(v)
 			return
 		}
-		fmt.Printf("mrm %s (commit %s, built %s)\n", v, shortSHA(c), d)
+		fmt.Printf("mrm %s (commit %s, built %s)\n", v, view.ShortSHA(c), d)
 	},
 }
 
