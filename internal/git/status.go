@@ -49,6 +49,7 @@ func (r *Runner) readStatus(ctx context.Context, dir, remote, branchOverride str
 	ParsePorcelainV2(out, st)
 	st.Operation = operation(gitDir)
 
+	st.GitCommonDir = commonDir
 	if fi, err := os.Stat(filepath.Join(commonDir, "FETCH_HEAD")); err == nil {
 		st.LastFetch = fi.ModTime()
 	}

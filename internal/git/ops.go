@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Fetch fetches a remote and prunes deleted branches.
@@ -15,10 +18,36 @@ func (r *Runner) Fetch(ctx context.Context, dir, remote string) error {
 
 // RefreshRemoteHead points <remote>/HEAD at the remote's current default
 // branch. It is set at clone time and goes stale when the default changes
-// on the forge; git before 2.48 never refreshes it on fetch.
-func (r *Runner) RefreshRemoteHead(ctx context.Context, dir, remote string) error {
-	_, err := r.Run(ctx, dir, "remote", "set-head", remote, "--auto")
-	return err
+// on the forge; git before 2.48 never refreshes it on fetch. It costs a
+// network round trip, so callers check RemoteHeadAge first. The ref file is
+// touched afterwards so its age counts from this check even when nothing
+// changed.
+func (r *Runner) RefreshRemoteHead(ctx context.Context, dir, commonDir, remote string) error {
+	if _, err := r.Run(ctx, dir, "remote", "set-head", remote, "--auto"); err != nil {
+		return err
+	}
+	if commonDir != "" {
+		now := time.Now()
+		_ = os.Chtimes(remoteHeadFile(commonDir, remote), now, now)
+	}
+	return nil
+}
+
+// RemoteHeadAge is how long ago <remote>/HEAD was last set or checked; ok
+// is false when it isn't a plain ref file (missing, or another ref store).
+func RemoteHeadAge(commonDir, remote string) (time.Duration, bool) {
+	if commonDir == "" {
+		return 0, false
+	}
+	fi, err := os.Stat(remoteHeadFile(commonDir, remote))
+	if err != nil {
+		return 0, false
+	}
+	return time.Since(fi.ModTime()), true
+}
+
+func remoteHeadFile(commonDir, remote string) string {
+	return filepath.Join(commonDir, "refs", "remotes", remote, "HEAD")
 }
 
 // FastForward moves the current branch to its upstream; git refuses anything

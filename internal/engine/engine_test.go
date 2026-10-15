@@ -259,9 +259,26 @@ func TestFetchRefreshesStaleDefault(t *testing.T) {
 		t.Fatalf("default %q, want master", st.DefaultBranch)
 	}
 	f.SetDefault("develop")
+
+	// Checked within the last day (the clone just set it): not re-checked,
+	// so a fetch costs one network round trip, not two.
 	res := newEngine().Collect(context.Background(), []model.Repo{repo(dir)}, Options{Op: OpFetch})[0]
+	if res.Status.DefaultBranch != "master" {
+		t.Fatalf("default after a fetch within a day %q, want master (not re-checked yet)", res.Status.DefaultBranch)
+	}
+
+	// Older than a day: re-checked, and the file's age resets.
+	head := filepath.Join(dir, ".git", "refs", "remotes", "origin", "HEAD")
+	old := time.Now().Add(-25 * time.Hour)
+	if err := os.Chtimes(head, old, old); err != nil {
+		t.Fatal(err)
+	}
+	res = newEngine().Collect(context.Background(), []model.Repo{repo(dir)}, Options{Op: OpFetch})[0]
 	if res.Status.DefaultBranch != "develop" {
 		t.Fatalf("default after fetch %q, want develop", res.Status.DefaultBranch)
+	}
+	if fi, err := os.Stat(head); err != nil || time.Since(fi.ModTime()) > time.Minute {
+		t.Fatalf("origin/HEAD age not reset: %v", err)
 	}
 }
 

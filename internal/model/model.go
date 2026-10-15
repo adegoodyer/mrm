@@ -110,6 +110,9 @@ type Status struct {
 	// HasOriginHead is false when <remote>/HEAD is not set and the default
 	// branch was guessed.
 	HasOriginHead bool `json:"has_origin_head"`
+	// GitCommonDir is the repo's shared .git folder (for worktrees, the main
+	// repo's); not reported.
+	GitCommonDir string `json:"-"`
 
 	LastCommit  time.Time `json:"last_commit,omitzero"`
 	LastAuthor  string    `json:"last_author,omitempty"`

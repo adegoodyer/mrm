@@ -46,6 +46,10 @@ type Event struct {
 	Result model.Result // set on EventDone
 }
 
+// RemoteHeadMaxAge is how often a fetch re-checks the remote's default
+// branch (tests shorten it).
+var RemoteHeadMaxAge = 24 * time.Hour
+
 // Engine runs operations.
 type Engine struct {
 	Git         *git.Runner
@@ -155,10 +159,13 @@ func (e *Engine) fetch(ctx context.Context, r model.Repo) model.Result {
 		res.Status = e.status(ctx, r)
 		return res
 	}
-	// Not with a branch override: the default comes from config then. A
-	// failure here is not worth failing the fetch for.
+	// Refresh <remote>/HEAD at most once a day: it is a second network round
+	// trip per repo. Not with a branch override - the default comes from
+	// config then. A failure here is not worth failing the fetch for.
 	if r.Branch == "" {
-		_ = e.Git.RefreshRemoteHead(ctx, r.Path, remote(r))
+		if age, ok := git.RemoteHeadAge(st.GitCommonDir, remote(r)); !ok || age > RemoteHeadMaxAge {
+			_ = e.Git.RefreshRemoteHead(ctx, r.Path, st.GitCommonDir, remote(r))
+		}
 	}
 	res.Outcome = model.OutcomeFetched
 	res.Status = e.status(ctx, r)
