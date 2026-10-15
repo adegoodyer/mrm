@@ -261,6 +261,22 @@ func TestPaletteAndWorkspaces(t *testing.T) {
 	h.waitFor("all · 5 repos")
 }
 
+// Regression: expiring a footer message called Draw inside a queued update,
+// which waits for the UI loop running it - the terminal froze 6 s after
+// start-up. The UI must still answer keys after a message expires.
+func TestMessageExpiryDoesNotFreeze(t *testing.T) {
+	old := msgTTL
+	msgTTL = 150 * time.Millisecond
+	t.Cleanup(func() { msgTTL = old })
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 100, 30)
+	h.keys("o") // the first repo has no remote URL: a warning appears
+	h.waitFor("no web URL")
+	h.waitFor("!no web URL") // ...and expires
+	h.keys("?")
+	h.waitFor("command palette") // still responding
+}
+
 func TestFuzzyRank(t *testing.T) {
 	acts := []action{{label: "Sync everything shown"}, {label: "Open pull requests"}, {label: "Show every repo"}, {label: "Help"}}
 	got := rank(acts, "opr")

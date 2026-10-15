@@ -77,7 +77,8 @@ type ui struct {
 	busy      string // label of the running operation
 	busyFlag  atomic.Bool
 	detailSeq atomic.Int64
-	progress  [2]int // done, total
+	msgFlag   atomic.Bool // a footer message is showing; read by tick
+	progress  [2]int      // done, total
 	lastSync  time.Time
 	message   string
 	msgStyle  string
@@ -200,7 +201,10 @@ func (u *ui) run() error {
 	return u.app.Run()
 }
 
-// tick animates spinners while an operation runs and expires messages.
+// tick animates spinners while an operation runs and expires footer
+// messages. It runs on its own goroutine and only ever queues work: nothing
+// queued may itself call QueueUpdate or Draw, which wait for the UI loop
+// that is running them - a deadlock that freezes the terminal.
 func (u *ui) tick(stop chan struct{}) {
 	t := time.NewTicker(100 * time.Millisecond)
 	defer t.Stop()
@@ -209,23 +213,25 @@ func (u *ui) tick(stop chan struct{}) {
 		case <-stop:
 			return
 		case <-t.C:
-			if u.busyFlag.Load() {
-				u.app.QueueUpdateDraw(func() {
-					u.frame++
-					u.drawChrome()
-				})
-			} else {
-				u.app.QueueUpdate(func() {
-					if u.message != "" && time.Since(u.msgAt) > 6*time.Second {
-						u.message = ""
-						u.drawChrome()
-						u.app.Draw()
-					}
-				})
+			if !u.busyFlag.Load() && !u.msgFlag.Load() {
+				continue // idle: don't wake the UI
 			}
+			u.app.QueueUpdateDraw(func() {
+				if u.busy != "" {
+					u.frame++
+				}
+				if u.message != "" && time.Since(u.msgAt) > msgTTL {
+					u.message = ""
+					u.msgFlag.Store(false)
+				}
+				u.drawChrome()
+			})
 		}
 	}
 }
+
+// msgTTL is how long a footer message stays (tests shorten it).
+var msgTTL = 6 * time.Second
 
 // visible returns the repos that pass the workspace, filter and attention
 // view, in display order.
@@ -417,13 +423,13 @@ func repoCount(n int) string {
 }
 
 // say shows a message in the footer for a few seconds.
-func (u *ui) say(msg string) {
-	u.message, u.msgStyle, u.msgAt = msg, "[::b]", time.Now()
-	u.drawChrome()
-}
+func (u *ui) say(msg string) { u.show(msg, "[::b]") }
 
-func (u *ui) warn(msg string) {
-	u.message, u.msgStyle, u.msgAt = msg, "[yellow::b]", time.Now()
+func (u *ui) warn(msg string) { u.show(msg, "[yellow::b]") }
+
+func (u *ui) show(msg, style string) {
+	u.message, u.msgStyle, u.msgAt = msg, style, time.Now()
+	u.msgFlag.Store(true)
 	u.drawChrome()
 }
 
