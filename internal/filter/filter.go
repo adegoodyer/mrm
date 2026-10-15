@@ -9,6 +9,7 @@ package filter
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -39,7 +40,28 @@ type term struct {
 	dur   time.Duration
 }
 
-var keys = map[string]bool{"is": true, "ws": true, "group": true, "tag": true, "branch": true, "forge": true, "age": true}
+var keyOrder = []string{"is", "ws", "group", "tag", "branch", "forge", "age"}
+
+var keys = func() map[string]bool {
+	m := map[string]bool{}
+	for _, k := range keyOrder {
+		m[k] = true
+	}
+	return m
+}()
+
+// Keys are the term keys, in display order (for shell completion).
+func Keys() []string { return append([]string(nil), keyOrder...) }
+
+// IsValues are the states and flags is: accepts, sorted.
+func IsValues() []string {
+	out := make([]string, 0, len(isValues))
+	for v := range isValues {
+		out = append(out, v)
+	}
+	sort.Strings(out)
+	return out
+}
 
 var isValues = func() map[string]bool {
 	m := map[string]bool{"ahead": true}

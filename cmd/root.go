@@ -96,4 +96,5 @@ func init() {
 	pf.BoolVar(&flagNoColor, "no-color", false, "no colour (also NO_COLOR)")
 	pf.StringVarP(&flagConfig, "config", "c", "", "config file (default $XDG_CONFIG_HOME/mrm/config.yaml, or $MRM_CONFIG)")
 	pf.BoolVarP(&flagVerbose, "verbose", "v", false, "debug logging to the log file")
+	registerCompletions()
 }

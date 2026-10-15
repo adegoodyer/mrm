@@ -108,7 +108,7 @@ mrm status -f "branch:feature/* forge:bitbucket"
 ```
 
 ## Shell Completion
-`mrm completion` prints a completion script for bash, zsh, fish or PowerShell. Subcommands and flags complete; workspace, repo and filter values don't yet.
+`mrm completion` prints a completion script for bash, zsh, fish or PowerShell. Subcommands and flags complete, and so do their values: workspaces after `-w`, tags after `-t`, filter terms after `-f` (`is:<Tab>` lists every state and flag; `ws:`, `tag:`, `group:` list yours), and repo names for `mrm open`.
 
 ```bash
 # bash (needs the bash-completion package, loaded by most distros' default .bashrc)

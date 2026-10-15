@@ -134,3 +134,42 @@ func TestOpenPrint(t *testing.T) {
 		t.Fatalf("exit %d: %q", code, out)
 	}
 }
+
+// Shell completion offers workspace, tag, filter and repo values.
+func TestCompletion(t *testing.T) {
+	f := gittest.New(t)
+	f.Clone("platform/billing-api")
+	f.Clone("web")
+	cfg := filepath.Join(t.TempDir(), "config.yaml")
+	gittest.WriteFile(t, cfg, "workspaces:\n  work:\n    roots: ["+filepath.Join(f.Root, "repos")+"]\n  personal:\n    roots: ["+t.TempDir()+"]\nrepos:\n  web:\n    tags: [frontend]\n")
+
+	complete := func(args ...string) []string {
+		t.Helper()
+		out, _ := run(t, append([]string{"__complete", "-c", cfg}, args...)...)
+		var vals []string
+		for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
+			if !strings.HasPrefix(line, ":") {
+				vals = append(vals, strings.SplitN(line, "\t", 2)[0])
+			}
+		}
+		return vals
+	}
+	cases := []struct {
+		args []string
+		want string
+	}{
+		{[]string{"status", "-w", ""}, "personal,work"},
+		{[]string{"status", "-t", ""}, "frontend"},
+		{[]string{"status", "-f", "is:di"}, "is:dirty,is:diverged"},
+		{[]string{"status", "-f", "ws:work -tag:"}, "ws:work -tag:frontend"},
+		{[]string{"status", "-f", "group:"}, "group:platform"},
+		{[]string{"status", "-f", "fo"}, "forge:"},
+		{[]string{"open", "bil"}, "billing-api"},
+		{[]string{"open", "platform/"}, "platform/billing-api"},
+	}
+	for _, c := range cases {
+		if got := strings.Join(complete(c.args...), ","); got != c.want {
+			t.Errorf("%v: got %q, want %q", c.args, got, c.want)
+		}
+	}
+}

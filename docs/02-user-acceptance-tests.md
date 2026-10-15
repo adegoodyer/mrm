@@ -37,7 +37,9 @@
 | ⬜   | 1.15 | Each run is appended to `runs.jsonl` in the state dir with start, duration and outcome per repo                                                                                                                                                                                                 |
 | ⬜   | 1.16 | `mrm doctor` reports git version, config validity, missing roots, repos with no `origin/HEAD`, ssh agent with no keys and a world-writable config                                                                                                                                               |
 | ⬜   | 1.17 | `mrm sync` replaces a hand-rolled update script in daily use for at least a week, on more than one workspace                                                                                                                                                                                    |
-| ⬜   | 1.18 | A fetch refreshes a stale `origin/HEAD` (seen on real repos: `develop` locally, `master` on the forge) `[A] engine.TestFetchRefreshesStaleDefault`                                                                                                                                              |
+| ⬜   | 1.18 | A fetch refreshes a stale `origin/HEAD` (seen on real repos: `develop` locally, `master` on the forge), at most once a day per repo; a sync of ~80 repos with nothing to pull takes under 30 s `[A] engine.TestFetchRefreshesStaleDefault`                                                      |
+| ⬜   | 1.19 | Tab completes workspaces after `-w`, tags after `-t`, filter terms after `-f` (keys, `is:` values, your workspaces, tags and groups) and repo names for `mrm open` `[A] cmd.TestCompletion`                                                                                                     |
+| ⬜   | 1.20 | `forge:` matches self-hosted hosts mapped under `forges:` `[A] filter.TestForgeUsesSelfHostedMapping`                                                                                                                                                                                           |
 
 ## 2 - TUI
 
@@ -113,7 +115,7 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 
 | Area                | Criteria   | Ticked | Walked through |
 | ------------------- | ---------- | ------ | -------------- |
-| 1 - core + headless | 1.1 - 1.18 | 0 / 18 | ⬜              |
+| 1 - core + headless | 1.1 - 1.20 | 0 / 20 | ⬜              |
 | 2 - TUI             | 2.1 - 2.10 | 0 / 10 | ⬜              |
 | 3 - web UI          | 3.1 - 3.7  | 0 / 7  | ⬜              |
 | 4 - extras          | 4.1 - 4.6  | 0 / 6  | ⬜              |
