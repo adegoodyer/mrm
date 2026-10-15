@@ -82,7 +82,7 @@ func runSync(ctx context.Context, op engine.Op, dryRun bool) error {
 
 	nameW := 0
 	for _, r := range repos {
-		nameW = max(nameW, min(len(r.Display()), maxName))
+		nameW = max(nameW, min(len(r.Display()), nameCap()))
 	}
 	verb := map[engine.Op]string{engine.OpSync: "syncing", engine.OpFetch: "fetching"}[op]
 	if dryRun {

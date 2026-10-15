@@ -14,10 +14,21 @@ import (
 	"github.com/adegoodyer/mrm/internal/view"
 )
 
-const (
-	maxName   = 44
-	maxBranch = 28
-)
+// nameCap and branchCap size those columns from the terminal width, so
+// long names show in full on a wide terminal; piped output is never cut.
+func nameCap() int   { return capFor(40, 20) }
+func branchCap() int { return capFor(20, 12) }
+
+func capFor(percent, least int) int {
+	if !term.IsTTY(os.Stdout) {
+		return 1 << 16
+	}
+	w := term.Width(os.Stdout)
+	if w <= 0 {
+		w = 120
+	}
+	return max(least, w*percent/100)
+}
 
 // statusRow is one repo in `mrm status`.
 type statusRow struct {
@@ -46,8 +57,8 @@ func (a *app) printStatus(w io.Writer, results []model.Result) {
 	nameW, branchW, abW, chW := 4, 6, 1, 0
 	for i, r := range results {
 		rows[i] = a.statusRow(r)
-		nameW = max(nameW, min(term.VisibleLen(rows[i].name), maxName))
-		branchW = max(branchW, min(term.VisibleLen(rows[i].branch), maxBranch))
+		nameW = max(nameW, min(term.VisibleLen(rows[i].name), nameCap()))
+		branchW = max(branchW, min(term.VisibleLen(rows[i].branch), branchCap()))
 		abW = max(abW, term.VisibleLen(rows[i].ab))
 		chW = max(chW, term.VisibleLen(rows[i].changes))
 	}
@@ -152,7 +163,7 @@ func (a *app) printSummary(w io.Writer, op string, results []model.Result, took 
 	fmt.Fprintln(w, "\n"+a.style.Bold("Needs attention"))
 	nameW := 0
 	for _, r := range attention {
-		nameW = max(nameW, min(len(r.Repo.Display()), maxName))
+		nameW = max(nameW, min(len(r.Repo.Display()), nameCap()))
 	}
 	for _, r := range attention {
 		fmt.Fprintln(w, "  "+a.outcomeLine(r, nameW))
