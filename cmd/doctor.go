@@ -16,6 +16,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/git"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/schedule"
 	"github.com/adegoodyer/mrm/internal/term"
 )
 
@@ -130,6 +131,14 @@ func runDoctor(ctx context.Context) error {
 			continue
 		}
 		c.ok("notify " + name)
+	}
+
+	if err := schedule.Available(); err != nil {
+		c.warn("schedules: " + err.Error())
+	} else if timers, _ := schedule.List(); len(timers) > 0 {
+		c.ok(fmt.Sprintf("schedules: %d timer(s) installed (mrm schedule list)", len(timers)))
+	} else {
+		c.ok("schedules: systemd user instance available")
 	}
 
 	if argv, err := browser.Command(cfg.BrowserCmd, "https://example.com"); err != nil {
