@@ -103,3 +103,25 @@ func (r *Runner) TopLevel(ctx context.Context, dir string) (string, error) {
 	out, err := r.Run(ctx, dir, "rev-parse", "--show-toplevel")
 	return strings.TrimSpace(out), err
 }
+
+// MergedBranches lists local branches whose tip is reachable from target.
+func (r *Runner) MergedBranches(ctx context.Context, dir, target string) (map[string]bool, error) {
+	out, err := r.Run(ctx, dir, "for-each-ref", "--format=%(refname:short)", "--merged", target, "refs/heads")
+	if err != nil {
+		return nil, err
+	}
+	m := map[string]bool{}
+	for _, l := range strings.Split(strings.TrimSpace(out), "\n") {
+		if l != "" {
+			m[l] = true
+		}
+	}
+	return m, nil
+}
+
+// DeleteBranch deletes a local branch. Callers check it is safe first:
+// this uses -D because git's own -d only checks against HEAD and upstream.
+func (r *Runner) DeleteBranch(ctx context.Context, dir, branch string) error {
+	_, err := r.Run(ctx, dir, "branch", "-D", "--", branch)
+	return err
+}

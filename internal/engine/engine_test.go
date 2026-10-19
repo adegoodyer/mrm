@@ -491,3 +491,63 @@ func TestPostSyncHooks(t *testing.T) {
 		t.Fatal("hook ran without its if_file")
 	}
 }
+
+// 4.3: prune offers merged and gone branches, never the current or default
+// one, deletes merged ones, and keeps an unmerged gone branch unless forced.
+func TestPrune(t *testing.T) {
+	f := gittest.New(t)
+	f.Branch("gone-merged")
+	f.Branch("gone-unmerged")
+	dir := f.Clone("app")
+	// merged: a local branch whose commits are on origin/master
+	gittest.Git(t, dir, "branch", "-q", "done", "master")
+	// gone and merged; gone with a commit nowhere else
+	gittest.Git(t, dir, "branch", "-q", "--track", "gone-merged", "origin/gone-merged")
+	gittest.Git(t, dir, "switch", "-q", "-c", "gone-unmerged", "--track", "origin/gone-unmerged")
+	gittest.Commit(t, dir, "only-here.txt", "x\n", "only here")
+	gittest.Git(t, dir, "push", "-q", "origin", "gone-unmerged")
+	gittest.Commit(t, dir, "only-here2.txt", "y\n", "only here, unpushed")
+	// current branch: also merged, must be kept
+	gittest.Git(t, dir, "switch", "-q", "-c", "current", "master")
+	gittest.Git(t, f.Remote, "branch", "-D", "gone-merged", "gone-unmerged")
+	gittest.Git(t, dir, "fetch", "-q", "--prune")
+
+	e := newEngine()
+	cands := e.PruneCandidates(context.Background(), []model.Repo{repo(dir)})
+	got := map[string]bool{}
+	for _, c := range cands {
+		got[c.Branch] = c.Merged
+	}
+	if len(got) != 3 || !got["done"] || !got["gone-merged"] || got["gone-unmerged"] {
+		t.Fatalf("candidates %v", got)
+	}
+	if _, ok := got["current"]; ok {
+		t.Fatal("current branch offered")
+	}
+	if _, ok := got["master"]; ok {
+		t.Fatal("default branch offered")
+	}
+	for _, c := range cands {
+		err := e.Prune(context.Background(), c, false)
+		if c.Merged && err != nil {
+			t.Fatalf("%s: %v", c.Branch, err)
+		}
+		if !c.Merged && err == nil {
+			t.Fatalf("%s deleted without --force", c.Branch)
+		}
+	}
+	branches := gittest.Git(t, dir, "branch", "--format=%(refname:short)")
+	if strings.Contains(branches, "done") || strings.Contains(branches, "gone-merged") || !strings.Contains(branches, "gone-unmerged") {
+		t.Fatalf("branches after prune:\n%s", branches)
+	}
+	for _, c := range cands {
+		if !c.Merged {
+			if err := e.Prune(context.Background(), c, true); err != nil {
+				t.Fatalf("forced: %v", err)
+			}
+		}
+	}
+	if strings.Contains(gittest.Git(t, dir, "branch", "--format=%(refname:short)"), "gone-unmerged") {
+		t.Fatal("--force did not delete the unmerged branch")
+	}
+}
