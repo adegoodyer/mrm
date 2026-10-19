@@ -17,11 +17,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/adegoodyer/mrm/internal/config"
 	"github.com/adegoodyer/mrm/internal/discover"
 	"github.com/adegoodyer/mrm/internal/engine"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/runner"
@@ -48,6 +50,7 @@ type Options struct {
 	CachePath  string
 	HistPath   string
 	LockDir    string
+	Forge      *forgeapi.Client // PR and CI info; nil leaves it out
 }
 
 // Server is one web UI session.
@@ -62,8 +65,10 @@ type Server struct {
 
 	mu        sync.Mutex
 	repos     []model.Repo
-	results   map[string]model.Result // by path
-	byID      map[string]string       // id -> path
+	results   map[string]model.Result  // by path
+	forge     map[string]forgeapi.Info // by path
+	forgeBusy atomic.Bool
+	byID      map[string]string // id -> path
 	running   map[string]bool
 	busy      string // label of our running operation
 	progress  [2]int
@@ -97,7 +102,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s := &Server{
 		opts: opts, cfg: opts.Config, tmpl: tmpl, hub: newHub(), token: opts.Token, ctx: ctx,
 		run:     &runner.Runner{Eng: opts.Engine, CachePath: opts.CachePath, HistPath: opts.HistPath, LockDir: opts.LockDir},
-		results: map[string]model.Result{}, byID: map[string]string{}, running: map[string]bool{},
+		results: map[string]model.Result{}, forge: map[string]forgeapi.Info{}, byID: map[string]string{}, running: map[string]bool{},
 	}
 	s.repos = opts.Repos
 	if s.repos == nil {
@@ -110,6 +115,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.loadCache()
 	for _, r := range s.repos {
 		s.byID[repoID(r.Path)] = r.Path
+		if opts.Forge != nil {
+			if i, ok := opts.Forge.CachedFor(forgeTarget(s.results[r.Path])); ok {
+				s.forge[r.Path] = i
+			}
+		}
 	}
 	if run, ok := store.LastRun(opts.HistPath, "sync"); ok {
 		s.lastSync = run.Started.Add(time.Duration(run.DurationMS) * time.Millisecond)

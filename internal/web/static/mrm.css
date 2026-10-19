@@ -122,6 +122,8 @@ td .name:hover { text-decoration: underline; }
 .tag { font-size: 0.786rem; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; color: var(--muted); margin-left: 6px; }
 .chg { color: var(--dirty); }
 .dim { color: var(--muted); }
+.btn .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ci-failed { color: var(--error); } .ci-running { color: var(--dirty); } .ci-passing { color: var(--clean); } .ci-cancelled { color: var(--muted); }
 .o-skipped { color: var(--dirty); } .o-failed { color: var(--error); } .o-synced, .o-fetched { color: var(--clean); }
 .cards { display: none; }
 

@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/adegoodyer/mrm/internal/browser"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
+	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/web"
 )
 
@@ -59,6 +61,7 @@ func runWeb(ctx context.Context) error {
 		Engine:     a.eng,
 		Workspaces: a.workspaces,
 		Port:       port,
+		Forge:      forgeapi.New(a.cfg, paths.ForgeCache()),
 	})
 	if err != nil {
 		return err

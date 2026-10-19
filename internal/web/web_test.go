@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,7 +17,9 @@ import (
 
 	"github.com/adegoodyer/mrm/internal/config"
 	"github.com/adegoodyer/mrm/internal/engine"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/gittest"
+	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
 )
 
@@ -318,4 +321,44 @@ func TestExternalLockShown(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	t.Fatal("external lock not noticed")
+}
+
+// 4.5: PR and CI info joins the rows and the repo page once the forge answers.
+func TestForgeInfo(t *testing.T) {
+	gh := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/repos/acme/api/pulls":
+			_, _ = w.Write([]byte(`[{"id":1},{"id":2}]`))
+		case "/repos/acme/api/actions/runs":
+			_, _ = w.Write([]byte(`{"workflow_runs":[{"status":"completed","conclusion":"failure","html_url":"https://github.com/acme/api/actions/runs/9"}]}`))
+		default:
+			w.WriteHeader(404)
+		}
+	}))
+	defer gh.Close()
+	h := start(t, "forge_tokens:\n  github.com:\n    token_cmd: echo tok\n")
+	fc := forgeapi.New(h.srv.cfg, filepath.Join(t.TempDir(), "forge.json"))
+	fc.BaseURL = map[string]string{"github.com": gh.URL}
+
+	h.srv.mu.Lock()
+	h.srv.opts.Forge = fc
+	res := h.srv.results[h.repo]
+	res.Status.RemoteURL = "git@github.com:acme/api.git"
+	h.srv.results[h.repo] = res
+	h.srv.mu.Unlock()
+
+	h.srv.refreshForge([]model.Result{res})
+	deadline := time.Now().Add(10 * time.Second)
+	for h.srv.forgeBusy.Load() && time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	if _, body := h.get("/"); !strings.Contains(body, "2 PRs · CI failed") {
+		t.Fatalf("overview row has no forge notes:\n%s", body)
+	}
+	_, body := h.get("/repo/" + repoID(h.repo))
+	for _, want := range []string{`Pull requests <span class="n">2</span>`, `<span class="ci-failed">failed</span>`, "actions/runs/9"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("repo page missing %q:\n%s", want, body)
+		}
+	}
 }

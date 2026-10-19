@@ -18,6 +18,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/filter"
 	"github.com/adegoodyer/mrm/internal/forge"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/runner"
@@ -114,6 +115,7 @@ type repoVM struct {
 	ID, Name, Display, WS, Path, State, Glyph, Error     string
 	Branch, Upstream, AB, Default, LastRun, LastRunClass string
 	Web, PRs, CI                                         string
+	PRCount, CIState, ForgeErr                           string
 	Branches                                             []branchVM
 	Stashes                                              []string
 	Commits                                              []commitVM
@@ -207,8 +209,8 @@ func (s *Server) rowLocked(res model.Result) rowVM {
 		row.Notes, row.NoteClass, row.Age = v.Error, "s-error", "-"
 	case res.Status.ReadAt.IsZero():
 		row.State, row.Glyph, row.Notes = "unknown", "·", "reading…"
-	case len(v.Notes) > 0:
-		row.Notes = strings.Join(v.Notes, " · ")
+	case len(v.Notes) > 0 || len(forgeapi.Notes(s.forge[r.Path])) > 0:
+		row.Notes = strings.Join(append(v.Notes, forgeapi.Notes(s.forge[r.Path])...), " · ")
 	default:
 		row.Notes = res.Status.LastSubject
 	}
@@ -455,6 +457,24 @@ func (s *Server) repoPage(w http.ResponseWriter, r *http.Request) {
 	vm.Web, _ = f.Web()
 	vm.PRs, _ = f.PRs()
 	vm.CI, _ = f.CI()
+	s.mu.Lock()
+	fi, hasForge := s.forge[path]
+	s.mu.Unlock()
+	if hasForge {
+		vm.ForgeErr = fi.Err
+		if fi.Err == "" {
+			vm.PRCount = fmt.Sprint(fi.PRs)
+			if fi.PRsMore {
+				vm.PRCount += "+"
+			}
+			if fi.CI != forgeapi.CINone {
+				vm.CIState = fi.CI
+			}
+			if fi.CIURL != "" {
+				vm.CI = fi.CIURL
+			}
+		}
+	}
 	for _, b := range detail.Branches {
 		track := ""
 		switch {
@@ -672,6 +692,7 @@ func (s *Server) finish(op engine.Op, results []model.Result) {
 
 	s.hub.publish("busy", busy)
 	s.hub.publish("panels", panels)
+	s.refreshForge(results)
 	if op == engine.OpStatus {
 		return
 	}
@@ -687,6 +708,34 @@ func (s *Server) finish(op engine.Op, results []model.Result) {
 		msg += " - see Needs attention"
 	}
 	s.hub.publish("toast", map[string]any{"msg": msg, "warn": attention})
+}
+
+// refreshForge asks the forges about the repos an operation just read, in
+// the background, and pushes each changed row.
+func (s *Server) refreshForge(results []model.Result) {
+	fc := s.opts.Forge
+	if fc == nil || !fc.Any() || !s.forgeBusy.CompareAndSwap(false, true) {
+		return
+	}
+	targets := make([]forgeapi.Target, 0, len(results))
+	for _, r := range results {
+		targets = append(targets, forgeTarget(r))
+	}
+	go func() {
+		defer s.forgeBusy.Store(false)
+		fc.Refresh(s.ctx, targets, s.cfg.Concurrency, func(path string, i forgeapi.Info) {
+			s.mu.Lock()
+			s.forge[path] = i
+			vm := s.rowLocked(s.results[path])
+			row := map[string]string{"id": vm.ID, "row": s.render("row", vm), "card": s.render("card", vm)}
+			s.mu.Unlock()
+			s.hub.publish("row", row)
+		})
+	}()
+}
+
+func forgeTarget(r model.Result) forgeapi.Target {
+	return forgeapi.Target{Path: r.Repo.Path, RemoteURL: r.Status.RemoteURL, DefaultBranch: r.Status.DefaultBranch}
 }
 
 // loadCache fills results from the status cache, keeping last outcomes.
