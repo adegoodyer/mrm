@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/git"
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/schedule"
+	"github.com/adegoodyer/mrm/internal/secret"
 	"github.com/adegoodyer/mrm/internal/term"
 )
 
@@ -131,6 +133,20 @@ func runDoctor(ctx context.Context) error {
 			continue
 		}
 		c.ok("notify " + name)
+	}
+
+	hosts := make([]string, 0, len(cfg.ForgeTokens))
+	for h := range cfg.ForgeTokens {
+		hosts = append(hosts, h)
+	}
+	sort.Strings(hosts)
+	for _, h := range hosts {
+		t := cfg.ForgeTokens[h]
+		if _, err := secret.Resolve(ctx, t.TokenCmd, t.TokenEnv); err != nil {
+			c.fail(fmt.Sprintf("forge_tokens.%s: %v", h, err))
+			continue
+		}
+		c.ok("forge token for " + h)
 	}
 
 	if err := schedule.Available(); err != nil {
