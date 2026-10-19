@@ -10,6 +10,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/discover"
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/filter"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/logger"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
@@ -23,6 +24,7 @@ type app struct {
 	eng        *engine.Engine
 	style      term.Style
 	workspaces []*config.Workspace
+	forge      map[string]forgeapi.Info // by repo path, when forges were asked
 }
 
 func configPath() string {

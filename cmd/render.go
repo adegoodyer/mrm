@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/term"
 	"github.com/adegoodyer/mrm/internal/view"
@@ -46,7 +47,11 @@ func (a *app) statusRow(r model.Result) statusRow {
 	if row.ab == "" {
 		row.ab = s.Dim("·")
 	}
-	row.notes = s.Dim(strings.Join(v.Notes, " · "))
+	notes := v.Notes
+	if i, ok := a.forge[r.Repo.Path]; ok {
+		notes = append(notes, forgeapi.Notes(i)...)
+	}
+	row.notes = s.Dim(strings.Join(notes, " · "))
 	return row
 }
 
@@ -202,15 +207,17 @@ func offline(attention []model.Result, total int) bool {
 // statusJSON is one repo in --json output.
 type statusJSON struct {
 	model.Repo
-	State   model.State   `json:"state"`
-	Flags   []string      `json:"flags"`
-	Status  model.Status  `json:"status"`
-	Outcome model.Outcome `json:"outcome,omitempty"`
-	Reason  string        `json:"reason,omitempty"`
-	Actions []string      `json:"actions,omitempty"`
+	State    model.State    `json:"state"`
+	Flags    []string       `json:"flags"`
+	Status   model.Status   `json:"status"`
+	Outcome  model.Outcome  `json:"outcome,omitempty"`
+	Reason   string         `json:"reason,omitempty"`
+	Actions  []string       `json:"actions,omitempty"`
+	Warnings []string       `json:"warnings,omitempty"`
+	Forge    *forgeapi.Info `json:"forge,omitempty"`
 }
 
-func printJSON(results []model.Result) error {
+func (a *app) printJSON(results []model.Result) error {
 	out := make([]statusJSON, len(results))
 	for i, r := range results {
 		flags := r.Status.Flags()
@@ -218,7 +225,10 @@ func printJSON(results []model.Result) error {
 			flags = []string{}
 		}
 		out[i] = statusJSON{Repo: r.Repo, State: r.Status.State(), Flags: flags, Status: r.Status,
-			Outcome: r.Outcome, Reason: r.Reason, Actions: r.Actions}
+			Outcome: r.Outcome, Reason: r.Reason, Actions: r.Actions, Warnings: r.Warnings}
+		if fi, ok := a.forge[r.Repo.Path]; ok {
+			out[i].Forge = &fi
+		}
 	}
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")

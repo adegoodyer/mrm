@@ -125,7 +125,7 @@ func runSync(ctx context.Context, op engine.Op, dryRun bool) error {
 	logger.L.Info("run finished", zap.String("op", string(op)), zap.Duration("took", took))
 
 	if flagJSON {
-		if err := printJSON(results); err != nil {
+		if err := a.printJSON(results); err != nil {
 			return err
 		}
 	} else {

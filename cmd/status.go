@@ -4,17 +4,22 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/spf13/cobra"
 
 	"github.com/adegoodyer/mrm/internal/engine"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/store"
 	"github.com/adegoodyer/mrm/internal/term"
 )
 
-var flagStatusFetch bool
+var (
+	flagStatusFetch bool
+	flagNoForge     bool
+)
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
@@ -31,6 +36,7 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	statusCmd.Flags().BoolVar(&flagStatusFetch, "fetch", false, "fetch every repo first")
+	statusCmd.Flags().BoolVar(&flagNoForge, "no-forge", false, "skip open PRs and CI from forges with a token")
 	rootCmd.AddCommand(statusCmd)
 }
 
@@ -60,10 +66,11 @@ func runStatus(ctx context.Context, fetch bool) error {
 			prog.Status(fmt.Sprintf("%s %d/%d", verb, done, len(repos)))
 		}
 	}
-	prog.Done()
 	_ = store.UpdateCache(paths.StatusCache(), results)
+	a.loadForge(ctx, results, prog)
+	prog.Done()
 	if flagJSON {
-		return printJSON(results)
+		return a.printJSON(results)
 	}
 	a.printStatus(os.Stdout, results)
 	return nil
@@ -77,4 +84,29 @@ func rootsOf(a *app) []string {
 		}
 	}
 	return roots
+}
+
+// loadForge asks the forges with a token about open PRs and CI (cached),
+// unless --no-forge.
+func (a *app) loadForge(ctx context.Context, results []model.Result, prog *term.Progress) {
+	fc := forgeapi.New(a.cfg, paths.ForgeCache())
+	if !fc.Any() || flagNoForge {
+		return
+	}
+	var targets []forgeapi.Target
+	for _, r := range results {
+		targets = append(targets, forgeapi.Target{Path: r.Repo.Path, RemoteURL: r.Status.RemoteURL, DefaultBranch: r.Status.DefaultBranch})
+	}
+	var mu sync.Mutex
+	a.forge = map[string]forgeapi.Info{}
+	n := 0
+	fc.Refresh(ctx, targets, a.cfg.Concurrency, func(path string, i forgeapi.Info) {
+		mu.Lock()
+		a.forge[path] = i
+		n++
+		if prog != nil {
+			prog.Status(fmt.Sprintf("asking forges %d", n))
+		}
+		mu.Unlock()
+	})
 }
