@@ -70,14 +70,14 @@
 
 ## 4 - Extras
 
-| ✓   | #   | Criterion                                                                                                                                                                                       |
-| --- | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ⬜   | 4.1 | `mrm exec -t terraform -- terraform fmt -check` runs in every terraform repo in parallel, output prefixed by repo, exit code non-zero if any failed                                             |
-| ⬜   | 4.2 | A `post_sync` hook runs only in repos matching `if_file` and only when `HEAD` moved; a failing hook is reported without failing the sync `[A]`                                                  |
-| ⬜   | 4.3 | `mrm prune` lists merged and upstream-gone branches and deletes only what is confirmed; never the current or default branch `[A]`                                                               |
-| ⬜   | 4.4 | `mrm drift` lists configured repos missing on disk and, with a forge token, org repos not cloned                                                                                                |
-| ⬜   | 4.5 | `mrm schedule install -w work --on "Mon..Fri 08:30"` creates and enables a user timer; it runs while no terminal is open and catches up after the machine was off; `schedule remove` removes it |
-| ⬜   | 4.6 | With forge tokens configured, open PR count and last CI status show in status, the TUI and the web UI                                                                                           |
+| ✓   | #   | Criterion                                                                                                                                                                                                                                                                                                                              |
+| --- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⬜   | 4.1 | `mrm exec -t terraform -- terraform fmt -check` runs in every terraform repo in parallel, output prefixed by repo, exit code non-zero if any failed; asks first (refuses without a terminal unless `--yes`) `[A] fleet.TestExecParallelPrefixes, TestExecFailures, TestExecRunsInRepo, TestExecCancel, cmd.TestConfirmWithoutTerminal` |
+| ⬜   | 4.2 | A `post_sync` hook runs only in repos matching `if_file` and only when `HEAD` moved; a failing hook is reported without failing the sync `[A] engine.TestPostSyncHooks`                                                                                                                                                                |
+| ⬜   | 4.3 | `mrm prune` lists merged and upstream-gone branches and deletes only what is confirmed; never the current or default branch; without a terminal it refuses unless `--yes` `[A] engine.TestPrune, cmd.TestConfirmWithoutTerminal` (dry run checked 2026-10-19 on a real tree: 42 merged branches in 22 repos)                           |
+| ⬜   | 4.4 | `mrm drift` lists exact `repos:` keys missing on disk and, with a forge token, org repos not cloned, each with a clone command; archived ones only with `--archived` `[A] drift.TestStaleKeys, TestCompareOrg, forgeapi.TestOrgRepos` (checked 2026-10-19 against a real GitHub account: 93 listed, 45 not cloned, 18 archived)        |
+| ⬜   | 4.5 | `mrm schedule install -w work --on "Mon..Fri 08:30"` creates and enables a user timer; it runs while no terminal is open and catches up after the machine was off; `schedule remove` removes it `[A] schedule.TestInstallListRemove, TestBadCalendar` for the units                                                                    |
+| ⬜   | 4.6 | With forge tokens configured, open PR count and last CI status show in status, the TUI and the web UI; hosts without a token are never contacted `[A] forgeapi.TestInfoPerForge, TestCache, TestTokens, tui.TestForgeInfo, web.TestForgeInfo` (checked 2026-10-19 on 37 real GitHub repos: 2.4 s)                                      |
 
 ## Cross-Cutting
 

@@ -11,9 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Web UI**: `mrm web` (`--open`, `--port`, `-w`) serves an overview of every repo on 127.0.0.1 - a state bar per workspace, what needs attention and what is at risk (unpushed commits, stashes, long-dirty trees, stale branches), and every repo, filtered as you type with the same language as `-f`. A page per repo (branches, stashes, last 20 commits, forge links), the run history, and settings: text size (Small to Extra large) and theme per browser, the config with secrets hidden. Sync or fetch a repo, a workspace, the filtered set or everything; rows update live in every open tab, and syncs run by other mrm processes show while they run.
 - Web security: this machine only, a new access token each run (kept in an HttpOnly cookie), Host check against DNS rebinding, a token header on every action, and a strict content security policy - no inline or third-party code. Fonts are embedded, so it works offline.
 - `web.text_size` in the config: the default text size for every browser.
+- **`mrm exec -- <cmd>`**: run a command in every matching repo, in parallel with each output line prefixed by its repo, or `--serial` with the terminal attached; ends with the repos where it failed (exit 2).
+- **Hooks**: `hooks.post_sync` commands run after a sync moved `HEAD`, in repos that have `if_file`, with `MRM_REPO`, `MRM_REPO_NAME`, `MRM_WORKSPACE` and `MRM_BRANCH` set and a 5-minute timeout. A failing hook is a warning on the repo, not a failed sync.
+- **`mrm prune`**: list local branches merged into the remote default branch, or whose upstream is gone, and delete the merged ones after one confirmation. Unmerged gone-upstream branches are kept unless `--force`; the current and default branches are never touched; `--dry-run` lists only.
+- **`mrm schedule install|list|remove`**: a systemd user timer running `mrm sync` (`--on "Mon..Fri 08:30"`, checked with `systemd-analyze`), catching up after the machine was off.
+- **Pull requests and CI**: with read-only tokens under `forge_tokens` (GitHub, GitLab, Bitbucket, Gitea/Codeberg), open PR counts and a failing or running CI on the default branch show in `mrm status` (and its `--json`), the interactive view's rows and detail pane, and the web UI's rows and Repo page. Answers are cached for `forge_cache` (default 10m) in `$XDG_CACHE_HOME/mrm/forge.json`; hosts without a token are never contacted; `mrm status --no-forge` skips them.
+- **`mrm drift`**: exact `repos:` keys that match no repo on disk, and the repos in each workspace's `orgs` with no clone anywhere, each with a `git clone` command. Archived repos are counted, and listed with `--archived`. Reports only; exit 2 on drift.
+- `exec`, `prune` and `schedule` ask before acting; `--yes` skips the question, and without a terminal they refuse instead of guessing.
 
 ### Changed
 - The TUI runs its operations through the same runner as the web UI (lock, cache, history), so both behave identically.
+- `mrm doctor` also checks that forge tokens resolve and that a systemd user instance is available for schedules.
+- `mrm config path` lists the forge cache; `mrm config init` shows `orgs`, `hooks`, `forge_tokens` and `forge_cache`, commented.
+- `mrm status --json` and `mrm sync --json` include each repo's warnings (from hooks).
 
 ## [0.1.0] - 2026-10-15
 

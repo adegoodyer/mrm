@@ -46,6 +46,12 @@ type harness struct {
 // and "platform/billing-api" (dirty).
 func start(t *testing.T, cfgExtra string) *harness {
 	t.Helper()
+	return startWith(t, cfgExtra, nil)
+}
+
+// startWith is start with a chance to adjust the options first.
+func startWith(t *testing.T, cfgExtra string, adjust func(*Options)) *harness {
+	t.Helper()
 	f := gittest.New(t)
 	api := f.Clone("api")
 	billing := f.Clone("platform/billing-api")
@@ -62,10 +68,14 @@ func start(t *testing.T, cfgExtra string) *harness {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	dir := t.TempDir()
-	srv, err := New(ctx, Options{
+	opts := Options{
 		Config: cfg, Engine: engine.New(30*time.Second, 4), Token: testToken, NoRefresh: true,
 		CachePath: filepath.Join(dir, "status.json"), HistPath: filepath.Join(dir, "runs.jsonl"), LockDir: filepath.Join(dir, "locks"),
-	})
+	}
+	if adjust != nil {
+		adjust(&opts)
+	}
+	srv, err := New(ctx, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,20 +346,34 @@ func TestForgeInfo(t *testing.T) {
 		}
 	}))
 	defer gh.Close()
-	h := start(t, "forge_tokens:\n  github.com:\n    token_cmd: echo tok\n")
-	fc := forgeapi.New(h.srv.cfg, filepath.Join(t.TempDir(), "forge.json"))
-	fc.BaseURL = map[string]string{"github.com": gh.URL}
+	h := startWith(t, "forge_tokens:\n  github.com:\n    token_cmd: echo tok\n", func(o *Options) {
+		o.Forge = forgeapi.New(o.Config, filepath.Join(t.TempDir(), "forge.json"))
+		o.Forge.BaseURL = map[string]string{"github.com": gh.URL}
+	})
+	waitForge := func() {
+		deadline := time.Now().Add(10 * time.Second)
+		for h.srv.forgeBusy.Load() && time.Now().Before(deadline) {
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
+	waitForge() // the start-up status read asks too (local remotes: nothing to ask)
 
 	h.srv.mu.Lock()
-	h.srv.opts.Forge = fc
 	res := h.srv.results[h.repo]
 	res.Status.RemoteURL = "git@github.com:acme/api.git"
 	h.srv.results[h.repo] = res
 	h.srv.mu.Unlock()
 
-	h.srv.refreshForge([]model.Result{res})
-	deadline := time.Now().Add(10 * time.Second)
-	for h.srv.forgeBusy.Load() && time.Now().Before(deadline) {
+	// Retry: the start-up refresh may still hold the busy flag, which skips ours.
+	for i := 0; i < 50; i++ {
+		h.srv.refreshForge([]model.Result{res})
+		waitForge()
+		h.srv.mu.Lock()
+		_, ok := h.srv.forge[h.repo]
+		h.srv.mu.Unlock()
+		if ok {
+			break
+		}
 		time.Sleep(20 * time.Millisecond)
 	}
 	if _, body := h.get("/"); !strings.Contains(body, "2 PRs · CI failed") {

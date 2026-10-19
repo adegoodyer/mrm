@@ -2,7 +2,7 @@
 
 Mass repo manager - find every git repo under your folders, keep them all current safely and in parallel, and see the state of all of them at once.
 
-> **Status:** 0.1.0 has the CLI and the interactive view; the web UI is on `next-release` for the next release. Extras (`exec`, hooks, `prune`, scheduling) come later - see the [roadmap](docs/03-roadmap.md).
+> **Status:** 0.2.0 has the CLI, the interactive view, the web UI and the extras - `exec`, hooks, `prune`, `drift`, scheduled syncs and PR/CI counts from your forges. See the [roadmap](docs/03-roadmap.md).
 
 - [mrm](#mrm)
   - [Install](#install)
@@ -10,6 +10,9 @@ Mass repo manager - find every git repo under your folders, keep them all curren
   - [Interactive View](#interactive-view)
   - [Web UI](#web-ui)
   - [What Sync Does](#what-sync-does)
+  - [Across Every Repo](#across-every-repo)
+  - [Pull Requests and CI](#pull-requests-and-ci)
+  - [Scheduled Sync](#scheduled-sync)
   - [Filters](#filters)
   - [Shell Completion](#shell-completion)
   - [Config](#config)
@@ -87,7 +90,7 @@ A branch whose upstream was deleted on the forge (an old `develop` after a merge
 | `o` `O`         | open on the forge / open its pull requests                                             |
 | `enter`         | hand off to lazygit in the repo (`tui.open_cmd`); back to mrm when it exits            |
 | `e` `t`         | editor / shell in the repo                                                             |
-| `l`             | detail pane: branches, stashes, recent commits                                         |
+| `l`             | detail pane: branches, stashes, recent commits, open PRs and CI                        |
 | `!`             | needs attention: everything not clean, grouped by reason                               |
 | `w`             | switch workspace                                                                       |
 | `ctrl+k`        | command palette - fuzzy search over every action                                       |
@@ -99,7 +102,7 @@ A sync that leaves anything skipped or failed ends on the needs-attention view. 
 `mrm web --open` serves the web UI on this machine only and opens it; Ctrl+C stops it. The address it prints carries a new access token each run, so only you can use it.
 
 - **Overview**: a state bar per workspace, what needs attention (grouped by reason), work at risk - unpushed commits, stashes, long-dirty trees and stale branches - and every repo, filtered as you type.
-- **Repo page**: branches with tracking, stashes, the last 20 commits, links to the repo, its pull requests and CI.
+- **Repo page**: branches with tracking, stashes, the last 20 commits, links to the repo, its pull requests and CI (with the open PR count and CI state when [forge tokens](#pull-requests-and-ci) are set).
 - **Activity**: every run, from the CLI, the interactive view or the page.
 - **Settings**: text size (Small, Medium, Large, Extra large) and theme for this browser; `web.text_size` in the config sets the default.
 
@@ -109,6 +112,45 @@ Sync or fetch one repo, a workspace, the filtered set or everything; rows update
 Per repo, in parallel: fetch (and refresh `origin/HEAD`), then fast-forward the default branch **only if the tree is clean and the branch is strictly behind**. On another branch, the default branch is updated in place and your branch is left alone. mrm **never** stashes, resets, rebases, merges or forces - anything unsafe is skipped and listed under "Needs attention".
 
 Exit codes: `0` everything synced or current, `2` some repos need attention, `1` mrm failed.
+
+Commands to run after a sync that moved `HEAD` go under `hooks.post_sync` (for example `pre-commit install` in repos that have `.pre-commit-config.yaml`). A failing hook is a warning on that repo; the sync still counts.
+
+## Across Every Repo
+```bash
+mrm exec -t terraform -- terraform fmt -check   # in parallel, each line prefixed by its repo
+mrm exec --serial -f "is:dirty" -- git add -p   # one at a time, with the terminal attached
+mrm prune --dry-run                              # merged and upstream-gone branches
+mrm prune -w work                                # delete the merged ones, after one confirmation
+mrm drift                                        # config entries with no repo; org repos not cloned
+```
+
+- **exec** runs the command directly (use `-- sh -c '...'` for pipes) and ends with the repos where it failed.
+- **prune** never touches the current or default branch. A branch whose upstream is gone but which isn't merged (usually squash-merged) may hold the only copy of its commits, so it is kept unless `--force`.
+- **drift** compares each workspace's `orgs` (e.g. `[github.com/acme]`) with every clone on disk and prints a `git clone` command for each missing repo. It reports only; it never clones.
+
+`exec`, `prune` and `schedule` ask first; without a terminal they refuse unless `--yes`.
+
+## Pull Requests and CI
+Give mrm a read-only token per forge and `mrm status`, the interactive view and the web UI show open PRs and a failing or running CI on the default branch:
+
+```yaml
+forge_tokens:
+  github.com:
+    token_cmd: gh auth token
+  gitlab.com:
+    token_env: GITLAB_TOKEN
+```
+
+GitHub, GitLab, Bitbucket and Gitea/Codeberg are supported. Hosts without a token are never contacted. Answers are cached for `forge_cache` (10 minutes), so repeated runs are instant; `mrm status --no-forge` skips them. `mrm doctor` checks each token resolves.
+
+## Scheduled Sync
+```bash
+mrm schedule install -w work --on "Mon..Fri 08:30"   # a systemd user timer running mrm sync -w work
+mrm schedule list
+mrm schedule remove work                              # or its full name, mrm-sync-work
+```
+
+The timer catches up after the machine was off, and the sync notifies per `notify:`. It needs a systemd user instance; on WSL, enable systemd in `/etc/wsl.conf`.
 
 ## Filters
 `-f` takes a query; terms are ANDed, `-` negates:

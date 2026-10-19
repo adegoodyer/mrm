@@ -29,6 +29,7 @@ func run(t *testing.T, args ...string) (string, int) {
 	flagWorkspaces, flagTags, flagFilter = nil, nil, ""
 	flagJSON, flagNoColor, flagConfig, flagVerbose = false, false, "", false
 	flagDryRun, flagStatusFetch = false, false
+	flagExecYes, flagExecSerial, flagPruneYes, flagPruneDry, flagPruneForce = false, false, false, false, false
 
 	r, w, _ := os.Pipe()
 	stdout := os.Stdout
@@ -171,5 +172,42 @@ func TestCompletion(t *testing.T) {
 		if got := strings.Join(complete(c.args...), ","); got != c.want {
 			t.Errorf("%v: got %q, want %q", c.args, got, c.want)
 		}
+	}
+}
+
+// 4.1 / 4.3: without a terminal, exec and prune refuse unless --yes.
+func TestConfirmWithoutTerminal(t *testing.T) {
+	f := gittest.New(t)
+	repo := f.Clone("one")
+	gittest.Git(t, repo, "branch", "done")
+	cfg := writeConfig(t, filepath.Join(f.Root, "repos"))
+	devnull, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer devnull.Close()
+	stdin := os.Stdin
+	os.Stdin = devnull
+	defer func() { os.Stdin = stdin }()
+
+	if _, code := run(t, "exec", "-c", cfg, "--", "touch", "ran"); code != 1 {
+		t.Fatalf("exec without --yes: exit %d, want 1", code)
+	}
+	if _, err := os.Stat(filepath.Join(repo, "ran")); err == nil {
+		t.Fatal("exec ran without confirmation")
+	}
+	if _, code := run(t, "exec", "-c", cfg, "--yes", "--", "touch", "ran"); code != 0 {
+		t.Fatalf("exec --yes: exit %d", code)
+	}
+	if _, err := os.Stat(filepath.Join(repo, "ran")); err != nil {
+		t.Fatal("exec --yes did not run")
+	}
+
+	gittest.Git(t, repo, "push", "-q", "-u", "origin", "done")
+	if out, code := run(t, "prune", "-c", cfg, "--no-color"); code != 1 || !strings.Contains(out, "done") {
+		t.Fatalf("prune without --yes: exit %d, want 1\n%s", code, out)
+	}
+	if gittest.Head(t, repo, "done") == "" {
+		t.Fatal("prune deleted without confirmation")
 	}
 }

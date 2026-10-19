@@ -67,14 +67,14 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 
 ## Phase 4 - Extras
 
-| ✓   | #   | Step                                                                                                                               |
-| --- | --- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| ⬜   | 4.1 | `exec` (parallel, prefixed output, `--serial`)                                                                                     |
-| ⬜   | 4.2 | `post_sync` hooks                                                                                                                  |
-| ⬜   | 4.3 | `prune`                                                                                                                            |
-| ⬜   | 4.4 | `schedule install/list/remove` (systemd user timers)                                                                               |
-| ⬜   | 4.5 | forge clients (shared with repo-stats, Q1): PR count, CI status; `drift` against an org                                            |
-| ⬜   | 4.6 | release 0.2.0 (the GoReleaser config and `task release` exist since 0.1.0); `go install` check on a clean machine; UAT walkthrough |
+| ✓            | #   | Step                                                                                                                                                                                                     |
+| ------------ | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ 2026-10-19 | 4.1 | `exec` (parallel, whole-line prefixed output, `--serial` with the terminal attached, summary of failures); asks first, refuses without a terminal unless `--yes`                                         |
+| ✅ 2026-10-19 | 4.2 | `post_sync` hooks (`if_file`, only when `HEAD` moved, `MRM_*` env, 5-minute timeout; a failure is a warning on the result)                                                                               |
+| ✅ 2026-10-19 | 4.3 | `prune` (merged into the remote default branch, or upstream gone; unmerged kept unless `--force`; merged re-checked before each delete; `--dry-run`)                                                     |
+| ✅ 2026-10-19 | 4.4 | `schedule install/list/remove` (systemd user timers, `Persistent=true`, calendar checked with `systemd-analyze`); `doctor` reports the user instance                                                     |
+| ✅ 2026-10-19 | 4.5 | forge clients in `internal/forgeapi` (Q1 closed: not shared): PR count and CI state for GitHub, GitLab, Bitbucket, Gitea in status, TUI and web, cached in `forge.json`; `drift` against config and orgs |
+| ⬜            | 4.6 | release 0.2.0 (the GoReleaser config and `task release` exist since 0.1.0); `go install` check on a clean machine; UAT walkthrough                                                                       |
 
 ## Releases
 
