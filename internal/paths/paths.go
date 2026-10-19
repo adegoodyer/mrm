@@ -32,6 +32,9 @@ func CacheDir() string { return filepath.Join(xdg.CacheHome, App) }
 // StatusCache is the last known status of every repo.
 func StatusCache() string { return filepath.Join(CacheDir(), "status.json") }
 
+// ForgeCache holds the last answers from forge APIs.
+func ForgeCache() string { return filepath.Join(CacheDir(), "forge.json") }
+
 // LockDir holds the per-workspace sync locks: $XDG_RUNTIME_DIR/mrm, or the
 // state dir when there is no runtime dir.
 func LockDir() string {

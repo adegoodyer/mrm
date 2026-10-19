@@ -8,12 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/adegoodyer/mrm/internal/config"
+	"github.com/adegoodyer/mrm/internal/secret"
 )
 
 // Message is one notification.
@@ -23,27 +22,9 @@ type Message struct {
 	Priority int // 0-10, Gotify scale
 }
 
-// Token resolves an endpoint's secret from token_env or token_cmd. It never
-// returns a literal from the config: the config can't hold one.
+// Token resolves an endpoint's secret from token_env or token_cmd.
 func Token(ctx context.Context, ep *config.Endpoint) (string, error) {
-	switch {
-	case ep.TokenEnv != "":
-		v := os.Getenv(ep.TokenEnv)
-		if v == "" {
-			return "", fmt.Errorf("$%s is empty", ep.TokenEnv)
-		}
-		return v, nil
-	case ep.TokenCmd != "":
-		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
-		out, err := exec.CommandContext(ctx, "sh", "-c", ep.TokenCmd).Output()
-		if err != nil {
-			// Don't echo the command's output: it may be the secret.
-			return "", fmt.Errorf("token_cmd failed: %v", err)
-		}
-		return strings.TrimSpace(strings.SplitN(string(out), "\n", 2)[0]), nil
-	}
-	return "", nil
+	return secret.Resolve(ctx, ep.TokenCmd, ep.TokenEnv)
 }
 
 // Send delivers msg to every configured endpoint and joins the errors.

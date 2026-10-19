@@ -32,7 +32,9 @@ type Config struct {
 	Concurrency int                   `yaml:"concurrency"`
 	Timeout     Duration              `yaml:"timeout"`
 	BrowserCmd  string                `yaml:"browser_cmd"`
-	Forges      map[string]string     `yaml:"forges"` // host -> github|gitlab|bitbucket|gitea
+	Forges      map[string]string     `yaml:"forges"`       // host -> github|gitlab|bitbucket|gitea
+	ForgeTokens map[string]ForgeToken `yaml:"forge_tokens"` // host -> token, for PR/CI counts and drift
+	ForgeCache  Duration              `yaml:"forge_cache"`  // how long forge answers are reused (default 10m)
 	Workspaces  map[string]*Workspace `yaml:"workspaces"`
 	Repos       map[string]Override   `yaml:"repos"`
 	Hooks       Hooks                 `yaml:"hooks"`
@@ -48,6 +50,7 @@ type Config struct {
 type Workspace struct {
 	Name   string     `yaml:"-"`
 	Roots  []string   `yaml:"roots"`
+	Orgs   []string   `yaml:"orgs"` // host/owner on a forge, for mrm drift
 	Depth  int        `yaml:"depth"`
 	Ignore []string   `yaml:"ignore"`
 	Sync   SyncPolicy `yaml:"sync"`
@@ -66,6 +69,16 @@ type Override struct {
 	Branch string   `yaml:"branch"`
 	Tags   []string `yaml:"tags"`
 	Sync   *bool    `yaml:"sync"`
+}
+
+// ForgeToken authenticates to one forge host. The secret only comes from a
+// command or an environment variable. Bitbucket app passwords and API
+// tokens need the account as user (HTTP Basic); without user it is sent as
+// a Bearer token.
+type ForgeToken struct {
+	User     string `yaml:"user"`
+	TokenCmd string `yaml:"token_cmd"`
+	TokenEnv string `yaml:"token_env"`
 }
 
 // Hooks run after a sync (phase 4).
@@ -206,6 +219,9 @@ func (c *Config) applyDefaults() {
 	if c.Web.Port == 0 {
 		c.Web.Port = DefaultWebPort
 	}
+	if c.ForgeCache.Duration <= 0 {
+		c.ForgeCache.Duration = 10 * time.Minute
+	}
 	if c.Web.TextSize == "" {
 		c.Web.TextSize = "medium"
 	}
@@ -259,6 +275,18 @@ func (c *Config) Validate() error {
 	for name, ep := range map[string]*Endpoint{"gotify": c.Notify.Gotify, "ntfy": c.Notify.Ntfy} {
 		if ep != nil && ep.URL == "" {
 			errs = append(errs, fmt.Sprintf("notify.%s.url is required", name))
+		}
+	}
+	for host, t := range c.ForgeTokens {
+		if t.TokenCmd == "" && t.TokenEnv == "" {
+			errs = append(errs, fmt.Sprintf("forge_tokens.%s needs token_cmd or token_env", host))
+		}
+	}
+	for _, ws := range c.Workspaces {
+		for _, o := range ws.Orgs {
+			if host, owner, ok := strings.Cut(o, "/"); !ok || host == "" || owner == "" || strings.Contains(owner, "/") && !strings.Contains(host, "gitlab") {
+				errs = append(errs, fmt.Sprintf("workspace %q: orgs entry %q should be host/owner, e.g. github.com/acme", ws.Name, o))
+			}
 		}
 	}
 	if _, ok := TextSizes[c.Web.TextSize]; !ok {
