@@ -54,6 +54,7 @@ var RemoteHeadMaxAge = 24 * time.Hour
 type Engine struct {
 	Git         *git.Runner
 	Concurrency int
+	Hooks       []Hook // run after a sync moves a repo's checked-out branch
 }
 
 // New returns an engine.

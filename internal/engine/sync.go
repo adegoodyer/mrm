@@ -22,6 +22,7 @@ func (e *Engine) sync(ctx context.Context, r model.Repo, dryRun bool) model.Resu
 		return res // failed, or excluded (no remote)
 	}
 	st := res.Status
+	headBefore := st.Head
 	res.Outcome = model.OutcomeCurrent
 	rem := remote(r)
 
@@ -109,6 +110,10 @@ func (e *Engine) sync(ctx context.Context, r model.Repo, dryRun bool) model.Resu
 	}
 
 	res.Status = e.status(ctx, r)
+	// 7 - post-sync hooks, only when the checked-out branch moved.
+	if !dryRun && res.Status.Head != headBefore && res.Status.Error == "" {
+		e.runHooks(ctx, r, &res)
+	}
 	return res
 }
 

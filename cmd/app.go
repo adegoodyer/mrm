@@ -46,9 +46,13 @@ func newApp() (*app, error) {
 		return nil, err
 	}
 	logger.L.Debug("config loaded", zap.String("path", cfg.Path), zap.Int("workspaces", len(wss)))
+	eng := engine.New(cfg.Timeout.Duration, cfg.Concurrency)
+	for _, h := range cfg.Hooks.PostSync {
+		eng.Hooks = append(eng.Hooks, engine.Hook{Name: h.Name, IfFile: h.IfFile, Run: h.Run})
+	}
 	return &app{
 		cfg:        cfg,
-		eng:        engine.New(cfg.Timeout.Duration, cfg.Concurrency),
+		eng:        eng,
 		style:      term.NewStyle(os.Stdout, flagNoColor || flagJSON),
 		workspaces: wss,
 	}, nil

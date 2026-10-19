@@ -75,6 +75,7 @@ func Build(r model.Result) Row {
 	if r.Outcome.NeedsAttention() {
 		row.Notes = append(row.Notes, r.Summary())
 	}
+	row.Notes = append(row.Notes, r.Warnings...)
 	if st.StaleBranches > 0 {
 		row.Notes = append(row.Notes, plural(st.StaleBranches, "stale branch", "stale branches"))
 	}

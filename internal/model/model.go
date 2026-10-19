@@ -204,11 +204,13 @@ func (o Outcome) NeedsAttention() bool { return o == OutcomeSkipped || o == Outc
 
 // Result of running an operation on one repo.
 type Result struct {
-	Repo     Repo          `json:"repo"`
-	Status   Status        `json:"status"`
-	Outcome  Outcome       `json:"outcome,omitempty"`
-	Reason   string        `json:"reason,omitempty"`
-	Actions  []string      `json:"actions,omitempty"`
+	Repo    Repo     `json:"repo"`
+	Status  Status   `json:"status"`
+	Outcome Outcome  `json:"outcome,omitempty"`
+	Reason  string   `json:"reason,omitempty"`
+	Actions []string `json:"actions,omitempty"`
+	// Warnings don't change the outcome: a post-sync hook that failed.
+	Warnings []string      `json:"warnings,omitempty"`
 	Duration time.Duration `json:"duration_ns"`
 }
 

@@ -445,3 +445,49 @@ func TestRunEmitsEventsInOrderOfCompletion(t *testing.T) {
 		t.Fatalf("started %d done %d seen %d", started, done, len(seen))
 	}
 }
+
+// 4.2: a post_sync hook runs only where its file exists and only when the
+// checked-out branch moved; a failing hook is a warning, not a failed sync.
+func TestPostSyncHooks(t *testing.T) {
+	f := gittest.New(t)
+	withFile := f.Clone("with")
+	gittest.Commit(t, f.Seed, ".pre-commit-config.yaml", "repos: []\n", "add pre-commit")
+	gittest.Git(t, f.Seed, "push", "-q", "origin", "HEAD:master")
+
+	marker := filepath.Join(t.TempDir(), "ran")
+	e := newEngine()
+	e.Hooks = []Hook{
+		{Name: "mark", IfFile: ".pre-commit-config.yaml", Run: "echo \"$MRM_REPO_NAME\" >> " + marker},
+		{Name: "broken", IfFile: ".pre-commit-config.yaml", Run: "echo nope >&2; exit 4"},
+		{Name: "elsewhere", IfFile: "Makefile", Run: "echo should-not-run >> " + marker},
+	}
+	res := e.Collect(context.Background(), []model.Repo{repo(withFile)}, Options{Op: OpSync})[0]
+	if res.Outcome != model.OutcomeSynced {
+		t.Fatalf("outcome %s %q", res.Outcome, res.Reason)
+	}
+	if got := strings.TrimSpace(gittest.ReadFile(t, marker)); got != "with" {
+		t.Fatalf("hook ran for %q", got)
+	}
+	if len(res.Warnings) != 1 || !strings.Contains(res.Warnings[0], "hook broken failed: nope") {
+		t.Fatalf("warnings %v", res.Warnings)
+	}
+
+	// Already current: HEAD doesn't move, no hook.
+	res = e.Collect(context.Background(), []model.Repo{repo(withFile)}, Options{Op: OpSync})[0]
+	if res.Outcome != model.OutcomeCurrent || len(res.Warnings) != 0 {
+		t.Fatalf("second sync %s %v", res.Outcome, res.Warnings)
+	}
+	if strings.Count(gittest.ReadFile(t, marker), "with") != 1 {
+		t.Fatal("hook ran without HEAD moving")
+	}
+
+	// Dry run: nothing runs.
+	f.Push("master", "b.txt", "b\n")
+	res = e.Collect(context.Background(), []model.Repo{repo(withFile)}, Options{Op: OpSync, DryRun: true})[0]
+	if res.Outcome != model.OutcomeWould || strings.Count(gittest.ReadFile(t, marker), "with") != 1 {
+		t.Fatalf("dry run ran a hook: %s", res.Outcome)
+	}
+	if strings.Contains(gittest.ReadFile(t, marker), "should-not-run") {
+		t.Fatal("hook ran without its if_file")
+	}
+}

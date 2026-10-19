@@ -63,6 +63,7 @@ type RunResult struct {
 	Outcome    string   `json:"outcome"`
 	Reason     string   `json:"reason,omitempty"`
 	Actions    []string `json:"actions,omitempty"`
+	Warnings   []string `json:"warnings,omitempty"`
 	DurationMS int64    `json:"duration_ms"`
 }
 
@@ -72,7 +73,7 @@ func NewRun(op string, dryRun bool, started time.Time, workspaces []string, resu
 	for _, r := range results {
 		run.Results = append(run.Results, RunResult{
 			Path: r.Repo.Path, Name: r.Repo.Display(), Workspace: r.Repo.Workspace,
-			Outcome: string(r.Outcome), Reason: r.Reason, Actions: r.Actions,
+			Outcome: string(r.Outcome), Reason: r.Reason, Actions: r.Actions, Warnings: r.Warnings,
 			DurationMS: r.Duration.Milliseconds(),
 		})
 	}

@@ -120,6 +120,9 @@ func (a *app) outcomeLine(r model.Result, nameW int) string {
 	case model.OutcomeFailed:
 		text = s.Red(text)
 	}
+	for _, w := range r.Warnings {
+		text += s.Yellow("  ! " + w)
+	}
 	return fmt.Sprintf("%s %s  %s", s.Outcome(r.Outcome), term.Pad(r.Repo.Display(), nameW), text)
 }
 
@@ -148,6 +151,20 @@ func (a *app) printSummary(w io.Writer, op string, results []model.Result, took 
 		}
 	}
 	fmt.Fprintf(w, "\n%s %s in %s: %s\n", op, repoCount(len(results)), took.Round(100*time.Millisecond), strings.Join(parts, ", "))
+	var warned []model.Result
+	for _, r := range results {
+		if len(r.Warnings) > 0 {
+			warned = append(warned, r)
+		}
+	}
+	if len(warned) > 0 {
+		fmt.Fprintln(w, "\n"+a.style.Bold("Hook warnings")+a.style.Dim(" (the sync itself succeeded)"))
+		for _, r := range warned {
+			for _, msg := range r.Warnings {
+				fmt.Fprintf(w, "  %s %s  %s\n", a.style.Yellow("!"), r.Repo.Display(), msg)
+			}
+		}
+	}
 	if len(attention) == 0 {
 		return
 	}
