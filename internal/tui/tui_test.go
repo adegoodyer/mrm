@@ -2,6 +2,8 @@ package tui
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/adegoodyer/mrm/internal/config"
 	"github.com/adegoodyer/mrm/internal/engine"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/gittest"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
@@ -307,4 +310,33 @@ func TestSyncFromTUI(t *testing.T) {
 	if gittest.Head(t, dir, "HEAD") != gittest.Head(t, dir, "origin/master") {
 		t.Fatal("repo not fast-forwarded")
 	}
+}
+
+// 4.5: PR and CI info arrives after the status read, in rows and the detail pane.
+func TestForgeInfo(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/repos/acme/api/pulls":
+			_, _ = w.Write([]byte(`[{"id":1},{"id":2}]`))
+		case "/repos/acme/api/actions/runs":
+			_, _ = w.Write([]byte(`{"workflow_runs":[{"status":"completed","conclusion":"failure","html_url":"https://github.com/acme/api/actions/runs/9"}]}`))
+		default:
+			w.WriteHeader(404)
+		}
+	}))
+	defer srv.Close()
+	cfg := testConfig(t)
+	cfg.ForgeTokens = map[string]config.ForgeToken{"github.com": {TokenCmd: "echo tok"}}
+	cfg.ForgeCache.Duration = time.Hour
+	fc := forgeapi.New(cfg, filepath.Join(t.TempDir(), "forge.json"))
+	fc.BaseURL = map[string]string{"github.com": srv.URL}
+
+	repos, results := fixtures()
+	results[0].Status.RemoteURL = "git@github.com:acme/api.git"
+	h := start(t, Options{Config: cfg, Repos: repos, Results: results, NoRefresh: true, Forge: fc}, 100, 30)
+	h.waitFor("fix: rounding")
+	h.u.app.QueueUpdate(func() { h.u.refreshForge(results) })
+	h.waitFor("2 PRs · CI failed")
+	h.keys("l")
+	h.waitFor("PRs      2 open", "CI       failed")
 }

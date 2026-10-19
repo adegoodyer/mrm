@@ -598,6 +598,15 @@ type Target struct {
 	Path, RemoteURL, DefaultBranch string
 }
 
+// CachedFor returns the last answer for a target, however old.
+func (c *Client) CachedFor(t Target) (Info, bool) {
+	f := forge.Parse(t.RemoteURL, c.Kinds)
+	if !c.Enabled(f) {
+		return Info{}, false
+	}
+	return c.Cached(f)
+}
+
 // Refresh asks about every target whose host has a token, a few at a time,
 // calls onInfo with each answer (from its goroutine), then saves the cache.
 func (c *Client) Refresh(ctx context.Context, targets []Target, concurrency int, onInfo func(path string, i Info)) {

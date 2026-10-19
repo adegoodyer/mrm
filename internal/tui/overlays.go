@@ -13,6 +13,7 @@ import (
 
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/forge"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/view"
 )
@@ -322,6 +323,9 @@ func (u *ui) updateDetail() {
 	if len(r.Tags) > 0 {
 		fmt.Fprintf(&b, "\ntags     %s", tview.Escape(strings.Join(r.Tags, ", ")))
 	}
+	if fi, ok := u.forge[r.Path]; ok {
+		b.WriteString(forgeLines(fi))
+	}
 	base := b.String()
 	u.detail.SetTitle(" " + r.Display() + " ")
 	u.detail.SetText(base + "\n\n[::d]reading…[::-]")
@@ -369,4 +373,31 @@ func (u *ui) updateDetail() {
 			u.detail.SetText(b.String()).ScrollToBeginning()
 		})
 	}()
+}
+
+// forgeLines are the detail pane's PR and CI lines.
+func forgeLines(i forgeapi.Info) string {
+	if i.Err != "" {
+		return "\nforge    [::d]" + tview.Escape(i.Err) + "[::-]"
+	}
+	prs := fmt.Sprintf("%d open", i.PRs)
+	if i.PRsMore {
+		prs = fmt.Sprintf("%d+ open", i.PRs)
+	}
+	ci := i.CI
+	switch ci {
+	case forgeapi.CIFailed:
+		ci = "[red]failed[-]"
+	case forgeapi.CIRunning:
+		ci = "[yellow]running[-]"
+	case forgeapi.CIPassing:
+		ci = "[green]passing[-]"
+	case "", forgeapi.CINone:
+		ci = "[::d]none[::-]"
+	}
+	s := "\nPRs      " + prs + "\nCI       " + ci
+	if i.CIURL != "" {
+		s += "  [::d]" + tview.Escape(i.CIURL) + "[::-]"
+	}
+	return s + fmt.Sprintf("  [::d](%s ago)[::-]", view.Age(i.Fetched))
 }

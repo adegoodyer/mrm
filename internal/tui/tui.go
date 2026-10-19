@@ -21,6 +21,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/discover"
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/filter"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/logger"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
@@ -35,11 +36,12 @@ type Options struct {
 	Workspace string // initial workspace; "" for all
 	Query     string // initial filter
 	Screen    tcell.Screen
-	NoRefresh bool           // don't read status on start (tests)
-	Repos     []model.Repo   // skip discovery (tests)
-	Results   []model.Result // seed results instead of the cache (tests)
-	CachePath string         // default paths.StatusCache()
-	HistPath  string         // default paths.History()
+	NoRefresh bool             // don't read status on start (tests)
+	Repos     []model.Repo     // skip discovery (tests)
+	Results   []model.Result   // seed results instead of the cache (tests)
+	CachePath string           // default paths.StatusCache()
+	HistPath  string           // default paths.History()
+	Forge     *forgeapi.Client // PR and CI info; nil leaves it out
 }
 
 type ui struct {
@@ -61,7 +63,8 @@ type ui struct {
 	list   *list
 
 	repos     []model.Repo
-	results   map[string]model.Result // by path
+	results   map[string]model.Result  // by path
+	forge     map[string]forgeapi.Info // by path
 	running   map[string]bool
 	marks     map[string]bool
 	collapsed map[string]bool
@@ -77,6 +80,7 @@ type ui struct {
 	busy      string // label of the running operation
 	busyFlag  atomic.Bool
 	detailSeq atomic.Int64
+	forgeBusy atomic.Bool
 	msgFlag   atomic.Bool // a footer message is showing; read by tick
 	progress  [2]int      // done, total
 	lastSync  time.Time
@@ -116,7 +120,7 @@ func newUI(ctx context.Context, opts Options) (*ui, error) {
 	}
 	u := &ui{
 		opts: opts, cfg: opts.Config, eng: opts.Engine, ctx: ctx,
-		results: map[string]model.Result{}, running: map[string]bool{},
+		results: map[string]model.Result{}, forge: map[string]forgeapi.Info{}, running: map[string]bool{},
 		marks: map[string]bool{}, collapsed: map[string]bool{},
 		ws: opts.Workspace, query: opts.Query, filt: f.WithForges(opts.Config.Forges),
 	}
@@ -147,6 +151,11 @@ func (u *ui) load() {
 		res := u.results[r.Path]
 		res.Repo = r
 		u.results[r.Path] = res
+		if u.opts.Forge != nil {
+			if i, ok := u.opts.Forge.CachedFor(forgeTarget(res)); ok {
+				u.forge[r.Path] = i
+			}
+		}
 	}
 	if run, ok := store.LastRun(u.opts.HistPath, "sync"); ok {
 		u.lastSync = run.Started.Add(time.Duration(run.DurationMS) * time.Millisecond)

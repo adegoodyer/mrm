@@ -10,6 +10,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/browser"
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/forge"
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/runner"
@@ -103,6 +104,36 @@ func (u *ui) finishOp(op engine.Op, results []model.Result) {
 		}
 	}
 	u.refresh()
+	u.refreshForge(results)
+}
+
+// refreshForge asks the forges about the repos an operation just read, on
+// its own goroutine; answers arrive through QueueUpdateDraw. Called on the
+// UI goroutine.
+func (u *ui) refreshForge(results []model.Result) {
+	fc := u.opts.Forge
+	if fc == nil || !fc.Any() || !u.forgeBusy.CompareAndSwap(false, true) {
+		return
+	}
+	targets := make([]forgeapi.Target, 0, len(results))
+	for _, r := range results {
+		targets = append(targets, forgeTarget(r))
+	}
+	go func() {
+		defer u.forgeBusy.Store(false)
+		fc.Refresh(u.ctx, targets, u.cfg.Concurrency, func(path string, i forgeapi.Info) {
+			u.app.QueueUpdateDraw(func() {
+				u.forge[path] = i
+				if cur, ok := u.currentRepo(); ok && cur.Path == path {
+					u.updateDetail()
+				}
+			})
+		})
+	}()
+}
+
+func forgeTarget(r model.Result) forgeapi.Target {
+	return forgeapi.Target{Path: r.Repo.Path, RemoteURL: r.Status.RemoteURL, DefaultBranch: r.Status.DefaultBranch}
 }
 
 type openKind int

@@ -7,6 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
+	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/view"
 )
@@ -168,6 +169,7 @@ func (l *list) drawRepo(screen tcell.Screen, x, y, w int, it item, c columns, se
 	u := l.u
 	res := u.results[it.path]
 	r := view.Build(res)
+	r.Notes = append(r.Notes, forgeapi.Notes(u.forge[it.path])...)
 	maxX := x + w
 	base := stDefault
 	if sel {

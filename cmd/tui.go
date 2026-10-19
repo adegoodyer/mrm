@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/adegoodyer/mrm/internal/forgeapi"
+	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/term"
 	"github.com/adegoodyer/mrm/internal/tui"
 )
@@ -40,5 +42,6 @@ func runTUI(ctx context.Context) error {
 		Engine:    a.eng,
 		Workspace: ws,
 		Query:     strings.TrimSpace(q),
+		Forge:     forgeapi.New(a.cfg, paths.ForgeCache()),
 	})
 }
