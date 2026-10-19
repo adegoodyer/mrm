@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-19
+
+The web UI (phase 3) and the extras (phase 4): `exec`, hooks, `prune`, `drift`, scheduled syncs, and pull request and CI counts from the forges.
+
 ### Added
 - **Web UI**: `mrm web` (`--open`, `--port`, `-w`) serves an overview of every repo on 127.0.0.1 - a state bar per workspace, what needs attention and what is at risk (unpushed commits, stashes, long-dirty trees, stale branches), and every repo, filtered as you type with the same language as `-f`. A page per repo (branches, stashes, last 20 commits, forge links), the run history, and settings: text size (Small to Extra large) and theme per browser, the config with secrets hidden. Sync or fetch a repo, a workspace, the filtered set or everything; rows update live in every open tab, and syncs run by other mrm processes show while they run.
 - Web security: this machine only, a new access token each run (kept in an HttpOnly cookie), Host check against DNS rebinding, a token header on every action, and a strict content security policy - no inline or third-party code. Fonts are embedded, so it works offline.

@@ -81,6 +81,7 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 | Version | Date       | Contains                                                                                                         |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
 | 0.1.0   | 2026-10-15 | phases 1-2: CLI and interactive view; release archives for linux/darwin amd64/arm64 (GoReleaser, `task release`) |
+| 0.2.0   | 2026-10-19 | phases 3-4: web UI; `exec`, hooks, `prune`, `drift`, `schedule`, forge PR/CI counts                              |
 
 ## Follow-Ups
 
