@@ -77,6 +77,7 @@ var configPathCmd = &cobra.Command{
 			{"history", paths.History()},
 			{"log", paths.Log()},
 			{"cache", paths.StatusCache()},
+			{"forge", paths.ForgeCache()},
 			{"locks", paths.LockDir()},
 		}
 		for _, r := range rows {

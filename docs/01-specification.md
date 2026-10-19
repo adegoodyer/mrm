@@ -169,23 +169,23 @@ One query language in the CLI (`--filter`), the TUI (`/`) and the web UI (search
 ## CLI
 Global flags: `-w/--workspace`, `-t/--tag`, `-f/--filter "<query>"`, `--json`, `--no-color` (and `NO_COLOR`), `-c/--config <path>`, `-v/--verbose`.
 
-| Command                                  | Does                                                                                                                  |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `mrm`                                    | the TUI on a terminal, otherwise `mrm status`                                                                         |
-| `mrm status`                             | one line per repo (glyph, name, branch, ahead/behind, flags, age); `--json` for scripts; `--fetch` to fetch first     |
-| `mrm sync`                               | headless fetch + fast-forward with a live progress line per repo, then the summary; `--dry-run` says what it would do |
-| `mrm fetch`                              | step 1 of sync only                                                                                                   |
-| `mrm web`                                | serve the web UI; `--open` opens the browser, `--port` (default 7420)                                                 |
-| `mrm open <repo> [--pr\|--ci\|--branch]` | the repo, its PRs, its CI or the current branch on the forge                                                          |
-| `mrm exec -- <cmd>`                      | run a command in every matching repo, in parallel, output prefixed by repo; `--serial` for interactive commands       |
-| `mrm prune`                              | list local branches already merged or with a gone upstream; delete only after confirmation                            |
-| `mrm drift`                              | repos on disk that config refers to but are missing, and (with a forge token) repos in an org that are not cloned     |
-| `mrm schedule install\|list\|remove`     | a systemd user timer for `mrm sync` ([Scheduling](#scheduling))                                                       |
-| `mrm config init\|edit\|path`            | write a commented default, open it in `$EDITOR`, print the paths                                                      |
-| `mrm doctor`                             | git version, config valid, roots exist, repos with no `origin/HEAD`, ssh agent loaded, config permissions             |
-| `mrm version`                            | version, commit, build date                                                                                           |
+| Command                                  | Does                                                                                                                                                                                                                    |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mrm`                                    | the TUI on a terminal, otherwise `mrm status`                                                                                                                                                                           |
+| `mrm status`                             | one line per repo (glyph, name, branch, ahead/behind, flags, age, open PRs and CI problems when [forge tokens](#forge-apis) are set); `--json` for scripts; `--fetch` to fetch first; `--no-forge` skips the forge APIs |
+| `mrm sync`                               | headless fetch + fast-forward with a live progress line per repo, then the summary; `--dry-run` says what it would do                                                                                                   |
+| `mrm fetch`                              | step 1 of sync only                                                                                                                                                                                                     |
+| `mrm web`                                | serve the web UI; `--open` opens the browser, `--port` (default 7420)                                                                                                                                                   |
+| `mrm open <repo> [--pr\|--ci\|--branch]` | the repo, its PRs, its CI or the current branch on the forge                                                                                                                                                            |
+| `mrm exec -- <cmd>`                      | run a command in every matching repo, in parallel, output prefixed by repo; `--serial` for interactive commands ([Exec](#exec))                                                                                         |
+| `mrm prune`                              | list local branches already merged or with a gone upstream; delete the merged ones after confirmation ([Prune](#prune))                                                                                                 |
+| `mrm drift`                              | exact `repos:` keys that match nothing on disk, and (with a forge token) repos in a workspace's `orgs` not cloned anywhere ([Drift](#drift))                                                                            |
+| `mrm schedule install\|list\|remove`     | a systemd user timer for `mrm sync` ([Scheduling](#scheduling))                                                                                                                                                         |
+| `mrm config init\|edit\|path`            | write a commented default, open it in `$EDITOR`, print the paths                                                                                                                                                        |
+| `mrm doctor`                             | git version, config valid, roots exist, repos with no `origin/HEAD`, ssh agent loaded, config permissions, notify and forge tokens resolve, systemd user instance                                                       |
+| `mrm version`                            | version, commit, build date                                                                                                                                                                                             |
 
-Every command that changes something outside `.git` (`prune`, `schedule`, `exec`) asks first unless `--yes`.
+Every command that deletes or runs something beyond sync (`prune`, `schedule install|remove`, `exec`) asks first unless `--yes`. Without a terminal to ask on it refuses and says to add `--yes`, so a script never acts by accident. `prune --dry-run` asks nothing.
 
 ## TUI
 `mrm` on a terminal (stdin and stdout both TTYs, no `--json`); piped, it prints `mrm status`. `-w <one workspace>` and `-f` / `-t` set the starting view. tview on tcell (decided 2026-10-15). The list is a custom widget drawn cell by cell, so group headers span the full width and every column truncates with `…`. Opens from the cache at once (first frame 13 ms for 86 repos), then refreshes status in the background (no fetch unless `tui.fetch_on_start: true`).
@@ -202,30 +202,30 @@ Every command that changes something outside `.git` (`prune`, `schedule`, `exec`
  1 marked  s sync  f fetch  A clear marks  ctrl+k more
 ```
 
-- **Rows**: mark (`▌`), state glyph (a spinner while an operation runs), name, branch, ahead/behind, changes, last commit age, then the outcome of the last run if it needs attention, else notes, else the last commit subject.
+- **Rows**: mark (`▌`), state glyph (a spinner while an operation runs), name, branch, ahead/behind, changes, last commit age, then the outcome of the last run if it needs attention, else notes (open PRs and CI problems among them, asked in the background after each operation), else the last commit subject.
 - **Groups**: workspace, then group folder (`work · platform` when more than one workspace is shown); `▸` collapsed, `▾` open, with a count. The cursor can sit on a header: actions there apply to the whole group.
 - **Targets**: an action applies to the marked repos, else the group under the cursor, else the repo under it. Marks clear once an action starts.
 - **Operations** run one at a time through the engine, streaming a live row per repo; a sync takes the same workspace lock as `mrm sync` and writes the same cache and run history. A sync that leaves anything skipped or failed ends on the needs-attention view.
 - **Quit** while an operation runs needs `q` twice; git finishes what it started.
 
-| Key                            | Action                                                                                                             |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `j/k` `↑/↓` `g/G` `PgUp/PgDn`  | move                                                                                                               |
-| `tab` (or `enter` on a header) | collapse / expand the group                                                                                        |
-| `/`                            | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                        |
-| `ctrl+k`                       | command palette - ranked fuzzy search over every action, workspace and common filter                               |
-| `space` · `a` · `A`            | mark the repo (or the whole group on a header), mark everything shown, clear marks                                 |
-| `s` · `S`                      | sync the targets / everything shown                                                                                |
-| `f` · `F`                      | fetch the targets / everything shown                                                                               |
-| `r`                            | refresh status                                                                                                     |
-| `o` · `O`                      | open on forge / open PRs (the palette has CI and branch too)                                                       |
-| `enter`                        | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                            |
-| `e` · `t`                      | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                         |
-| `l`                            | detail pane: path, forge URL, upstream, default branch, last run, branches with tracking, stashes, last 12 commits |
-| `!`                            | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states            |
-| `w`                            | switch workspace                                                                                                   |
-| `esc`                          | clear the filter, else leave the attention view, else clear marks                                                  |
-| `?` · `q`                      | help, quit                                                                                                         |
+| Key                            | Action                                                                                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `j/k` `↑/↓` `g/G` `PgUp/PgDn`  | move                                                                                                                                      |
+| `tab` (or `enter` on a header) | collapse / expand the group                                                                                                               |
+| `/`                            | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                                               |
+| `ctrl+k`                       | command palette - ranked fuzzy search over every action, workspace and common filter                                                      |
+| `space` · `a` · `A`            | mark the repo (or the whole group on a header), mark everything shown, clear marks                                                        |
+| `s` · `S`                      | sync the targets / everything shown                                                                                                       |
+| `f` · `F`                      | fetch the targets / everything shown                                                                                                      |
+| `r`                            | refresh status                                                                                                                            |
+| `o` · `O`                      | open on forge / open PRs (the palette has CI and branch too)                                                                              |
+| `enter`                        | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                                                   |
+| `e` · `t`                      | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                                                |
+| `l`                            | detail pane: path, forge URL, upstream, default branch, last run, open PRs and CI state, branches with tracking, stashes, last 12 commits |
+| `!`                            | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states                                   |
+| `w`                            | switch workspace                                                                                                                          |
+| `esc`                          | clear the filter, else leave the attention view, else clear marks                                                                         |
+| `?` · `q`                      | help, quit                                                                                                                                |
 
 Colours are the terminal's own ANSI palette on its default background, so light and dark themes both read; tcell drops colour under `NO_COLOR` (or `--no-color`) and bold, dim and reverse still carry the meaning.
 
@@ -235,7 +235,7 @@ Colours are the terminal's own ANSI palette on its default background, so light 
 | Page                | Shows                                                                                                                                                                                     | Actions                                           |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | **Overview** (home) | state counts per workspace; **needs attention** list; **work at risk** (unpushed commits, stashes, dirty trees older than a day); filterable table of every repo; last sync per workspace | sync / fetch all, a workspace or the filtered set |
-| **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, forge links                                                                                              | sync, fetch, open on forge                        |
+| **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, forge links with the open PR count and CI state                                                          | sync, fetch, open on forge                        |
 | **Activity**        | sync runs from `runs.jsonl`: when, what, duration, outcome per repo                                                                                                                       | -                                                 |
 | **Settings**        | Appearance (this browser): text size and theme. Config as loaded, its path and validation errors                                                                                          | - (edit with `mrm config edit`)                   |
 
@@ -257,12 +257,43 @@ The web URL is derived from the remote (`git@host:owner/repo.git` or `https://..
 
 The browser is opened with `browser_cmd` if set, else `wslview` on WSL, else `xdg-open` / `open`.
 
+## Forge APIs
+With a token for a host under `forge_tokens`, mrm asks that forge, read-only, for each repo's open PR count and the state of the latest CI run on the default branch. No token, no request: hosts without one are never contacted. One token per host (decided 2026-10-19, closing Q1: the clients live in mrm rather than in a module shared with other tools, since mrm needs only counts and org listings).
+
+| Forge            | Open PRs                                  | CI                                           | Auth                                         |
+| ---------------- | ----------------------------------------- | -------------------------------------------- | -------------------------------------------- |
+| GitHub           | `pulls?state=open` (100+ shown as `100+`) | latest Actions run on the default branch     | `Bearer` token                               |
+| GitLab           | `merge_requests?state=opened` (`X-Total`) | latest pipeline on the default branch        | `PRIVATE-TOKEN`                              |
+| Bitbucket        | `pullrequests?state=OPEN` (`size`)        | latest pipeline targeting the default branch | API token with `user` (Basic), else `Bearer` |
+| Gitea / Codeberg | `pulls?state=open` (`X-Total-Count`)      | combined commit status of the default branch | `token`                                      |
+
+- **Where it shows**: notes in `mrm status` ("3 PRs", "CI failed", "CI running" - a passing CI isn't news) and its `--json` (`forge`), the TUI rows and detail pane, the web rows and Repo page. A repo the token can't see shows "forge: not found - a private repo the token can't see?".
+- **Speed**: answers are cached in `$XDG_CACHE_HOME/mrm/forge.json` for `forge_cache` (default 10m; errors are retried after a minute), so a second `mrm status` makes no requests. The TUI and web UI paint cached answers at once and ask in the background; status asks after reading git, at `concurrency` requests at a time.
+
+## Exec
+`mrm exec [-w|-t|-f] -- <cmd> [args]` runs the command in each matching repo's top folder, `concurrency` at a time. Output is prefixed by the repo name a whole line at a time, so parallel output never interleaves mid-line. `--serial` runs one repo at a time with the terminal attached, for interactive commands. The command is run directly, not through a shell (`-- sh -c '...'` for pipes). A summary lists the repos where it failed; exit code 2 if any did. Asks first unless `--yes`.
+
+## Hooks
+`hooks.post_sync` entries run after a sync moved `HEAD` (not on a dry run, not when nothing changed), in repos that contain `if_file` (any repo when it is empty), through `sh -c` in the repo folder, with `MRM_REPO`, `MRM_REPO_NAME`, `MRM_WORKSPACE` and `MRM_BRANCH` set and a 5-minute timeout. A failing hook becomes a warning on that repo's result ("hook failed: pre-commit") - the sync still counts as done.
+
+## Prune
+`mrm prune` lists, per repo, local branches that are merged into the remote default branch or whose upstream is gone, and deletes the merged ones after one confirmation. A gone-upstream branch that isn't merged (usually squash-merged) may hold the only copy of its commits: it is listed and kept unless `--force`. The current branch and the default branch are never candidates, and "merged" is checked again just before each delete. `--dry-run` lists only. Fetch first so "merged" and "gone" are current.
+
+## Drift
+`mrm drift` reports, and never clones:
+
+1. Keys under `repos:` that name one repo or path (no glob characters) and match nothing on disk - usually a repo that was renamed or removed. Glob keys are left out: matching nothing may be what they mean.
+2. For each selected workspace's `orgs` (`host/owner`, an org or a user), the forge's repo list compared by remote URL with every clone in every workspace. Missing repos are listed with a `git clone` command into the workspace's first root; archived ones are counted and listed with `--archived`; names matching the workspace's `ignore` globs are counted as ignored. For the token's own GitHub account, private repos are included.
+
+Exit code 2 when there is drift; `--json` for scripts.
+
 ## Configuration
 | What             | Path                                                             |
 | ---------------- | ---------------------------------------------------------------- |
 | config           | `$XDG_CONFIG_HOME/mrm/config.yaml` (`~/.config/mrm/config.yaml`) |
 | run history, log | `$XDG_STATE_HOME/mrm/runs.jsonl`, `mrm.log`                      |
 | status cache     | `$XDG_CACHE_HOME/mrm/status.json`                                |
+| forge cache      | `$XDG_CACHE_HOME/mrm/forge.json`                                 |
 | sync lock        | `$XDG_RUNTIME_DIR/mrm/<workspace>.lock` (state dir if unset)     |
 
 Precedence: flags > `MRM_*` environment > config > defaults.
@@ -275,6 +306,7 @@ browser_cmd: ""                   # default: wslview / xdg-open / open
 workspaces:
   work:
     roots: [~/work]
+    orgs: [github.com/<org>]      # for mrm drift
     depth: 3
     ignore: [legacy-*, "*-archive"]
     sync:
@@ -306,6 +338,16 @@ notify:
   ntfy:
     url: <ntfy-url>/<topic>
     token_env: MRM_NTFY_TOKEN
+
+forge_tokens:                     # read-only API tokens, per host
+  github.com:
+    token_cmd: gh auth token
+  gitlab.com:
+    token_env: GITLAB_TOKEN
+  bitbucket.org:
+    user: <email>                 # Bitbucket API tokens use Basic auth
+    token_cmd: pass show bitbucket/mrm
+forge_cache: 10m                  # how long forge answers are reused
 
 tui:
   open_cmd: lazygit
@@ -360,8 +402,8 @@ After a headless `mrm sync` (also from the timer), per `notify.on`: `attention` 
 - native Windows
 
 ## Open Questions
-| #      | Question                                                                                                                    | Leaning                                                                                                                     |
-| ------ | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Q1     | forge PR/CI counts (phase 4) need an API token per forge. Share forge clients with the maintainer's repo-stats as a module? | yes, extract a shared module when phase 4 starts                                                                            |
-| ~~Q2~~ | ~~TUI library~~                                                                                                             | closed 2026-10-15: tview, with the list drawn as a custom primitive (tview's table can't span group headers across columns) |
-| Q3     | should `switch_merged` default to true?                                                                                     | decide after a few weeks of phase 1 use                                                                                     |
+| #      | Question                                               | Leaning                                                                                                                                             |
+| ------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~Q1~~ | ~~share forge clients with another tool as a module?~~ | closed 2026-10-19: no - mrm needs only PR counts, CI state and org listings, so its clients live in `internal/forgeapi` ([Forge APIs](#forge-apis)) |
+| ~~Q2~~ | ~~TUI library~~                                        | closed 2026-10-15: tview, with the list drawn as a custom primitive (tview's table can't span group headers across columns)                         |
+| Q3     | should `switch_merged` default to true?                | decide after a few weeks of phase 1 use                                                                                                             |

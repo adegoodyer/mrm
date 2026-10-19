@@ -29,6 +29,7 @@ workspaces:
 {{- range .Workspaces}}
   {{.Name}}:
     roots: [{{.Root}}]
+    orgs: []              # host/owner to compare with, for mrm drift, e.g. [github.com/acme]
     depth: 3              # how deep to look for repos under each root
     ignore: []            # name or relative-path globs, e.g. [legacy-*]
     sync:
@@ -48,6 +49,13 @@ repos: {}
 #   legacy-portal:
 #     sync: false         # status only
 
+# Commands run after a sync moved HEAD, in repos that have if_file.
+# hooks:
+#   post_sync:
+#     - name: pre-commit
+#       if_file: .pre-commit-config.yaml
+#       run: pre-commit install --install-hooks
+
 notify:
   on: attention           # attention | always | never
 #   gotify:
@@ -56,6 +64,18 @@ notify:
 #   ntfy:
 #     url: <ntfy-url>/<topic>
 #     token_env: MRM_NTFY_TOKEN
+
+# Read-only API tokens, by host, for open PR counts, CI state and mrm drift.
+# Hosts without one are never contacted.
+forge_tokens: {}
+#   github.com:
+#     token_cmd: gh auth token
+#   gitlab.com:
+#     token_env: GITLAB_TOKEN
+#   bitbucket.org:
+#     user: <email>       # Bitbucket API tokens use Basic auth
+#     token_cmd: pass show bitbucket/mrm
+forge_cache: 10m          # how long forge answers are reused
 
 tui:
   open_cmd: lazygit
