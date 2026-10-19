@@ -44,9 +44,9 @@ type Info struct {
 
 // OrgRepo is a repo listed in an org on the forge.
 type OrgRepo struct {
-	Path     string // owner/name
-	CloneURL string // ssh when the forge gives one
-	Archived bool
+	Path     string `json:"path"`                // owner/name
+	CloneURL string `json:"clone_url,omitempty"` // ssh when the forge gives one
+	Archived bool   `json:"archived,omitempty"`
 }
 
 // Client talks to the forges that have tokens.
