@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pictures in the README and the guide - `mrm status`, `mrm sync`, the interactive view and its detail pane, the web UI in light and dark, how mrm fits together, and what sync does to each repo. The terminal pictures are mrm's real output on a demo fleet, rebuilt with `task docs:images`.
 
 ### Changed
+- The interactive view's keys come from one table, so `?` help, the command palette and the docs always list the same keys. Help scrolls when the terminal is short and closes with `esc`, `q` or `?`. `Home` and `End` (top and bottom) were already there; they are now documented.
 - The README is rewritten for someone new to mrm: what it is and why, install, a five-minute first run, how to read the status, then each way in, with links into the guide.
 
 ## [0.2.0] - 2026-10-19

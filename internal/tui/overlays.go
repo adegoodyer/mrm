@@ -11,7 +11,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/forge"
 	"github.com/adegoodyer/mrm/internal/forgeapi"
 	"github.com/adegoodyer/mrm/internal/paths"
@@ -26,31 +25,23 @@ type action struct {
 }
 
 func (u *ui) actions() []action {
-	acts := []action{
-		{"Sync marked, group or repo", "s", func() { u.act(engine.OpSync, u.targets()) }},
-		{"Sync everything shown", "S", func() { u.act(engine.OpSync, u.visible()) }},
-		{"Fetch marked, group or repo", "f", func() { u.act(engine.OpFetch, u.targets()) }},
-		{"Fetch everything shown", "F", func() { u.act(engine.OpFetch, u.visible()) }},
-		{"Refresh status", "r", func() { u.startOp(engine.OpStatus, u.repos, false, "reading") }},
-		{"Open on forge", "o", func() { u.open(openWeb) }},
-		{"Open pull requests", "O", func() { u.open(openPRs) }},
-		{"Open CI", "", func() { u.open(openCI) }},
-		{"Open current branch on forge", "", func() { u.open(openBranch) }},
-		{"Open in " + u.cfg.TUI.OpenCmd, "enter", func() { u.handoff(handoffGit) }},
-		{"Open in editor", "e", func() { u.handoff(handoffEditor) }},
-		{"Open a shell in the repo", "t", func() { u.handoff(handoffShell) }},
-		{"Toggle detail pane", "l", func() { u.toggleDetail() }},
-		{"Needs attention view", "!", func() { u.attention = true; u.refresh() }},
-		{"Show every repo", "!", func() { u.attention = false; u.refresh() }},
-		{"Filter", "/", func() { u.startFilter() }},
-		{"Clear filter", "esc", func() { u.setFilter("") }},
-		{"Mark everything shown", "a", func() { u.markVisible() }},
-		{"Clear marks", "A", func() { u.marks = map[string]bool{}; u.drawChrome() }},
-		{"Collapse or expand group", "tab", func() { u.toggleGroup() }},
-		{"Collapse every group", "", func() { u.setAllCollapsed(true) }},
-		{"Expand every group", "", func() { u.setAllCollapsed(false) }},
-		{"Workspace: all", "w", func() { u.setWorkspace("") }},
+	var acts []action
+	for _, b := range u.keys {
+		if b.palette {
+			b := b
+			label := strings.ToUpper(b.label[:1]) + b.label[1:]
+			acts = append(acts, action{label, b.show, func() { b.run(u) }})
+		}
 	}
+	acts = append(acts,
+		action{"Open CI", "", func() { u.open(openCI) }},
+		action{"Open current branch on forge", "", func() { u.open(openBranch) }},
+		action{"Show every repo", "!", func() { u.attention = false; u.refresh() }},
+		action{"Clear filter", "esc", func() { u.setFilter("") }},
+		action{"Collapse every group", "", func() { u.setAllCollapsed(true) }},
+		action{"Expand every group", "", func() { u.setAllCollapsed(false) }},
+		action{"Workspace: all", "w", func() { u.setWorkspace("") }},
+	)
 	for _, name := range u.cfg.WorkspaceNames() {
 		name := name
 		acts = append(acts, action{"Workspace: " + name, "w", func() { u.setWorkspace(name) }})
@@ -59,10 +50,7 @@ func (u *ui) actions() []action {
 		q := q
 		acts = append(acts, action{"Filter " + q, "", func() { u.setFilter(q) }})
 	}
-	return append(acts,
-		action{"Help", "?", func() { u.openHelp() }},
-		action{"Quit", "q", func() { u.quit() }},
-	)
+	return acts
 }
 
 // openPalette shows the command palette: type to fuzzy-search every
@@ -236,37 +224,23 @@ func (u *ui) openWorkspaces() {
 	u.app.SetFocus(l)
 }
 
-const helpText = `[::b]Move[::-]
-  j k ↑ ↓   up / down          g G       top / bottom
-  PgUp PgDn page               tab       collapse / expand group
-
-[::b]Select[::-]
-  space     mark repo (or whole group on a header)
-  a         mark everything shown     A   clear marks
-
-[::b]Act[::-]   on marked repos, else the group or repo under the cursor
-  s / S     sync / sync everything shown
-  f / F     fetch / fetch everything shown
-  r         refresh status
-  o / O     open on forge / open pull requests
-  enter     hand off to lazygit (tui.open_cmd); back to mrm on exit
-  e / t     editor / shell in the repo
-
-[::b]View[::-]
-  /         filter: is:dirty ws:work tag:x branch:feat/* age:>30d -is:clean
-  esc       clear filter, leave attention view, clear marks
-  !         needs attention: everything not clean, grouped by reason
-  l         detail pane      w   workspace      ctrl+k   command palette
-  ?         this help        q   quit`
-
+// openHelp lists every key from the table. It scrolls when the terminal
+// is short; esc, q or ? closes it.
 func (u *ui) openHelp() {
-	t := tview.NewTextView().SetDynamicColors(true).SetText(helpText)
-	t.SetBorder(true).SetTitle(" keys ").SetBorderPadding(0, 0, 1, 1)
+	text := helpText(u.keys)
+	t := tview.NewTextView().SetDynamicColors(true).SetText(text)
+	t.SetBorder(true).SetTitle(" keys  [::d]esc closes[::-] ").SetBorderPadding(0, 0, 1, 1)
 	t.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
-		u.closeOverlay("help")
-		return nil
+		switch {
+		case ev.Key() == tcell.KeyEscape, ev.Key() == tcell.KeyRune && (ev.Rune() == 'q' || ev.Rune() == '?'):
+			u.closeOverlay("help")
+			return nil
+		}
+		return ev // arrows, j/k, PgUp/PgDn, g/G scroll
 	})
-	u.pages.AddPage("help", modal(t, 76, 26), true, true)
+	_, _, _, h := u.root.GetRect()
+	lines := strings.Count(text, "\n") + 3
+	u.pages.AddPage("help", modal(t, 86, min(lines, max(h-2, 10))), true, true)
 	u.app.SetFocus(t)
 }
 

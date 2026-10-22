@@ -322,26 +322,27 @@ mrm status -f "is:not-default group:services"
 - **One operation at a time**, each repo's row showing a spinner until it is done. A sync takes the same lock and writes the same history as `mrm sync`. When a sync leaves anything skipped or failed, the view switches to the needs-attention list.
 - **Quitting** while an operation runs needs `q` twice; git finishes what it started either way.
 
-| Key                   | Action                                                                       |
-| --------------------- | ---------------------------------------------------------------------------- |
-| `j` `k` `↑` `↓`       | move                                                                         |
-| `g` `G` `PgUp` `PgDn` | top, bottom, page                                                            |
-| `tab`                 | collapse or expand the group                                                 |
-| `space`               | mark the repo, or the whole group on its header                              |
-| `a` · `A`             | mark everything shown · clear marks                                          |
-| `s` · `S`             | sync the targets · sync everything shown                                     |
-| `f` · `F`             | fetch the targets · fetch everything shown                                   |
-| `r`                   | read status again                                                            |
-| `o` · `O`             | open on the forge · open its pull requests                                   |
-| `enter`               | hand off to `tui.open_cmd` (lazygit) in the repo; back to mrm when it exits  |
-| `e` · `t`             | `$VISUAL`/`$EDITOR` · `$SHELL` in the repo                                   |
-| `/`                   | filter as you type; `enter` keeps it, `esc` clears it                        |
-| `!`                   | needs attention: everything not clean, grouped by reason                     |
-| `l`                   | detail pane                                                                  |
-| `w`                   | switch workspace                                                             |
-| `ctrl+k`              | command palette: fuzzy search over every action, workspace and common filter |
-| `esc`                 | clear the filter, else leave the attention view, else clear marks            |
-| `?` · `q`             | help · quit                                                                  |
+| Key                    | Action                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `j` `k` `↑` `↓`        | move                                                                         |
+| `g` `Home` · `G` `End` | top · bottom                                                                 |
+| `PgUp` `PgDn`          | page up, page down                                                           |
+| `tab`                  | collapse or expand the group                                                 |
+| `space`                | mark the repo, or the whole group on its header                              |
+| `a` · `A`              | mark everything shown · clear marks                                          |
+| `s` · `S`              | sync the targets · sync everything shown                                     |
+| `f` · `F`              | fetch the targets · fetch everything shown                                   |
+| `r`                    | read status again                                                            |
+| `o` · `O`              | open on the forge · open its pull requests                                   |
+| `enter`                | hand off to `tui.open_cmd` (lazygit) in the repo; back to mrm when it exits  |
+| `e` · `t`              | `$VISUAL`/`$EDITOR` · `$SHELL` in the repo                                   |
+| `/`                    | filter as you type; `enter` keeps it, `esc` clears it                        |
+| `!`                    | needs attention: everything not clean, grouped by reason                     |
+| `l`                    | detail pane                                                                  |
+| `w`                    | switch workspace                                                             |
+| `ctrl+k`               | command palette: fuzzy search over every action, workspace and common filter |
+| `esc`                  | clear the filter, else leave the attention view, else clear marks            |
+| `?` · `q`              | help · quit                                                                  |
 
 The **detail pane** (`l`) shows the repo's path and forge URL, branch and upstream, the default branch, the last run's outcome, open PRs and CI (with [tokens](#pull-requests-and-ci)), every branch with its tracking, stashes, and the last 12 commits:
 

@@ -208,24 +208,24 @@ Every command that deletes or runs something beyond sync (`prune`, `schedule ins
 - **Operations** run one at a time through the engine, streaming a live row per repo; a sync takes the same workspace lock as `mrm sync` and writes the same cache and run history. A sync that leaves anything skipped or failed ends on the needs-attention view.
 - **Quit** while an operation runs needs `q` twice; git finishes what it started.
 
-| Key                            | Action                                                                                                                                    |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `j/k` `↑/↓` `g/G` `PgUp/PgDn`  | move                                                                                                                                      |
-| `tab` (or `enter` on a header) | collapse / expand the group                                                                                                               |
-| `/`                            | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                                               |
-| `ctrl+k`                       | command palette - ranked fuzzy search over every action, workspace and common filter                                                      |
-| `space` · `a` · `A`            | mark the repo (or the whole group on a header), mark everything shown, clear marks                                                        |
-| `s` · `S`                      | sync the targets / everything shown                                                                                                       |
-| `f` · `F`                      | fetch the targets / everything shown                                                                                                      |
-| `r`                            | refresh status                                                                                                                            |
-| `o` · `O`                      | open on forge / open PRs (the palette has CI and branch too)                                                                              |
-| `enter`                        | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                                                   |
-| `e` · `t`                      | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                                                |
-| `l`                            | detail pane: path, forge URL, upstream, default branch, last run, open PRs and CI state, branches with tracking, stashes, last 12 commits |
-| `!`                            | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states                                   |
-| `w`                            | switch workspace                                                                                                                          |
-| `esc`                          | clear the filter, else leave the attention view, else clear marks                                                                         |
-| `?` · `q`                      | help, quit                                                                                                                                |
+| Key                                      | Action                                                                                                                                    |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `j/k` `↑/↓` `g/G` `Home/End` `PgUp/PgDn` | move                                                                                                                                      |
+| `tab` (or `enter` on a header)           | collapse / expand the group                                                                                                               |
+| `/`                                      | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                                               |
+| `ctrl+k`                                 | command palette - ranked fuzzy search over every action, workspace and common filter                                                      |
+| `space` · `a` · `A`                      | mark the repo (or the whole group on a header), mark everything shown, clear marks                                                        |
+| `s` · `S`                                | sync the targets / everything shown                                                                                                       |
+| `f` · `F`                                | fetch the targets / everything shown                                                                                                      |
+| `r`                                      | refresh status                                                                                                                            |
+| `o` · `O`                                | open on forge / open PRs (the palette has CI and branch too)                                                                              |
+| `enter`                                  | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                                                   |
+| `e` · `t`                                | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                                                |
+| `l`                                      | detail pane: path, forge URL, upstream, default branch, last run, open PRs and CI state, branches with tracking, stashes, last 12 commits |
+| `!`                                      | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states                                   |
+| `w`                                      | switch workspace                                                                                                                          |
+| `esc`                                    | clear the filter, else leave the attention view, else clear marks                                                                         |
+| `?` · `q`                                | help, quit                                                                                                                                |
 
 Colours are the terminal's own ANSI palette on its default background, so light and dark themes both read; tcell drops colour under `NO_COLOR` (or `--no-color`) and bold, dim and reverse still carry the meaning.
 

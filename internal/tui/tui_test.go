@@ -248,9 +248,9 @@ func TestPaletteAndWorkspaces(t *testing.T) {
 	h.waitFor("commands")
 	h.keys("hlp")
 	h.key(tcell.KeyEnter)
-	h.waitFor("keys", "command palette")
-	h.keys("x") // any key closes help
-	h.waitFor("!command palette")
+	h.waitFor("esc closes", "Move", "sync everything shown")
+	h.key(tcell.KeyEscape)
+	h.waitFor("!esc closes")
 
 	h.key(tcell.KeyCtrlK)
 	h.keys("wspers")
@@ -277,7 +277,7 @@ func TestMessageExpiryDoesNotFreeze(t *testing.T) {
 	h.waitFor("no web URL")
 	h.waitFor("!no web URL") // ...and expires
 	h.keys("?")
-	h.waitFor("command palette") // still responding
+	h.waitFor("esc closes") // still responding
 }
 
 func TestFuzzyRank(t *testing.T) {

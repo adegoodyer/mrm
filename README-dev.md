@@ -51,6 +51,7 @@ docs/                   user guide, spec, UAT, roadmap
 - **The TUI is tview, never Bubble Tea.** UI state is only touched on the UI goroutine: background work (engine runs, detail reads) hands results back with `app.QueueUpdateDraw`.
 - **Never call `QueueUpdate`, `QueueUpdateDraw` or `Draw` from the UI goroutine** - in key handlers or inside a queued update. They wait for the UI loop that is running them: the terminal freezes and Ctrl+C dies with it (it did, 6 s after start-up, when a footer message expired). On the UI goroutine, change state and return; tview redraws after every event and queued update.
 - **CLI, TUI and web show the same text** for a repo: build it in `internal/view`, colour it in the front end.
+- **TUI keys live in one table** (`internal/tui/keys.go`): the key handler, the `?` help and the command palette all read it. Add a key there and to the key table in [docs/user-guide.md](docs/user-guide.md#the-interactive-view); `TestKeysDocumented` fails until you do, and `TestKeysUnique` catches a key bound twice.
 - **Web: no inline script or style.** The CSP allows only `'self'`; put CSS in `static/mrm.css`, behaviour in `static/mrm.js`, and size things with classes or SVG attributes (the state bars are SVG for this reason). Templates escape everything; keep it that way.
 - **Web grids need `minmax(0, 1fr)`**, not `1fr`: a long repo name or URL otherwise widens the column past the screen (it did, at every width).
 - Docs: tables are aligned with `markdown-table-prettify` (the VS Code extension's formatter).
