@@ -385,3 +385,21 @@ func (h *harness) waitCursor(ok func(item) bool, what string) {
 		time.Sleep(20 * time.Millisecond)
 	}
 }
+
+// The footer fills the width, keeps ? help, and follows the context.
+func TestFooter(t *testing.T) {
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 80, 24)
+	txt := h.waitFor("? help", "/ filter")
+	if strings.Contains(txt, "r refresh") {
+		t.Fatalf("80 columns shouldn't fit refresh:\n%s", txt)
+	}
+	h.s.SetSize(160, 24)
+	h.u.app.QueueUpdateDraw(func() {})
+	h.waitFor("r refresh", "? help")
+
+	h.keys("g") // the first row is a group header
+	h.waitFor("tab collapse", "s sync group")
+	h.keys("j ") // mark the repo below it
+	h.waitFor("1 marked", "A clear marks")
+}

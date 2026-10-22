@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `shift+tab` collapses every group, or expands them all when all are collapsed.
   - `J` / `K` and `shift+↓` / `shift+↑` move 10 rows.
   - `p` opens the repo's pull requests, `P` its pipelines or actions, and `b` the current branch on the forge. `O` is gone: `p` replaces it, so an uppercase key now always means "everything shown" or a sibling page.
+- The interactive view's footer shows as many keys as fit the terminal, most useful first, always ending with `? help`. It follows what you're doing: on a group header it shows the group keys, with repos marked the keys for them, and with a filter on, the filter and how to clear it.
 - The interactive view's keys come from one table, so `?` help, the command palette and the docs always list the same keys. Help scrolls when the terminal is short and closes with `esc`, `q` or `?`. `Home` and `End` (top and bottom) were already there; they are now documented.
 - The README is rewritten for someone new to mrm: what it is and why, install, a five-minute first run, how to read the status, then each way in, with links into the guide.
 

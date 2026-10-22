@@ -90,6 +90,7 @@ type ui struct {
 	msgAt     time.Time
 	quitArmed bool
 	frame     int
+	width     int // of the screen, for the footer
 }
 
 // Run starts the TUI and returns when the user quits.
@@ -195,6 +196,15 @@ func (u *ui) build() {
 	u.pages = tview.NewPages().AddPage("main", u.root, true, true)
 	u.app.SetRoot(u.pages, true).SetFocus(u.list)
 	u.app.SetInputCapture(u.onKey)
+	u.app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
+		// Refit the footer when the terminal is resized. This runs on the
+		// UI goroutine, inside a draw: change state only, never Draw.
+		if w, _ := screen.Size(); w != u.width {
+			u.width = w
+			u.drawFooter()
+		}
+		return false
+	})
 	u.loading = true
 }
 
@@ -387,18 +397,7 @@ func (u *ui) drawChrome() {
 	// The status takes what it needs; the header gets the rest.
 	u.top.ResizeItem(u.status, tview.TaggedStringWidth(st)+1, 0)
 
-	switch {
-	case u.message != "":
-		u.footer.SetText(" " + u.msgStyle + tview.Escape(u.message) + "[-::-]")
-	case len(u.marks) > 0:
-		u.footer.SetText(fmt.Sprintf(" [fuchsia::b]%d marked[-::-]  [::d]s sync  f fetch  A clear marks  ctrl+k more[::-]", len(u.marks)))
-	default:
-		q := ""
-		if u.query != "" {
-			q = "  [aqua]/" + tview.Escape(u.query) + "[-]"
-		}
-		u.footer.SetText(" [::d]/ filter  space mark  s sync  f fetch  o open  enter " + tview.Escape(u.cfg.TUI.OpenCmd) + "  l detail  ! attention  ? help[::-]" + q)
-	}
+	u.drawFooter()
 }
 
 func (u *ui) anyCollapsed() bool {
@@ -472,6 +471,7 @@ func (u *ui) onKey(ev *tcell.EventKey) *tcell.EventKey {
 	// The detail pane follows the cursor.
 	if after, _ := u.list.current(); after != before {
 		u.updateDetail()
+		u.drawFooter() // its hints depend on what the cursor is on
 	}
 	return nil
 }

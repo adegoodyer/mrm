@@ -320,6 +320,7 @@ mrm status -f "is:not-default group:services"
 
 - **Targets.** An action applies to the marked repos; with none marked, to the group under the cursor (on a header) or the repo under it. Marks clear once an action starts.
 - **One operation at a time**, each repo's row showing a spinner until it is done. A sync takes the same lock and writes the same history as `mrm sync`. When a sync leaves anything skipped or failed, the view switches to the needs-attention list.
+- **The footer** shows as many keys as fit, most useful first, and changes with what you're on: a repo, a group header, marked repos, a filter. `?` lists them all.
 - **Quitting** while an operation runs needs `q` twice; git finishes what it started either way.
 
 | Key                         | Action                                                                                               |
