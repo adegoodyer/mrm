@@ -7,6 +7,7 @@
   - [Phase 2 - TUI](#phase-2---tui)
   - [Phase 3 - Web UI](#phase-3---web-ui)
   - [Phase 4 - Extras](#phase-4---extras)
+  - [Phase 5 - Polish](#phase-5---polish)
   - [Releases](#releases)
   - [Follow-Ups](#follow-ups)
 
@@ -74,7 +75,24 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 | ✅ 2026-10-19 | 4.3 | `prune` (merged into the remote default branch, or upstream gone; unmerged kept unless `--force`; merged re-checked before each delete; `--dry-run`)                                                     |
 | ✅ 2026-10-19 | 4.4 | `schedule install/list/remove` (systemd user timers, `Persistent=true`, calendar checked with `systemd-analyze`); `doctor` reports the user instance                                                     |
 | ✅ 2026-10-19 | 4.5 | forge clients in `internal/forgeapi` (Q1 closed: not shared): PR count and CI state for GitHub, GitLab, Bitbucket, Gitea in status, TUI and web, cached in `forge.json`; `drift` against config and orgs |
-| ⬜            | 4.6 | release 0.2.0 (the GoReleaser config and `task release` exist since 0.1.0); `go install` check on a clean machine; UAT walkthrough                                                                       |
+| ⬜            | 4.6 | release 0.2.0 (done 2026-10-19: tagged, draft release with archives); left: `go install` check on a clean machine; UAT walkthrough                                                                       |
+
+## Phase 5 - Polish
+Ideas from using 0.2.0, for 0.3.0.
+
+| ✓            | #    | Step                                                                                                                               |
+| ------------ | ---- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ 2026-10-22 | 5.1  | README for newcomers, user guide, pictures made from mrm's real output on a demo fleet (`task docs:images`)                        |
+| ✅ 2026-10-22 | 5.2  | TUI keys in one table read by the handler, help and palette; a test fails when the guide misses a key                              |
+| ✅ 2026-10-22 | 5.3  | `←` `→` cycle workspaces, `shift+tab` all groups, `J` `K` / `shift+↑↓` move 10, `p` `P` `b` open PRs, pipelines, branch (`O` gone) |
+| ✅ 2026-10-22 | 5.4  | footer fits the width and follows the context                                                                                      |
+| ✅ 2026-10-22 | 5.5  | `L` commit graph in a modal; `ctrl+d` `ctrl+u` scroll                                                                              |
+| ✅ 2026-10-22 | 5.6  | mouse (`tui.mouse`); the view reopens where you left it                                                                            |
+| ✅ 2026-10-22 | 5.7  | `ff_dirty` sync policy                                                                                                             |
+| ✅ 2026-10-22 | 5.8  | docs: sync step by step with the exact git commands; compared with `git pull`                                                      |
+| ⬜            | 5.9  | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
+| ⬜            | 5.10 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
+| ⬜            | 5.11 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
 
 ## Releases
 

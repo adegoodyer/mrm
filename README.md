@@ -118,14 +118,14 @@ Changes are counted as `S` staged, `M` modified, `U` conflicted and `?` untracke
 ## What Sync Does
 <p align="center"><img src="docs/images/sync-rules.svg" alt="The sync decision ladder: fetch, then for each repo the first matching rule decides - fetch failed, operation in progress, detached HEAD, on another branch, not behind, diverged, dirty, or clean and behind, which is fast-forwarded"></p>
 
-In short: if a fast-forward is safe, mrm does it; otherwise it leaves the repo exactly as it was and tells you why. When you're on a feature branch, your branch stays put, and the default branch is still brought up to date in place, so it's current when you switch back.
+In short: if a fast-forward is safe, mrm does it; otherwise it leaves the repo exactly as it was and tells you why. When you're on a feature branch, your branch stays put, and the default branch is still brought up to date in place, so it's current when you switch back. The [user guide](docs/user-guide.md#sync-step-by-step) lists the exact git commands, and [how sync compares with `git pull`](docs/user-guide.md#compared-with-git-pull) when you have local changes.
 
 ## The Interactive View
 `mrm` on a terminal opens a live, grouped list of every repo. It appears at once from the last known state, then refreshes in the background.
 
 <p align="center"><img src="docs/images/tui.svg" alt="The interactive view: repos grouped by workspace and folder, two repos marked, the cursor on a third, and a footer of keys"></p>
 
-Mark repos with `space` (or a whole group on its header), then `s` to sync or `f` to fetch them; with nothing marked, the action applies to the group or repo under the cursor. `/` filters as you type, `!` shows only what needs attention, `enter` hands off to lazygit in that repo, and `ctrl+k` opens a command palette with everything else. `l` opens a detail pane:
+Mark repos with `space` (or a whole group on its header), then `s` to sync or `f` to fetch them; with nothing marked, the action applies to the group or repo under the cursor. `/` filters as you type, `!` shows only what needs attention, `←` `→` step through workspaces, and `enter` hands off to lazygit in that repo. `o`, `p`, `P` and `b` open the repo, its pull requests, its pipelines and its branch in your browser, `L` shows the commit graph, and `ctrl+k` opens a command palette with everything else. The mouse works too, and mrm reopens where you left it. `l` opens a detail pane:
 
 <p align="center"><img src="docs/images/tui-detail.svg" alt="The detail pane for one repo: path, forge URL, state, branch and upstream, changes, pull requests, CI failed with a link, branches and recent commits"></p>
 

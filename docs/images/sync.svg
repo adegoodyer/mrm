@@ -22,20 +22,20 @@
 <text class="title" x="337.0" y="22.0" text-anchor="middle">mrm sync</text>
 <text class="dim" x="18.0" y="62" xml:space="preserve">$</text>
 <text class="t b" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6" y="62" xml:space="preserve">mrm sync</text>
-<text class="dim" x="18.0" y="100" xml:space="preserve">·</text>
-<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6" y="100" xml:space="preserve">dotfiles</text>
-<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="100" xml:space="preserve">current</text>
-<text class="c3" x="18.0" y="119" xml:space="preserve">!</text>
-<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="119" xml:space="preserve">platform/auth</text>
-<text class="c3" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0" y="119" xml:space="preserve">skipped: diverged (1 ahead, 1 behind origin/main)</text>
-<text class="dim" x="18.0" y="138" xml:space="preserve">·</text>
-<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2" y="138" xml:space="preserve">services/payments</text>
-<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="138" xml:space="preserve">current</text>
-<text class="c2" x="18.0" y="157" xml:space="preserve">✓</text>
-<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="157" xml:space="preserve">services/docs</text>
-<text class="t" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="157" xml:space="preserve">main +1</text>
+<text class="c2" x="18.0" y="100" xml:space="preserve">✓</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="100" xml:space="preserve">services/docs</text>
+<text class="t" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="100" xml:space="preserve">main +1</text>
+<text class="dim" x="18.0" y="119" xml:space="preserve">·</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6" y="119" xml:space="preserve">dotfiles</text>
+<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="119" xml:space="preserve">current</text>
+<text class="c3" x="18.0" y="138" xml:space="preserve">!</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="138" xml:space="preserve">platform/auth</text>
+<text class="c3" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0" y="138" xml:space="preserve">skipped: diverged (1 ahead, 1 behind origin/main)</text>
+<text class="dim" x="18.0" y="157" xml:space="preserve">·</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6" y="157" xml:space="preserve">infra/terraform-network</text>
+<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="157" xml:space="preserve">current</text>
 <text class="dim" x="18.0" y="176" xml:space="preserve">·</text>
-<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6" y="176" xml:space="preserve">infra/terraform-network</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2" y="176" xml:space="preserve">services/payments</text>
 <text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="176" xml:space="preserve">current</text>
 <text class="c2" x="18.0" y="195" xml:space="preserve">✓</text>
 <text class="t" x="34.8 43.2 51.6 60.0" y="195" xml:space="preserve">blog</text>

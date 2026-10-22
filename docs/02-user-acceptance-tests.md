@@ -6,6 +6,7 @@
   - [2 - TUI](#2---tui)
   - [3 - Web UI](#3---web-ui)
   - [4 - Extras](#4---extras)
+  - [5 - Polish](#5---polish)
   - [Cross-Cutting](#cross-cutting)
   - [The Nasty Cases](#the-nasty-cases)
   - [Sign-Off](#sign-off)
@@ -79,6 +80,20 @@
 | ⬜   | 4.5 | `mrm schedule install -w work --on "Mon..Fri 08:30"` creates and enables a user timer; it runs while no terminal is open and catches up after the machine was off; `schedule remove` removes it `[A] schedule.TestInstallListRemove, TestBadCalendar` for the units                                                                    |
 | ⬜   | 4.6 | With forge tokens configured, open PR count and last CI status show in status, the TUI and the web UI; hosts without a token are never contacted `[A] forgeapi.TestInfoPerForge, TestCache, TestTokens, tui.TestForgeInfo, web.TestForgeInfo` (checked 2026-10-19 on 37 real GitHub repos: 2.4 s)                                      |
 
+## 5 - Polish
+
+| ✓   | #   | Criterion                                                                                                                                                                                                                                       |
+| --- | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⬜   | 5.1 | Someone new to mrm can install it and sync from the README alone; the pictures match what mrm shows in light and dark                                                                                                                           |
+| ⬜   | 5.2 | `?` help, the command palette and the user guide list the same keys `[A] tui.TestKeysDocumented, TestKeysUnique`                                                                                                                                |
+| ⬜   | 5.3 | `←` `→` step through the workspaces and wrap, with *all* among them; `shift+tab` collapses every group, then expands them; `J` `K` and `shift+↑` `shift+↓` move 10 `[A] tui.TestWorkspaceCycleAndGroups`                                        |
+| ⬜   | 5.4 | `o`, `p`, `P` and `b` open the repo, its pull requests, its pipelines and the current branch in the browser, on GitHub, GitLab and Bitbucket                                                                                                    |
+| ⬜   | 5.5 | The footer shows more keys on a wider terminal, always `? help`, and different keys on a group header and with repos marked `[A] tui.TestFooter`                                                                                                |
+| ⬜   | 5.6 | `L` shows the commit graph with every branch and remote; `esc` closes it; `ctrl+d` `ctrl+u` scroll it and the detail pane `[A] tui.TestGraph`                                                                                                   |
+| ⬜   | 5.7 | A click selects a row and the wheel scrolls; `tui.mouse: false` gives the mouse back to the terminal `[A] tui.TestMouse`                                                                                                                        |
+| ⬜   | 5.8 | Quitting and reopening `mrm` brings back the workspace, collapsed groups and detail pane; `-w` still wins `[A] tui.TestViewRemembered`                                                                                                          |
+| ⬜   | 5.9 | With `ff_dirty: true`, a dirty repo behind its remote is fast-forwarded when the update touches none of the changed files, keeping the edits, and skipped naming the files when it does; `--dry-run` says the same `[A] engine.TestSyncFFDirty` |
+
 ## Cross-Cutting
 
 | ✓   | #   | Criterion                                                                                                                                                                                                                  |
@@ -119,5 +134,6 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 | 2 - TUI             | 2.1 - 2.10 | 0 / 10 | ⬜              |
 | 3 - web UI          | 3.1 - 3.7  | 0 / 7  | ⬜              |
 | 4 - extras          | 4.1 - 4.6  | 0 / 6  | ⬜              |
+| 5 - polish          | 5.1 - 5.9  | 0 / 9  | ⬜              |
 | cross-cutting       | X.1 - X.5  | 0 / 5  | ⬜              |
 | nasty cases         | N.1 - N.16 | 0 / 16 | ⬜              |

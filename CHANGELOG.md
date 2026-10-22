@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The user guide spells out sync step by step - the exact git commands, in order - and compares it with `git pull` when you have local changes.
 - `ff_dirty: true` under a workspace's `sync:` fast-forwards a repo with uncommitted changes when the update changes none of the same files, keeping the edits. When it would touch one, the repo is skipped and the reason names the files. Off by default: a dirty repo is still skipped.
 - `L` in the interactive view shows the repo's commit graph - every branch, tag and remote, newest first, in git's colours - in a scrollable window, without any extra tool. It reads at most the newest 300 commits and says when there are more.
 - The interactive view takes the mouse: click a row to select it (a second click on a group header collapses it) and scroll with the wheel. `tui.mouse: false` turns it off.

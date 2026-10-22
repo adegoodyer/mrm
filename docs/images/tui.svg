@@ -101,8 +101,18 @@
 <text class="dim" x="530.4 538.8" y="309" xml:space="preserve">4h</text>
 <text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6 774.0 782.4 790.8 799.2 807.6 816.0 824.4 832.8 841.2 849.6" y="309" xml:space="preserve">on feature/checkout, default main …</text>
 <text class="c5 b" x="26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2" y="366" xml:space="preserve">2 marked</text>
-<text class="dim" x="110.4 118.8 127.2 135.6 144.0 152.4" y="366" xml:space="preserve">s sync</text>
-<text class="dim" x="177.6 186.0 194.4 202.8 211.2 219.6 228.0" y="366" xml:space="preserve">f fetch</text>
-<text class="dim" x="253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0" y="366" xml:space="preserve">A clear marks</text>
-<text class="dim" x="379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2" y="366" xml:space="preserve">ctrl+k more</text>
+<text class="t b" x="110.4" y="366" xml:space="preserve">s</text>
+<text class="dim" x="127.2 135.6 144.0 152.4" y="366" xml:space="preserve">sync</text>
+<text class="t b" x="177.6" y="366" xml:space="preserve">f</text>
+<text class="dim" x="194.4 202.8 211.2 219.6 228.0" y="366" xml:space="preserve">fetch</text>
+<text class="t b" x="253.2 261.6 270.0 278.4 286.8" y="366" xml:space="preserve">space</text>
+<text class="dim" x="303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6" y="366" xml:space="preserve">mark/unmark</text>
+<text class="t b" x="412.8" y="366" xml:space="preserve">a</text>
+<text class="dim" x="429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8" y="366" xml:space="preserve">mark all shown</text>
+<text class="t b" x="564.0" y="366" xml:space="preserve">A</text>
+<text class="dim" x="580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8" y="366" xml:space="preserve">clear marks</text>
+<text class="t b" x="690.0 698.4 706.8 715.2 723.6 732.0" y="366" xml:space="preserve">ctrl+k</text>
+<text class="dim" x="748.8 757.2 765.6 774.0" y="366" xml:space="preserve">more</text>
+<text class="t b" x="799.2" y="366" xml:space="preserve">?</text>
+<text class="dim" x="816.0 824.4 832.8 841.2" y="366" xml:space="preserve">help</text>
 </svg>

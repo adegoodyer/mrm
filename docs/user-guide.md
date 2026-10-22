@@ -17,6 +17,8 @@ Everything about using mrm, from the ideas it is built on to every setting. New 
     - [Secrets](#secrets)
   - [Status](#status)
   - [Syncing](#syncing)
+    - [Sync, Step by Step](#sync-step-by-step)
+    - [Compared With git pull](#compared-with-git-pull)
     - [Sync Policies](#sync-policies)
     - [One Sync at a Time](#one-sync-at-a-time)
   - [Filters](#filters)
@@ -279,6 +281,35 @@ For each repo, the first rule that matches decides what happens:
 - `mrm fetch` is the first step alone: fetch, never fast-forward.
 
 Every run is appended to the history (`~/.local/state/mrm/runs.jsonl`), which the web UI's Activity page shows. Exit codes: `0` every repo synced or current, `2` some need attention, `1` mrm itself failed (a bad config, say).
+
+### Sync, Step by Step
+These are the exact git commands, per repo. Each runs with prompts switched off (`GIT_TERMINAL_PROMPT=0`, ssh in batch mode) and the `timeout`, so nothing can wait for a password.
+
+| #   | When                                                                   | Command                                                                                                        |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1   | always                                                                 | `git fetch --prune --quiet origin`                                                                             |
+| 2   | `origin/HEAD` last checked over a day ago                              | `git remote set-head origin --auto`                                                                            |
+| 3   | always                                                                 | `git status --porcelain=v2 --branch --show-stash`, which every decision below is made from                     |
+| 4   | `switch_merged`, on a pushed, clean branch merged into the default one | `git merge-base --is-ancestor HEAD origin/main`, then `git switch main`                                        |
+| 5   | on the default branch, clean and strictly behind                       | `git merge --ff-only @{u}`                                                                                     |
+| 5a  | same, but dirty, with `ff_dirty`                                       | `git diff --name-only HEAD` and `git diff --name-only HEAD @{u}`; if they share no file, step 5                |
+| 6   | on another branch, the default branch strictly behind                  | `git fetch . origin/main:main` - moves `main` without checking it out; git refuses anything but a fast-forward |
+| 7   | `ff_current`, the current branch clean and strictly behind             | `git merge --ff-only @{u}`                                                                                     |
+| 8   | `HEAD` moved                                                           | your `post_sync` hooks                                                                                         |
+
+`--dry-run` runs steps 1-3 and the checks, and reports what steps 4-7 would do.
+
+### Compared With git pull
+`git pull` is `git fetch` followed by `git merge` (or `git rebase` with `pull.rebase`). With uncommitted changes it does one of these:
+
+| Your changes and the incoming commits     | `git pull`                                                                                                    | `mrm sync`                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| touch the same files                      | refuses: "Your local changes to the following files would be overwritten by merge". Nothing changes           | skipped: dirty. Nothing changes                                     |
+| touch different files                     | updates the branch and keeps your edits                                                                       | skipped: dirty; with `ff_dirty`, fast-forwards and keeps your edits |
+| your branch has commits of its own too    | makes a merge commit, or (recent git) refuses until you choose with `pull.rebase` / `pull.ff`                 | skipped: diverged. Never merges or rebases                          |
+| `pull.rebase=true` and any tracked change | refuses ("cannot pull with rebase: You have unstaged changes") unless `rebase.autoStash` stashes them for you | as above - mrm never stashes                                        |
+
+So mrm never does anything `git pull` wouldn't, and stops in every case where `git pull` would merge, rebase or stash.
 
 ### Sync Policies
 Three opt-in behaviours, set per workspace under `sync:`:
