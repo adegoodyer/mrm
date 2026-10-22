@@ -247,3 +247,37 @@ func stateCounts(results []model.Result) map[model.State]int {
 	}
 	return n
 }
+
+// MouseHandler: a click selects a row (a second click on a group header
+// collapses or expands it) and the wheel moves the cursor.
+func (l *list) MouseHandler() func(action tview.MouseAction, event *tcell.EventMouse, setFocus func(p tview.Primitive)) (bool, tview.Primitive) {
+	return l.WrapMouseHandler(func(action tview.MouseAction, event *tcell.EventMouse, setFocus func(p tview.Primitive)) (bool, tview.Primitive) {
+		x, y := event.Position()
+		if front, _ := l.u.pages.GetFrontPage(); front != "main" || !l.InRect(x, y) {
+			return false, nil
+		}
+		before, _ := l.current()
+		switch action {
+		case tview.MouseLeftClick:
+			_, top, _, _ := l.GetInnerRect()
+			i := l.offset + y - top
+			if i < 0 || i >= len(l.items) {
+				return false, nil
+			}
+			if i == l.cursor && l.items[i].header {
+				l.u.toggleGroup()
+			} else {
+				l.cursor = i
+			}
+			setFocus(l)
+		case tview.MouseScrollUp:
+			l.move(-3)
+		case tview.MouseScrollDown:
+			l.move(3)
+		default:
+			return false, nil
+		}
+		l.u.cursorMoved(before)
+		return true, nil
+	})
+}

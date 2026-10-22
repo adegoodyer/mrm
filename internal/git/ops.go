@@ -72,6 +72,33 @@ func (r *Runner) Switch(ctx context.Context, dir, branch string) error {
 	return err
 }
 
+// Overlap lists the files changed locally - staged or not, against HEAD -
+// that the commits between HEAD and ref also change. A fast-forward to ref
+// over local changes is safe exactly when it is empty.
+func (r *Runner) Overlap(ctx context.Context, dir, ref string) ([]string, error) {
+	local, err := r.Run(ctx, dir, "diff", "--name-only", "-z", "HEAD")
+	if err != nil {
+		return nil, err
+	}
+	incoming, err := r.Run(ctx, dir, "diff", "--name-only", "-z", "HEAD", ref)
+	if err != nil {
+		return nil, err
+	}
+	mine := map[string]bool{}
+	for _, f := range strings.Split(local, "\x00") {
+		if f != "" {
+			mine[f] = true
+		}
+	}
+	var both []string
+	for _, f := range strings.Split(incoming, "\x00") {
+		if mine[f] {
+			both = append(both, f)
+		}
+	}
+	return both, nil
+}
+
 // IsAncestor reports whether commit a is an ancestor of b.
 func (r *Runner) IsAncestor(ctx context.Context, dir, a, b string) (bool, error) {
 	_, err := r.Run(ctx, dir, "merge-base", "--is-ancestor", a, b)

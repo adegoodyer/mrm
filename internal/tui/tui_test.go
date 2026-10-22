@@ -248,9 +248,9 @@ func TestPaletteAndWorkspaces(t *testing.T) {
 	h.waitFor("commands")
 	h.keys("hlp")
 	h.key(tcell.KeyEnter)
-	h.waitFor("keys", "command palette")
-	h.keys("x") // any key closes help
-	h.waitFor("!command palette")
+	h.waitFor("esc closes", "Move", "sync everything shown")
+	h.key(tcell.KeyEscape)
+	h.waitFor("!esc closes")
 
 	h.key(tcell.KeyCtrlK)
 	h.keys("wspers")
@@ -277,7 +277,7 @@ func TestMessageExpiryDoesNotFreeze(t *testing.T) {
 	h.waitFor("no web URL")
 	h.waitFor("!no web URL") // ...and expires
 	h.keys("?")
-	h.waitFor("command palette") // still responding
+	h.waitFor("esc closes") // still responding
 }
 
 func TestFuzzyRank(t *testing.T) {
@@ -339,4 +339,128 @@ func TestForgeInfo(t *testing.T) {
 	h.waitFor("2 PRs · CI failed")
 	h.keys("l")
 	h.waitFor("PRs      2 open", "CI       failed")
+}
+
+// ← → cycle workspaces with "all" among them; shift+tab collapses every
+// group, then expands them all; J and shift+↓ jump 10.
+func TestWorkspaceCycleAndGroups(t *testing.T) {
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 100, 30)
+	h.waitFor("all · 5 repos")
+	h.key(tcell.KeyRight)
+	h.waitFor("personal · 1 repo")
+	h.key(tcell.KeyRight)
+	h.waitFor("work · 4 repos")
+	h.key(tcell.KeyRight)
+	h.waitFor("all · 5 repos") // wraps
+	h.key(tcell.KeyLeft)
+	h.waitFor("work · 4 repos")
+	h.key(tcell.KeyRight)
+
+	h.key(tcell.KeyBacktab)
+	h.waitFor("▸ work · 3", "▸ personal · 1", "!dotfiles")
+	h.key(tcell.KeyBacktab)
+	h.waitFor("▾ work · 3", "▾ personal · 1", "dotfiles")
+
+	h.keys("J")
+	h.waitCursor(func(it item) bool { return it.path == "/src/dotfiles" }, "J to the last row")
+	h.s.InjectKey(tcell.KeyUp, 0, tcell.ModShift)
+	h.waitCursor(func(it item) bool { return it.header && it.group == "work/" }, "shift+↑ to the first row")
+}
+
+// waitCursor polls until the cursor's item passes ok.
+func (h *harness) waitCursor(ok func(item) bool, what string) {
+	h.t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		ch := make(chan item, 1)
+		h.u.app.QueueUpdate(func() { it, _ := h.u.list.current(); ch <- it })
+		it := <-ch
+		if ok(it) {
+			return
+		}
+		if time.Now().After(deadline) {
+			h.t.Fatalf("%s: cursor on %+v", what, it)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+// The footer fills the width, keeps ? help, and follows the context.
+func TestFooter(t *testing.T) {
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 80, 24)
+	txt := h.waitFor("? help", "/ filter")
+	if strings.Contains(txt, "r refresh") {
+		t.Fatalf("80 columns shouldn't fit refresh:\n%s", txt)
+	}
+	h.s.SetSize(160, 24)
+	h.u.app.QueueUpdateDraw(func() {})
+	h.waitFor("r refresh", "? help")
+
+	h.keys("g") // the first row is a group header
+	h.waitFor("tab collapse", "s sync group")
+	h.keys("j ") // mark the repo below it
+	h.waitFor("1 marked", "A clear marks")
+}
+
+// L shows the commit graph of a real repo; esc closes it.
+func TestGraph(t *testing.T) {
+	f := gittest.New(t)
+	dir := f.Clone("app")
+	f.Push("master", "a.txt", "a\n")
+	gittest.Git(t, dir, "fetch", "-q")
+	gittest.Git(t, dir, "switch", "-q", "-c", "feature/x")
+	gittest.WriteFile(t, filepath.Join(dir, "b.txt"), "b\n")
+	gittest.Git(t, dir, "add", "b.txt")
+	gittest.Git(t, dir, "commit", "-q", "-m", "feat: b on a branch")
+	cfg, err := config.Parse([]byte("workspaces:\n  work:\n    roots: [" + filepath.Join(f.Root, "repos") + "]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	repos := []model.Repo{{Name: "app", Path: dir, Workspace: "work", Remote: "origin"}}
+	h := start(t, Options{Config: cfg, Repos: repos, NoRefresh: true}, 100, 24)
+	h.keys("jL")
+	h.waitFor("graph · esc closes", "feat: b on a branch", "feature/x", "origin/master")
+	h.key(tcell.KeyEscape)
+	h.waitFor("!graph · esc closes")
+}
+
+// A click selects a row, a second click on a header collapses it, and the
+// wheel moves the cursor.
+func TestMouse(t *testing.T) {
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 100, 24)
+	txt := h.waitFor("dotfiles")
+	row := -1
+	for i, line := range strings.Split(txt, "\n") {
+		if strings.Contains(line, "dotfiles") {
+			row = i
+		}
+	}
+	h.s.InjectMouse(20, row, tcell.Button1, tcell.ModNone)
+	h.s.InjectMouse(20, row, tcell.ButtonNone, tcell.ModNone)
+	h.waitCursor(func(it item) bool { return it.path == "/src/dotfiles" }, "click on dotfiles")
+	h.s.InjectMouse(20, row, tcell.WheelUp, tcell.ModNone)
+	h.waitCursor(func(it item) bool { return it.path != "/src/dotfiles" }, "wheel up")
+}
+
+// The workspace, collapsed groups and detail pane come back next time.
+func TestViewRemembered(t *testing.T) {
+	repos, results := fixtures()
+	state := filepath.Join(t.TempDir(), "tui.json")
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state}, 100, 24)
+	h.key(tcell.KeyRight) // personal
+	h.waitFor("personal · 1 repo")
+	h.key(tcell.KeyTab) // collapse the group under the cursor
+	h.waitFor("▸ personal")
+	h.u.app.Stop()
+	h.done <- <-h.done // saved on the way out; leave the result for cleanup
+	if _, err := os.Stat(state); err != nil {
+		t.Fatal("view not saved:", err)
+	}
+	h2 := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state}, 100, 24)
+	h2.waitFor("personal · 1 repo", "▸ personal")
+	h3 := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state, Workspace: "work"}, 100, 24)
+	h3.waitFor("work · 4 repos") // -w wins
 }

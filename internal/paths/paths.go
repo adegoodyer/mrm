@@ -35,6 +35,9 @@ func StatusCache() string { return filepath.Join(CacheDir(), "status.json") }
 // ForgeCache holds the last answers from forge APIs.
 func ForgeCache() string { return filepath.Join(CacheDir(), "forge.json") }
 
+// TUIState is the interactive view's last workspace, groups and panes.
+func TUIState() string { return filepath.Join(StateDir(), "tui.json") }
+
 // LockDir holds the per-workspace sync locks: $XDG_RUNTIME_DIR/mrm, or the
 // state dir when there is no runtime dir.
 func LockDir() string {

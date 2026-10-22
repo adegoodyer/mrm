@@ -21,6 +21,7 @@ type Repo struct {
 	Remote       string `json:"-"` // remote to fetch, default "origin"
 	FFCurrent    bool   `json:"-"`
 	SwitchMerged bool   `json:"-"`
+	FFDirty      bool   `json:"-"`
 }
 
 // Display is the name shown in lists: group/name for nested repos.

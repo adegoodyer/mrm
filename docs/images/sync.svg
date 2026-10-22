@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="674" height="366" viewBox="0 0 674 366" role="img" aria-label="mrm sync">
+<title>mrm sync</title><style>
+  .bg{fill:#ffffff} .bar{fill:#eef1f4} .edge{stroke:#d0d7de} .t{fill:#1f2328}
+  .title{fill:#59636e} .dim{fill:#6e7781} .c1{fill:#cf222e} .c2{fill:#1a7f37}
+  .c3{fill:#9a6700} .c4{fill:#0969da} .c5{fill:#8250df} .c6{fill:#1b7c83} .c7{fill:#6e7781}
+  .rev{fill:#1f2328} .revt{fill:#ffffff} .hdr{fill:#0969da}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#0d1117} .bar{fill:#161b22} .edge{stroke:#30363d} .t{fill:#e6edf3}
+    .title{fill:#9198a1} .dim{fill:#8b949e} .c1{fill:#ff7b72} .c2{fill:#3fb950}
+    .c3{fill:#d29922} .c4{fill:#58a6ff} .c5{fill:#bc8cff} .c6{fill:#39c5cf} .c7{fill:#8b949e}
+    .rev{fill:#e6edf3} .revt{fill:#0d1117} .hdr{fill:#58a6ff}
+  }
+  text{font-family:ui-monospace,"SF Mono","Cascadia Mono","JetBrains Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:14px;white-space:pre}
+  .b{font-weight:700}
+</style>
+<rect class="bg edge" x="0.5" y="0.5" width="673" height="365" rx="8"/>
+<path class="bar" d="M8.5 .5h657a8 8 0 0 1 8 8V34H.5V8.5a8 8 0 0 1 8-8z"/>
+<line class="edge" x1="0" y1="34" x2="674" y2="34"/>
+<circle cx="20" cy="17.0" r="5.5" fill="#ff5f57"/>
+<circle cx="38" cy="17.0" r="5.5" fill="#febc2e"/>
+<circle cx="56" cy="17.0" r="5.5" fill="#28c840"/>
+<text class="title" x="337.0" y="22.0" text-anchor="middle">mrm sync</text>
+<text class="dim" x="18.0" y="62" xml:space="preserve">$</text>
+<text class="t b" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6" y="62" xml:space="preserve">mrm sync</text>
+<text class="c2" x="18.0" y="100" xml:space="preserve">✓</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="100" xml:space="preserve">services/docs</text>
+<text class="t" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="100" xml:space="preserve">main +1</text>
+<text class="dim" x="18.0" y="119" xml:space="preserve">·</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6" y="119" xml:space="preserve">dotfiles</text>
+<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="119" xml:space="preserve">current</text>
+<text class="c3" x="18.0" y="138" xml:space="preserve">!</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="138" xml:space="preserve">platform/auth</text>
+<text class="c3" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0" y="138" xml:space="preserve">skipped: diverged (1 ahead, 1 behind origin/main)</text>
+<text class="dim" x="18.0" y="157" xml:space="preserve">·</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6" y="157" xml:space="preserve">infra/terraform-network</text>
+<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="157" xml:space="preserve">current</text>
+<text class="dim" x="18.0" y="176" xml:space="preserve">·</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2" y="176" xml:space="preserve">services/payments</text>
+<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="176" xml:space="preserve">current</text>
+<text class="c2" x="18.0" y="195" xml:space="preserve">✓</text>
+<text class="t" x="34.8 43.2 51.6 60.0" y="195" xml:space="preserve">blog</text>
+<text class="t" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="195" xml:space="preserve">main +1</text>
+<text class="c2" x="18.0" y="214" xml:space="preserve">✓</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4" y="214" xml:space="preserve">platform/billing-api</text>
+<text class="t" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="214" xml:space="preserve">main +4</text>
+<text class="c2" x="18.0" y="233" xml:space="preserve">✓</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2" y="233" xml:space="preserve">services/api</text>
+<text class="t" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="233" xml:space="preserve">main +3</text>
+<text class="dim" x="18.0" y="252" xml:space="preserve">·</text>
+<text class="t" x="34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2" y="252" xml:space="preserve">services/web</text>
+<text class="dim" x="244.8 253.2 261.6 270.0 278.4 286.8 295.2" y="252" xml:space="preserve">current</text>
+<text class="t" x="18.0 26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6 228.0 236.4 244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6" y="290" xml:space="preserve">Synced 9 repos in 100ms: 4 synced, 4 current, 1 skipped</text>
+<text class="t b" x="18.0 26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6" y="328" xml:space="preserve">Needs attention</text>
+<text class="c3" x="34.8" y="347" xml:space="preserve">!</text>
+<text class="t" x="51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4" y="347" xml:space="preserve">platform/auth</text>
+<text class="c3" x="177.6 186.0 194.4 202.8 211.2 219.6 228.0 236.4 244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8" y="347" xml:space="preserve">skipped: diverged (1 ahead, 1 behind origin/main)</text>
+</svg>

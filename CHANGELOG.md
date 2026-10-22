@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The user guide spells out sync step by step - the exact git commands, in order - and compares it with `git pull` when you have local changes.
+- `ff_dirty: true` under a workspace's `sync:` fast-forwards a repo with uncommitted changes when the update changes none of the same files, keeping the edits. When it would touch one, the repo is skipped and the reason names the files. Off by default: a dirty repo is still skipped.
+- `L` in the interactive view shows the repo's commit graph - every branch, tag and remote, newest first, in git's colours - in a scrollable window, without any extra tool. It reads at most the newest 300 commits and says when there are more.
+- The interactive view takes the mouse: click a row to select it (a second click on a group header collapses it) and scroll with the wheel. `tui.mouse: false` turns it off.
+- The interactive view reopens where you left it: the same workspace, collapsed groups and detail pane, from `~/.local/state/mrm/tui.json`. `-w` still picks the workspace.
+- `ctrl+d` / `ctrl+u` scroll the detail pane and the graph half a page; with the pane closed they move the list.
+- **User guide** (`docs/user-guide.md`): concepts (workspaces, discovery, groups, tags, the default branch, every state, flag and outcome), every config key with its default, status, sync rules and policies, filters, the interactive view's keys, the web UI and its security, `open`, `exec`, `prune`, `drift`, forge tokens per forge, hooks, schedules, notifications, scripting, completion, troubleshooting and uninstalling.
+- Pictures in the README and the guide - `mrm status`, `mrm sync`, the interactive view and its detail pane, the web UI in light and dark, how mrm fits together, and what sync does to each repo. The terminal pictures are mrm's real output on a demo fleet, rebuilt with `task docs:images`.
+
+### Changed
+- Interactive view keys:
+  - `←` / `→` step through the workspaces, with *all* as one of them.
+  - `shift+tab` collapses every group, or expands them all when all are collapsed.
+  - `J` / `K` and `shift+↓` / `shift+↑` move 10 rows.
+  - `p` opens the repo's pull requests, `P` its pipelines or actions, and `b` the current branch on the forge. `O` is gone: `p` replaces it, so an uppercase key now always means "everything shown" or a sibling page.
+- The interactive view's footer shows as many keys as fit the terminal, most useful first, always ending with `? help`. It follows what you're doing: on a group header it shows the group keys, with repos marked the keys for them, and with a filter on, the filter and how to clear it.
+- The interactive view's keys come from one table, so `?` help, the command palette and the docs always list the same keys. Help scrolls when the terminal is short and closes with `esc`, `q` or `?`. `Home` and `End` (top and bottom) were already there; they are now documented.
+- The README is rewritten for someone new to mrm: what it is and why, install, a five-minute first run, how to read the status, then each way in, with links into the guide.
+
 ## [0.2.0] - 2026-10-19
 
 The web UI (phase 3) and the extras (phase 4): `exec`, hooks, `prune`, `drift`, scheduled syncs, and pull request and CI counts from the forges.

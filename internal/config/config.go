@@ -62,6 +62,7 @@ type SyncPolicy struct {
 	Remote       string `yaml:"remote"`
 	FFCurrent    bool   `yaml:"ff_current"`
 	SwitchMerged bool   `yaml:"switch_merged"`
+	FFDirty      bool   `yaml:"ff_dirty"` // fast-forward over local changes the update doesn't touch
 }
 
 // Override is a per-repo exception, keyed by repo name or path glob.
@@ -112,7 +113,11 @@ type Endpoint struct {
 type TUI struct {
 	OpenCmd      string `yaml:"open_cmd"`
 	FetchOnStart bool   `yaml:"fetch_on_start"`
+	Mouse        *bool  `yaml:"mouse"` // default true
 }
+
+// MouseOn reports whether the interactive view takes the mouse.
+func (t TUI) MouseOn() bool { return t.Mouse == nil || *t.Mouse }
 
 // Web settings (phase 3).
 type Web struct {

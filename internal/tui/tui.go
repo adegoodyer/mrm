@@ -42,6 +42,7 @@ type Options struct {
 	CachePath string           // default paths.StatusCache()
 	HistPath  string           // default paths.History()
 	Forge     *forgeapi.Client // PR and CI info; nil leaves it out
+	StatePath string           // where the view is remembered; "" doesn't (tests)
 }
 
 type ui struct {
@@ -68,6 +69,7 @@ type ui struct {
 	running   map[string]bool
 	marks     map[string]bool
 	collapsed map[string]bool
+	keys      []binding
 
 	ws         string
 	query      string
@@ -89,6 +91,7 @@ type ui struct {
 	msgAt     time.Time
 	quitArmed bool
 	frame     int
+	width     int // of the screen, for the footer
 }
 
 // Run starts the TUI and returns when the user quits.
@@ -123,8 +126,10 @@ func newUI(ctx context.Context, opts Options) (*ui, error) {
 		results: map[string]model.Result{}, forge: map[string]forgeapi.Info{}, running: map[string]bool{},
 		marks: map[string]bool{}, collapsed: map[string]bool{},
 		ws: opts.Workspace, query: opts.Query, filt: f.WithForges(opts.Config.Forges),
+		keys: bindings(),
 	}
 	u.build()
+	u.loadState()
 	u.load()
 	return u, nil
 }
@@ -193,6 +198,16 @@ func (u *ui) build() {
 	u.pages = tview.NewPages().AddPage("main", u.root, true, true)
 	u.app.SetRoot(u.pages, true).SetFocus(u.list)
 	u.app.SetInputCapture(u.onKey)
+	u.app.EnableMouse(u.cfg.TUI.MouseOn())
+	u.app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
+		// Refit the footer when the terminal is resized. This runs on the
+		// UI goroutine, inside a draw: change state only, never Draw.
+		if w, _ := screen.Size(); w != u.width {
+			u.width = w
+			u.drawFooter()
+		}
+		return false
+	})
 	u.loading = true
 }
 
@@ -207,7 +222,9 @@ func (u *ui) run() error {
 	stop := make(chan struct{})
 	go u.tick(stop)
 	defer close(stop)
-	return u.app.Run()
+	err := u.app.Run()
+	u.saveState()
+	return err
 }
 
 // tick animates spinners while an operation runs and expires footer
@@ -385,18 +402,7 @@ func (u *ui) drawChrome() {
 	// The status takes what it needs; the header gets the rest.
 	u.top.ResizeItem(u.status, tview.TaggedStringWidth(st)+1, 0)
 
-	switch {
-	case u.message != "":
-		u.footer.SetText(" " + u.msgStyle + tview.Escape(u.message) + "[-::-]")
-	case len(u.marks) > 0:
-		u.footer.SetText(fmt.Sprintf(" [fuchsia::b]%d marked[-::-]  [::d]s sync  f fetch  A clear marks  ctrl+k more[::-]", len(u.marks)))
-	default:
-		q := ""
-		if u.query != "" {
-			q = "  [aqua]/" + tview.Escape(u.query) + "[-]"
-		}
-		u.footer.SetText(" [::d]/ filter  space mark  s sync  f fetch  o open  enter " + tview.Escape(u.cfg.TUI.OpenCmd) + "  l detail  ! attention  ? help[::-]" + q)
-	}
+	u.drawFooter()
 }
 
 func (u *ui) anyCollapsed() bool {
@@ -442,18 +448,14 @@ func (u *ui) show(msg, style string) {
 	u.drawChrome()
 }
 
-// onKey handles keys for the list; overlays and the filter input get their
-// keys first through their own handlers.
+// onKey handles keys for the list from the key table (keys.go); overlays
+// and the filter input get their keys first through their own handlers.
 func (u *ui) onKey(ev *tcell.EventKey) *tcell.EventKey {
 	if front, _ := u.pages.GetFrontPage(); front != "main" {
 		return ev // an overlay is open
 	}
 	if u.filtering {
 		return ev // the input field handles it
-	}
-	if ev.Key() == tcell.KeyCtrlK {
-		u.openPalette()
-		return nil
 	}
 	if ev.Key() == tcell.KeyCtrlC {
 		u.quit()
@@ -462,104 +464,26 @@ func (u *ui) onKey(ev *tcell.EventKey) *tcell.EventKey {
 	if ev.Key() != tcell.KeyRune || ev.Rune() != 'q' {
 		u.quitArmed = false
 	}
-	switch ev.Key() {
-	case tcell.KeyUp:
-		u.list.move(-1)
-	case tcell.KeyDown:
-		u.list.move(1)
-	case tcell.KeyPgUp:
-		u.list.page(-1)
-	case tcell.KeyPgDn:
-		u.list.page(1)
-	case tcell.KeyHome:
-		u.list.top()
-	case tcell.KeyEnd:
-		u.list.bottom()
-	case tcell.KeyTab:
-		u.toggleGroup()
-		return nil
-	case tcell.KeyEnter:
-		if cur, ok := u.list.current(); ok && cur.header {
-			u.toggleGroup()
-		} else {
-			u.handoff(handoffGit)
+	b, ok := u.bindingFor(ev)
+	if !ok {
+		if ev.Key() == tcell.KeyRune {
+			return nil // unbound letters do nothing
 		}
-		return nil
-	case tcell.KeyEscape:
-		switch {
-		case u.query != "":
-			u.setFilter("")
-		case u.attention:
-			u.attention = false
-			u.refresh()
-		case len(u.marks) > 0:
-			u.marks = map[string]bool{}
-			u.drawChrome()
-		}
-		return nil
-	case tcell.KeyRune:
-		return u.onRune(ev.Rune())
-	default:
 		return ev
 	}
-	u.updateDetail()
+	before, _ := u.list.current()
+	b.run(u)
+	u.cursorMoved(before)
 	return nil
 }
 
-func (u *ui) onRune(r rune) *tcell.EventKey {
-	switch r {
-	case 'j':
-		u.list.move(1)
-	case 'k':
-		u.list.move(-1)
-	case 'g':
-		u.list.top()
-	case 'G':
-		u.list.bottom()
-	case '/':
-		u.startFilter()
-		return nil
-	case ' ':
-		u.toggleMark()
-	case 'a':
-		u.markVisible()
-	case 'A':
-		u.marks = map[string]bool{}
-		u.drawChrome()
-	case 's':
-		u.act(engine.OpSync, u.targets())
-	case 'S':
-		u.act(engine.OpSync, u.visible())
-	case 'f':
-		u.act(engine.OpFetch, u.targets())
-	case 'F':
-		u.act(engine.OpFetch, u.visible())
-	case 'r':
-		u.startOp(engine.OpStatus, u.repos, false, "reading")
-	case 'o':
-		u.open(openWeb)
-	case 'O':
-		u.open(openPRs)
-	case 'e':
-		u.handoff(handoffEditor)
-	case 't':
-		u.handoff(handoffShell)
-	case 'l':
-		u.toggleDetail()
-	case '!':
-		u.attention = !u.attention
-		u.refresh()
-	case 'w':
-		u.openWorkspaces()
-	case '?':
-		u.openHelp()
-	case 'q':
-		u.quit()
-	default:
-		return nil
+// cursorMoved updates what follows the cursor - the detail pane and the
+// footer's hints - when it is on a different row than before.
+func (u *ui) cursorMoved(before item) {
+	if after, _ := u.list.current(); after != before {
+		u.updateDetail()
+		u.drawFooter()
 	}
-	u.updateDetail()
-	return nil
 }
 
 func (u *ui) quit() {

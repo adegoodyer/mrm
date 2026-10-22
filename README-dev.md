@@ -4,8 +4,10 @@
   - [Layout](#layout)
   - [Rules](#rules)
   - [Tasks](#tasks)
+  - [Trying a Change](#trying-a-change)
   - [Tests](#tests)
   - [Releasing](#releasing)
+  - [Docs Images](#docs-images)
   - [Adding a Command](#adding-a-command)
 
 ## Layout
@@ -37,7 +39,8 @@ internal/
   term/                 ANSI colour, padding, live progress line
   logger/               zap JSON log in the state dir
   gittest/              test fixtures: bare remote + seed + clones
-docs/                   spec, UAT, roadmap
+docs/                   user guide, spec, UAT, roadmap
+  images/               README and user guide pictures; src/ holds what makes them (see Docs Images)
 ```
 
 ## Rules
@@ -49,6 +52,7 @@ docs/                   spec, UAT, roadmap
 - **The TUI is tview, never Bubble Tea.** UI state is only touched on the UI goroutine: background work (engine runs, detail reads) hands results back with `app.QueueUpdateDraw`.
 - **Never call `QueueUpdate`, `QueueUpdateDraw` or `Draw` from the UI goroutine** - in key handlers or inside a queued update. They wait for the UI loop that is running them: the terminal freezes and Ctrl+C dies with it (it did, 6 s after start-up, when a footer message expired). On the UI goroutine, change state and return; tview redraws after every event and queued update.
 - **CLI, TUI and web show the same text** for a repo: build it in `internal/view`, colour it in the front end.
+- **TUI keys live in one table** (`internal/tui/keys.go`): the key handler, the `?` help and the command palette all read it. Add a key there and to the key table in [docs/user-guide.md](docs/user-guide.md#the-interactive-view); `TestKeysDocumented` fails until you do, and `TestKeysUnique` catches a key bound twice.
 - **Web: no inline script or style.** The CSP allows only `'self'`; put CSS in `static/mrm.css`, behaviour in `static/mrm.js`, and size things with classes or SVG attributes (the state bars are SVG for this reason). Templates escape everything; keep it that way.
 - **Web grids need `minmax(0, 1fr)`**, not `1fr`: a long repo name or URL otherwise widens the column past the screen (it did, at every width).
 - Docs: tables are aligned with `markdown-table-prettify` (the VS Code extension's formatter).
@@ -59,9 +63,30 @@ docs/                   spec, UAT, roadmap
 task              # list
 task check        # gofmt check + vet + race tests - run before committing
 task build        # bin/mrm
+task install      # go install: replaces the mrm on your PATH with this checkout
 task test:smoke ROOT=~/work   # doctor, status, sync --dry-run in a folder of clones (fetches; changes no branches)
 task run -- status -w work
+task docs:images  # rebuild the README and user guide pictures
 ```
+
+## Trying a Change
+Run the checkout's build without replacing your installed mrm:
+
+```bash
+task build && ./bin/mrm                # your real repos and config
+```
+
+To try it against the demo fleet instead - nine made-up repos in every state (behind, diverged, dirty, unpushed, a stash, PRs and a failing CI) in a throwaway folder, with nothing outside it touched:
+
+```bash
+bash docs/images/src/demo.sh /tmp/mrm-demo
+HOME=/tmp/mrm-demo/home XDG_CONFIG_HOME=/tmp/mrm-demo/xdg/config XDG_CACHE_HOME=/tmp/mrm-demo/xdg/cache \
+  XDG_STATE_HOME=/tmp/mrm-demo/xdg/state ./bin/mrm
+```
+
+Sync works there too: the demo's remotes resolve to local bare repos. Run `demo.sh` again for a fresh copy.
+
+When you're happy with it, `task install` makes it the `mrm` on your PATH (`go install` puts it in `$(go env GOPATH)/bin` unless `GOBIN` is set). The interactive view remembers its last view in `~/.local/state/mrm/tui.json`; delete that file to start fresh.
 
 ## Tests
 `go test ./...` builds real repos in temp dirs (`internal/gittest`): a bare remote, a seed clone that pushes "upstream" changes, and clones put into each state (dirty, diverged, mid-merge, detached, upstream gone, untracked clash, odd paths). `gittest.Isolate()` (called from `TestMain`) points git at an empty global config with a fake identity (`Dev User <dev@example.com>`), so your own git config - signing, hooks, default branch - can't leak in.
@@ -79,9 +104,28 @@ UAT criteria marked `[A]` in [docs/02-user-acceptance-tests.md](docs/02-user-acc
 
 The binary's version comes from ldflags (`main.version`); `go install` builds read it from the module version instead.
 
+## Docs Images
+The pictures in the README and the [user guide](docs/user-guide.md) are mrm's real output on a demo fleet of nine made-up repos (`docs/images/src/demo.sh`: acme remotes, `Dev User <dev@example.com>`, seeded PR and CI answers), so they show what mrm actually draws. Rebuild them after changing anything visible:
+
+```bash
+task docs:images    # Linux: needs python3 and util-linux script
+```
+
+| Image                                  | Made by                                                                                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `status.svg`, `sync.svg`               | `mrm status` / `mrm sync` run under `script` for colour, then `src/term2svg.py ansi`                                                  |
+| `tui.svg`, `tui-detail.svg`            | `internal/tui/screenshot_test.go` dumps a frame of the real TUI (skipped unless `MRM_SCREENSHOT` is set), then `src/term2svg.py grid` |
+| `how-it-works.svg`, `sync-rules.svg`   | `src/diagrams.py` - edit the text there when behaviour changes                                                                        |
+| `web-overview-*.png`, `web-repo-*.png` | by hand, below                                                                                                                        |
+
+The SVGs follow the reader's light or dark theme (`prefers-color-scheme`) and place every character on a grid, so they line up whatever monospace font the reader has.
+
+Web screenshots: build a demo fleet with `bash docs/images/src/demo.sh /tmp/mrm-demo github`, then run `mrm web` against it with `HOME`, `GIT_CONFIG_NOSYSTEM=1` and the `XDG_*` variables pointing into `/tmp/mrm-demo` (as `mrm_in` in `src/make.sh` does). Take each page at 1280 px wide, 1.5x, once with the browser in light mode and once in dark: Overview 1280 x 1000, the `services/web` Repo page 1280 x 530. Save them as `docs/images/web-{overview,repo}-{light,dark}.png`, reduced to a 256-colour palette (about 40-85 KB each).
+
 ## Adding a Command
 1. `cmd/<name>.go` with a `cobra.Command`, registered in `init()`.
 2. Use `newApp()` for config + engine and `a.repos(ctx)` for the selected, filtered repos.
 3. Return `&exitError{code: 2}` when repos need attention; plain errors exit 1.
 4. Add it to the CLI table in the spec and a UAT row.
-5. Note it under `[Unreleased]` in `CHANGELOG.md`.
+5. Add it to the commands table in the README and a section in the [user guide](docs/user-guide.md).
+6. Note it under `[Unreleased]` in `CHANGELOG.md`.

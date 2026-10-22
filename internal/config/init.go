@@ -36,6 +36,7 @@ workspaces:
       remote: origin
       ff_current: false   # also fast-forward a non-default current branch
       switch_merged: false # switch to the default branch when the current one is merged
+      ff_dirty: false     # fast-forward over local changes the update doesn't touch
 {{- end}}
 
 # Exceptions only - repos are discovered. Keys are repo names, name globs,
@@ -80,6 +81,7 @@ forge_cache: 10m          # how long forge answers are reused
 tui:
   open_cmd: lazygit
   fetch_on_start: false
+  mouse: true             # click and scroll; false keeps the terminal's own text selection
 
 web:
   port: 7420

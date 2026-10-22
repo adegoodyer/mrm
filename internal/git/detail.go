@@ -58,3 +58,23 @@ func (r *Runner) ReadDetail(ctx context.Context, dir string, n int) Detail {
 	}
 	return d
 }
+
+// GraphLimit is how many commits Graph reads.
+const GraphLimit = 300
+
+// Graph is `git log --graph` over every branch, tag and remote, newest
+// first, with git's own colours (ANSI) and at most GraphLimit commits, and
+// how many commits there are in all.
+func (r *Runner) Graph(ctx context.Context, dir string) (string, int, error) {
+	out, err := r.Run(ctx, dir, "log", "--graph", "--all", "--color=always", "--date-order",
+		"-n", strconv.Itoa(GraphLimit),
+		"--format=%C(auto)%h%d%C(reset) %s %C(dim)%cr · %an%C(reset)")
+	if err != nil {
+		return "", 0, err
+	}
+	total := 0
+	if n, err := r.Run(ctx, dir, "rev-list", "--all", "--count"); err == nil {
+		total, _ = strconv.Atoi(strings.TrimSpace(n))
+	}
+	return out, total, nil
+}
