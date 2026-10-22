@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="385" viewBox="0 0 876 385" role="img" aria-label="mrm">
+<title>mrm</title><style>
+  .bg{fill:#ffffff} .bar{fill:#eef1f4} .edge{stroke:#d0d7de} .t{fill:#1f2328}
+  .title{fill:#59636e} .dim{fill:#6e7781} .c1{fill:#cf222e} .c2{fill:#1a7f37}
+  .c3{fill:#9a6700} .c4{fill:#0969da} .c5{fill:#8250df} .c6{fill:#1b7c83} .c7{fill:#6e7781}
+  .rev{fill:#1f2328} .revt{fill:#ffffff} .hdr{fill:#0969da}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#0d1117} .bar{fill:#161b22} .edge{stroke:#30363d} .t{fill:#e6edf3}
+    .title{fill:#9198a1} .dim{fill:#8b949e} .c1{fill:#ff7b72} .c2{fill:#3fb950}
+    .c3{fill:#d29922} .c4{fill:#58a6ff} .c5{fill:#bc8cff} .c6{fill:#39c5cf} .c7{fill:#8b949e}
+    .rev{fill:#e6edf3} .revt{fill:#0d1117} .hdr{fill:#58a6ff}
+  }
+  text{font-family:ui-monospace,"SF Mono","Cascadia Mono","JetBrains Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:14px;white-space:pre}
+  .b{font-weight:700}
+</style>
+<rect class="bg edge" x="0.5" y="0.5" width="875" height="384" rx="8"/>
+<path class="bar" d="M8.5 .5h859a8 8 0 0 1 8 8V34H.5V8.5a8 8 0 0 1 8-8z"/>
+<line class="edge" x1="0" y1="34" x2="876" y2="34"/>
+<circle cx="20" cy="17.0" r="5.5" fill="#ff5f57"/>
+<circle cx="38" cy="17.0" r="5.5" fill="#febc2e"/>
+<circle cx="56" cy="17.0" r="5.5" fill="#28c840"/>
+<text class="title" x="438.0" y="22.0" text-anchor="middle">mrm</text>
+<text class="t b" x="26.4 34.8 43.2" y="62" xml:space="preserve">mrm</text>
+<text class="t" x="68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2" y="62" xml:space="preserve">all · 9 repos</text>
+<text class="c5" x="211.2" y="62" xml:space="preserve">⇅</text>
+<text class="t" x="228.0" y="62" xml:space="preserve">1</text>
+<text class="c3" x="253.2" y="62" xml:space="preserve">●</text>
+<text class="t" x="270.0" y="62" xml:space="preserve">1</text>
+<text class="c6" x="295.2" y="62" xml:space="preserve">↑</text>
+<text class="t" x="312.0" y="62" xml:space="preserve">1</text>
+<text class="c4" x="337.2" y="62" xml:space="preserve">↓</text>
+<text class="t" x="354.0" y="62" xml:space="preserve">4</text>
+<text class="c2" x="379.2" y="62" xml:space="preserve">✓</text>
+<text class="t" x="396.0" y="62" xml:space="preserve">2</text>
+<text class="dim" x="664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6" y="62" xml:space="preserve">synced 2s ago</text>
+<text class="dim" x="799.2 807.6 816.0 824.4 832.8 841.2" y="62" xml:space="preserve">ctrl+k</text>
+<text class="c7 b" x="18.0 26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0" y="81" xml:space="preserve">─ ▾ personal · 2</text>
+<text class="c7" x="160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6 228.0 236.4 244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6 774.0 782.4 790.8 799.2 807.6 816.0 824.4 832.8 841.2 849.6" y="81" xml:space="preserve">───────────────────────────────────────────────────────────────────────────────────</text>
+<text class="c4 b" x="34.8" y="100" xml:space="preserve">↓</text>
+<text class="t b" x="60.0 68.4 76.8 85.2" y="100" xml:space="preserve">blog</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="100" xml:space="preserve">main</text>
+<text class="t" x="421.2 429.6" y="100" xml:space="preserve">1↓</text>
+<text class="dim" x="530.4 538.8" y="100" xml:space="preserve">9w</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8" y="100" xml:space="preserve">post: fast-forward only</text>
+<text class="c2" x="34.8" y="119" xml:space="preserve">✓</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8" y="119" xml:space="preserve">dotfiles</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="119" xml:space="preserve">main</text>
+<text class="dim" x="421.2" y="119" xml:space="preserve">·</text>
+<text class="dim" x="530.4 538.8" y="119" xml:space="preserve">2w</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6" y="119" xml:space="preserve">stash</text>
+<text class="c7 b" x="18.0 26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6" y="138" xml:space="preserve">─ ▾ work · infra · 1</text>
+<text class="c7" x="194.4 202.8 211.2 219.6 228.0 236.4 244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6 774.0 782.4 790.8 799.2 807.6 816.0 824.4 832.8 841.2 849.6" y="138" xml:space="preserve">───────────────────────────────────────────────────────────────────────────────</text>
+<text class="c2" x="34.8" y="157" xml:space="preserve">✓</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6 228.0 236.4 244.8" y="157" xml:space="preserve">infra/terraform-network</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="157" xml:space="preserve">main</text>
+<text class="dim" x="421.2" y="157" xml:space="preserve">·</text>
+<text class="dim" x="530.4 538.8" y="157" xml:space="preserve">3w</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0" y="157" xml:space="preserve">feat: private subnets</text>
+<text class="c7 b" x="18.0 26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8" y="176" xml:space="preserve">─ ▾ work · platform · 2</text>
+<text class="c7" x="219.6 228.0 236.4 244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6 774.0 782.4 790.8 799.2 807.6 816.0 824.4 832.8 841.2 849.6" y="176" xml:space="preserve">────────────────────────────────────────────────────────────────────────────</text>
+<text class="c5 b" x="34.8" y="195" xml:space="preserve">⇅</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8" y="195" xml:space="preserve">platform/auth</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="195" xml:space="preserve">main</text>
+<text class="t" x="421.2 429.6 438.0 446.4 454.8" y="195" xml:space="preserve">1↑ 1↓</text>
+<text class="dim" x="522.0 530.4 538.8" y="195" xml:space="preserve">24h</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6" y="195" xml:space="preserve">feat: key cache</text>
+<text class="c4 b" x="34.8" y="214" xml:space="preserve">↓</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8 211.2 219.6" y="214" xml:space="preserve">platform/billing-api</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="214" xml:space="preserve">main</text>
+<text class="t" x="421.2 429.6" y="214" xml:space="preserve">4↓</text>
+<text class="dim" x="530.4 538.8" y="214" xml:space="preserve">3d</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8" y="214" xml:space="preserve">3 PRs · CI running</text>
+<text class="c7 b" x="18.0 26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4 202.8" y="233" xml:space="preserve">─ ▾ work · services · 4</text>
+<text class="c7" x="219.6 228.0 236.4 244.8 253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8 547.2 555.6 564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6 774.0 782.4 790.8 799.2 807.6 816.0 824.4 832.8 841.2 849.6" y="233" xml:space="preserve">────────────────────────────────────────────────────────────────────────────</text>
+<text class="c5 b" x="18.0" y="252" xml:space="preserve">▌</text>
+<text class="c4 b" x="34.8" y="252" xml:space="preserve">↓</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4" y="252" xml:space="preserve">services/api</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="252" xml:space="preserve">main</text>
+<text class="t" x="421.2 429.6" y="252" xml:space="preserve">3↓</text>
+<text class="dim" x="530.4 538.8" y="252" xml:space="preserve">2h</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6" y="252" xml:space="preserve">2 PRs</text>
+<text class="c5 b" x="18.0" y="271" xml:space="preserve">▌</text>
+<text class="c4 b" x="34.8" y="271" xml:space="preserve">↓</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8" y="271" xml:space="preserve">services/docs</text>
+<text class="t" x="270.0 278.4 286.8 295.2" y="271" xml:space="preserve">main</text>
+<text class="t" x="421.2 429.6" y="271" xml:space="preserve">1↓</text>
+<text class="dim" x="530.4 538.8" y="271" xml:space="preserve">5d</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8" y="271" xml:space="preserve">docs: deploy guide</text>
+<rect class="rev" x="18.0" y="276" width="840.0" height="19"/>
+<text class="revt b" x="34.8" y="290" xml:space="preserve">↑</text>
+<text class="revt b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4 160.8 169.2 177.6 186.0 194.4" y="290" xml:space="preserve">services/payments</text>
+<text class="revt" x="270.0 278.4 286.8 295.2" y="290" xml:space="preserve">main</text>
+<text class="revt" x="421.2 429.6" y="290" xml:space="preserve">2↑</text>
+<text class="revt" x="530.4 538.8" y="290" xml:space="preserve">2h</text>
+<text class="revt" x="564.0 572.4 580.8 589.2" y="290" xml:space="preserve">1 PR</text>
+<text class="c3 b" x="34.8" y="309" xml:space="preserve">●</text>
+<text class="t b" x="60.0 68.4 76.8 85.2 93.6 102.0 110.4 118.8 127.2 135.6 144.0 152.4" y="309" xml:space="preserve">services/web</text>
+<text class="t" x="270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0 362.4 370.8 379.2 387.6 396.0" y="309" xml:space="preserve">feature/checkout</text>
+<text class="t" x="421.2 429.6" y="309" xml:space="preserve">2↑</text>
+<text class="c3" x="480.0 488.4" y="309" xml:space="preserve">2M</text>
+<text class="dim" x="530.4 538.8" y="309" xml:space="preserve">4h</text>
+<text class="dim" x="564.0 572.4 580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8 673.2 681.6 690.0 698.4 706.8 715.2 723.6 732.0 740.4 748.8 757.2 765.6 774.0 782.4 790.8 799.2 807.6 816.0 824.4 832.8 841.2 849.6" y="309" xml:space="preserve">on feature/checkout, default main …</text>
+<text class="c5 b" x="26.4 34.8 43.2 51.6 60.0 68.4 76.8 85.2" y="366" xml:space="preserve">2 marked</text>
+<text class="dim" x="110.4 118.8 127.2 135.6 144.0 152.4" y="366" xml:space="preserve">s sync</text>
+<text class="dim" x="177.6 186.0 194.4 202.8 211.2 219.6 228.0" y="366" xml:space="preserve">f fetch</text>
+<text class="dim" x="253.2 261.6 270.0 278.4 286.8 295.2 303.6 312.0 320.4 328.8 337.2 345.6 354.0" y="366" xml:space="preserve">A clear marks</text>
+<text class="dim" x="379.2 387.6 396.0 404.4 412.8 421.2 429.6 438.0 446.4 454.8 463.2" y="366" xml:space="preserve">ctrl+k more</text>
+</svg>

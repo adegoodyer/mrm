@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="430" viewBox="0 0 880 430" role="img" aria-label="How mrm works: workspaces are discovered, one engine runs git, three front ends show it"><title>How mrm works: workspaces are discovered, one engine runs git, three front ends show it</title><style>
+  .bg{fill:#ffffff;stroke:#d0d7de} .card{fill:#f6f8fa;stroke:#d0d7de} .hi{fill:#ddf4ff;stroke:#54aeff}
+  .t{fill:#1f2328} .m{fill:#59636e} .ln{stroke:#8c959f;fill:none} .ah{fill:#8c959f}
+  .ok{fill:#1a7f37} .warn{fill:#9a6700} .bad{fill:#cf222e} .acc{fill:#0969da} .neu{fill:#59636e}
+  .okb{fill:#dafbe1} .warnb{fill:#fff8c5} .badb{fill:#ffebe9} .neub{fill:#eaeef2} .accb{fill:#ddf4ff}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#0d1117;stroke:#30363d} .card{fill:#161b22;stroke:#30363d} .hi{fill:#0c2d4b;stroke:#1f6feb}
+    .t{fill:#e6edf3} .m{fill:#9198a1} .ln{stroke:#6e7681} .ah{fill:#6e7681}
+    .ok{fill:#3fb950} .warn{fill:#d29922} .bad{fill:#ff7b72} .acc{fill:#58a6ff} .neu{fill:#9198a1}
+    .okb{fill:#12261e} .warnb{fill:#2b2111} .badb{fill:#2d1517} .neub{fill:#21262d} .accb{fill:#0c2d4b}
+  }
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;font-size:14px}
+  .mono{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:13px}
+  .h{font-weight:600} .s{font-size:12.5px} .xl{font-size:16px;font-weight:600}
+</style><rect class="bg" x="0.5" y="0.5" width="879" height="429" rx="10"/>
+<rect class="card" x="24" y="24" width="230" height="250" rx="8"/>
+<text class="t xl" x="40" y="52" text-anchor="start">Your folders</text>
+<text class="m s" x="40" y="72" text-anchor="start">workspaces in the config</text>
+<text x="40" y="96" text-anchor="start"><tspan class="t h">work</tspan><tspan class="m mono">  ~/work</tspan></text>
+<text class="m mono" x="56" y="116" text-anchor="start">services/api</text>
+<text class="m mono" x="56" y="136" text-anchor="start">services/web</text>
+<text class="m mono" x="56" y="156" text-anchor="start">platform/auth</text>
+<text class="m mono" x="56" y="176" text-anchor="start">…</text>
+<text x="40" y="206" text-anchor="start"><tspan class="t h">personal</tspan><tspan class="m mono">  ~/src</tspan></text>
+<text class="m mono" x="56" y="226" text-anchor="start">dotfiles</text>
+<text class="m mono" x="56" y="246" text-anchor="start">blog</text>
+<rect class="hi" x="324" y="24" width="232" height="250" rx="8"/>
+<text class="t xl" x="340" y="52" text-anchor="start">Engine</text>
+<text class="m s" x="340" y="72" text-anchor="start">the only part that runs git</text>
+<text class="t" x="340" y="104" text-anchor="start">· 8 repos at a time</text>
+<text class="t" x="340" y="128" text-anchor="start">· no prompts, ssh BatchMode</text>
+<text class="t" x="340" y="152" text-anchor="start">· a timeout on every git call</text>
+<text class="t" x="340" y="176" text-anchor="start">· fetch + fast-forward only</text>
+<text class="t" x="340" y="200" text-anchor="start">· one sync per workspace (lock)</text>
+<path class="ln" d="M254 150 L322 150" stroke-width="1.5"/>
+<polygon class="ah" points="322,150 314,145 314,155"/>
+<text class="m s" x="288" y="140" text-anchor="middle">discover</text>
+<rect class="card" x="626" y="24" width="230" height="78" rx="8"/>
+<text class="t mono h" x="642" y="54" text-anchor="start">mrm status · sync · exec …</text>
+<text class="m s" x="642" y="78" text-anchor="start">CLI: scripts, cron, --json</text>
+<path class="ln" d="M556 150 L590 150 L590 63 L624 63" stroke-width="1.5"/>
+<polygon class="ah" points="624,63 616,58 616,68"/>
+<rect class="card" x="626" y="110" width="230" height="78" rx="8"/>
+<text class="t mono h" x="642" y="140" text-anchor="start">mrm</text>
+<text class="m s" x="642" y="164" text-anchor="start">interactive view in the terminal</text>
+<path class="ln" d="M556 150 L590 150 L590 149 L624 149" stroke-width="1.5"/>
+<polygon class="ah" points="624,149 616,144 616,154"/>
+<rect class="card" x="626" y="196" width="230" height="78" rx="8"/>
+<text class="t mono h" x="642" y="226" text-anchor="start">mrm web</text>
+<text class="m s" x="642" y="250" text-anchor="start">web UI on 127.0.0.1</text>
+<path class="ln" d="M556 150 L590 150 L590 235 L624 235" stroke-width="1.5"/>
+<polygon class="ah" points="624,235 616,230 616,240"/>
+<rect class="card" x="24" y="318" width="230" height="88" rx="8"/>
+<text class="t h" x="40" y="346" text-anchor="start">Around a sync</text>
+<text class="m s" x="40" y="370" text-anchor="start">systemd timer runs mrm sync</text>
+<text class="m s" x="40" y="390" text-anchor="start">post_sync hooks · Gotify / ntfy</text>
+<rect class="card" x="324" y="318" width="232" height="88" rx="8"/>
+<text class="t h" x="340" y="346" text-anchor="start">Cache and history</text>
+<text class="m s" x="340" y="370" text-anchor="start">status.json · runs.jsonl · mrm.log</text>
+<text class="m s" x="340" y="390" text-anchor="start">in your XDG cache and state dirs</text>
+<rect class="card" x="626" y="318" width="230" height="88" rx="8"/>
+<text class="t h" x="642" y="346" text-anchor="start">Forges (optional)</text>
+<text class="m s" x="642" y="370" text-anchor="start">read-only API tokens: open PRs,</text>
+<text class="m s" x="642" y="390" text-anchor="start">CI state, org repo lists</text>
+<path class="ln" d="M400 274 L400 296 L139 296 L139 316" stroke-width="1.5"/>
+<polygon class="ah" points="139,316 134,308 144,308"/>
+<path class="ln" d="M480 274 L480 316" stroke-width="1.5"/>
+<polygon class="ah" points="480,316 475,308 485,308"/>
+<path class="ln" d="M741 274 L741 316" stroke-width="1.5" stroke-dasharray="5 4"/>
+<polygon class="ah" points="741,316 736,308 746,308"/>
+</svg>

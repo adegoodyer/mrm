@@ -51,6 +51,12 @@ tasks:
       - mkdir -p bin
       - go build -o {{.BINARY}} {{.PKG}}
 
+  docs:images:
+    desc: Rebuild the README and user guide terminal pictures and diagrams from a demo fleet (docs/images)
+    deps: [build]
+    cmds:
+      - bash docs/images/src/make.sh
+
   install:
     desc: Install mrm into GOBIN (go install)
     cmds:

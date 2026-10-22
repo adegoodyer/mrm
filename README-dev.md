@@ -6,6 +6,7 @@
   - [Tasks](#tasks)
   - [Tests](#tests)
   - [Releasing](#releasing)
+  - [Docs Images](#docs-images)
   - [Adding a Command](#adding-a-command)
 
 ## Layout
@@ -37,7 +38,8 @@ internal/
   term/                 ANSI colour, padding, live progress line
   logger/               zap JSON log in the state dir
   gittest/              test fixtures: bare remote + seed + clones
-docs/                   spec, UAT, roadmap
+docs/                   user guide, spec, UAT, roadmap
+  images/               README and user guide pictures; src/ holds what makes them (see Docs Images)
 ```
 
 ## Rules
@@ -79,9 +81,28 @@ UAT criteria marked `[A]` in [docs/02-user-acceptance-tests.md](docs/02-user-acc
 
 The binary's version comes from ldflags (`main.version`); `go install` builds read it from the module version instead.
 
+## Docs Images
+The pictures in the README and the [user guide](docs/user-guide.md) are mrm's real output on a demo fleet of nine made-up repos (`docs/images/src/demo.sh`: acme remotes, `Dev User <dev@example.com>`, seeded PR and CI answers), so they show what mrm actually draws. Rebuild them after changing anything visible:
+
+```bash
+task docs:images    # Linux: needs python3 and util-linux script
+```
+
+| Image                                  | Made by                                                                                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `status.svg`, `sync.svg`               | `mrm status` / `mrm sync` run under `script` for colour, then `src/term2svg.py ansi`                                                  |
+| `tui.svg`, `tui-detail.svg`            | `internal/tui/screenshot_test.go` dumps a frame of the real TUI (skipped unless `MRM_SCREENSHOT` is set), then `src/term2svg.py grid` |
+| `how-it-works.svg`, `sync-rules.svg`   | `src/diagrams.py` - edit the text there when behaviour changes                                                                        |
+| `web-overview-*.png`, `web-repo-*.png` | by hand, below                                                                                                                        |
+
+The SVGs follow the reader's light or dark theme (`prefers-color-scheme`) and place every character on a grid, so they line up whatever monospace font the reader has.
+
+Web screenshots: build a demo fleet with `bash docs/images/src/demo.sh /tmp/mrm-demo github`, then run `mrm web` against it with `HOME`, `GIT_CONFIG_NOSYSTEM=1` and the `XDG_*` variables pointing into `/tmp/mrm-demo` (as `mrm_in` in `src/make.sh` does). Take each page at 1280 px wide, 1.5x, once with the browser in light mode and once in dark: Overview 1280 x 1000, the `services/web` Repo page 1280 x 530. Save them as `docs/images/web-{overview,repo}-{light,dark}.png`, reduced to a 256-colour palette (about 40-85 KB each).
+
 ## Adding a Command
 1. `cmd/<name>.go` with a `cobra.Command`, registered in `init()`.
 2. Use `newApp()` for config + engine and `a.repos(ctx)` for the selected, filtered repos.
 3. Return `&exitError{code: 2}` when repos need attention; plain errors exit 1.
 4. Add it to the CLI table in the spec and a UAT row.
-5. Note it under `[Unreleased]` in `CHANGELOG.md`.
+5. Add it to the commands table in the README and a section in the [user guide](docs/user-guide.md).
+6. Note it under `[Unreleased]` in `CHANGELOG.md`.
