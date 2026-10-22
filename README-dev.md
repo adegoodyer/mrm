@@ -4,6 +4,7 @@
   - [Layout](#layout)
   - [Rules](#rules)
   - [Tasks](#tasks)
+  - [Trying a Change](#trying-a-change)
   - [Tests](#tests)
   - [Releasing](#releasing)
   - [Docs Images](#docs-images)
@@ -62,9 +63,30 @@ docs/                   user guide, spec, UAT, roadmap
 task              # list
 task check        # gofmt check + vet + race tests - run before committing
 task build        # bin/mrm
+task install      # go install: replaces the mrm on your PATH with this checkout
 task test:smoke ROOT=~/work   # doctor, status, sync --dry-run in a folder of clones (fetches; changes no branches)
 task run -- status -w work
+task docs:images  # rebuild the README and user guide pictures
 ```
+
+## Trying a Change
+Run the checkout's build without replacing your installed mrm:
+
+```bash
+task build && ./bin/mrm                # your real repos and config
+```
+
+To try it against the demo fleet instead - nine made-up repos in every state (behind, diverged, dirty, unpushed, a stash, PRs and a failing CI) in a throwaway folder, with nothing outside it touched:
+
+```bash
+bash docs/images/src/demo.sh /tmp/mrm-demo
+HOME=/tmp/mrm-demo/home XDG_CONFIG_HOME=/tmp/mrm-demo/xdg/config XDG_CACHE_HOME=/tmp/mrm-demo/xdg/cache \
+  XDG_STATE_HOME=/tmp/mrm-demo/xdg/state ./bin/mrm
+```
+
+Sync works there too: the demo's remotes resolve to local bare repos. Run `demo.sh` again for a fresh copy.
+
+When you're happy with it, `task install` makes it the `mrm` on your PATH (`go install` puts it in `$(go env GOPATH)/bin` unless `GOBIN` is set). The interactive view remembers its last view in `~/.local/state/mrm/tui.json`; delete that file to start fresh.
 
 ## Tests
 `go test ./...` builds real repos in temp dirs (`internal/gittest`): a bare remote, a seed clone that pushes "upstream" changes, and clones put into each state (dirty, diverged, mid-merge, detached, upstream gone, untracked clash, odd paths). `gittest.Isolate()` (called from `TestMain`) points git at an empty global config with a fake identity (`Dev User <dev@example.com>`), so your own git config - signing, hooks, default branch - can't leak in.
