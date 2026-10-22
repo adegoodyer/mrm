@@ -34,12 +34,10 @@ func (u *ui) actions() []action {
 		}
 	}
 	acts = append(acts,
-		action{"Open CI", "", func() { u.open(openCI) }},
-		action{"Open current branch on forge", "", func() { u.open(openBranch) }},
 		action{"Show every repo", "!", func() { u.attention = false; u.refresh() }},
 		action{"Clear filter", "esc", func() { u.setFilter("") }},
-		action{"Collapse every group", "", func() { u.setAllCollapsed(true) }},
-		action{"Expand every group", "", func() { u.setAllCollapsed(false) }},
+		action{"Collapse every group", "shift+tab", func() { u.setAllCollapsed(true) }},
+		action{"Expand every group", "shift+tab", func() { u.setAllCollapsed(false) }},
 		action{"Workspace: all", "w", func() { u.setWorkspace("") }},
 	)
 	for _, name := range u.cfg.WorkspaceNames() {

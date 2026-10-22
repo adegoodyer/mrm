@@ -218,7 +218,7 @@ Every command that deletes or runs something beyond sync (`prune`, `schedule ins
 | `s` · `S`                                | sync the targets / everything shown                                                                                                       |
 | `f` · `F`                                | fetch the targets / everything shown                                                                                                      |
 | `r`                                      | refresh status                                                                                                                            |
-| `o` · `O`                                | open on forge / open PRs (the palette has CI and branch too)                                                                              |
+| `o` · `p` · `P` · `b`                    | open on forge: the repo / its PRs / its pipelines (CI) / the current branch                                                               |
 | `enter`                                  | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                                                   |
 | `e` · `t`                                | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                                                |
 | `l`                                      | detail pane: path, forge URL, upstream, default branch, last run, open PRs and CI state, branches with tracking, stashes, last 12 commits |

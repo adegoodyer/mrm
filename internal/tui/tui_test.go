@@ -340,3 +340,48 @@ func TestForgeInfo(t *testing.T) {
 	h.keys("l")
 	h.waitFor("PRs      2 open", "CI       failed")
 }
+
+// ← → cycle workspaces with "all" among them; shift+tab collapses every
+// group, then expands them all; J and shift+↓ jump 10.
+func TestWorkspaceCycleAndGroups(t *testing.T) {
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 100, 30)
+	h.waitFor("all · 5 repos")
+	h.key(tcell.KeyRight)
+	h.waitFor("personal · 1 repo")
+	h.key(tcell.KeyRight)
+	h.waitFor("work · 4 repos")
+	h.key(tcell.KeyRight)
+	h.waitFor("all · 5 repos") // wraps
+	h.key(tcell.KeyLeft)
+	h.waitFor("work · 4 repos")
+	h.key(tcell.KeyRight)
+
+	h.key(tcell.KeyBacktab)
+	h.waitFor("▸ work · 3", "▸ personal · 1", "!dotfiles")
+	h.key(tcell.KeyBacktab)
+	h.waitFor("▾ work · 3", "▾ personal · 1", "dotfiles")
+
+	h.keys("J")
+	h.waitCursor(func(it item) bool { return it.path == "/src/dotfiles" }, "J to the last row")
+	h.s.InjectKey(tcell.KeyUp, 0, tcell.ModShift)
+	h.waitCursor(func(it item) bool { return it.header && it.group == "work/" }, "shift+↑ to the first row")
+}
+
+// waitCursor polls until the cursor's item passes ok.
+func (h *harness) waitCursor(ok func(item) bool, what string) {
+	h.t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		ch := make(chan item, 1)
+		h.u.app.QueueUpdate(func() { it, _ := h.u.list.current(); ch <- it })
+		it := <-ch
+		if ok(it) {
+			return
+		}
+		if time.Now().After(deadline) {
+			h.t.Fatalf("%s: cursor on %+v", what, it)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
