@@ -12,7 +12,7 @@
   - [Follow-Ups](#follow-ups)
 
 ## How to Use This
-The [spec](01-specification.md) says *what*, this says *in what order*. Each phase ends usable; its definition of done is the matching section of [02-user-acceptance-tests.md](02-user-acceptance-tests.md). Work happens on `next-release`, a commit per change, each noted under `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md).
+The [spec](01-specification.md) says *what*, this says *in what order*. Each phase ends usable; its definition of done is the matching section of [02-user-acceptance-tests.md](02-user-acceptance-tests.md). Work happens on `master`, a commit per change, each noted under `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Phase 0 - Setup
 

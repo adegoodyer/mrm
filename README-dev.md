@@ -98,8 +98,8 @@ Forge clients are tested against a fake server speaking all four APIs (`internal
 UAT criteria marked `[A]` in [docs/02-user-acceptance-tests.md](docs/02-user-acceptance-tests.md) name the test that covers them.
 
 ## Releasing
-1. On `next-release`, move the `[Unreleased]` notes in `CHANGELOG.md` into a new `## [X.Y.Z] - <date>` section; `task check`; commit.
-2. Fast-forward `master` to `next-release`, tag `vX.Y.Z` on it, push both (`git push origin master next-release vX.Y.Z`).
+1. On `master`, move the `[Unreleased]` notes in `CHANGELOG.md` into a new `## [X.Y.Z] - <date>` section; `task check`; commit.
+2. Tag `vX.Y.Z` on that commit and push both (`git push origin master vX.Y.Z`).
 3. `task release:snapshot` to see the archives, then `GITHUB_TOKEN=$(gh auth token) task release` for a **draft** GitHub release with linux/darwin amd64/arm64 archives and that version's changelog section as notes. Publish the draft on GitHub.
 
 The binary's version comes from ldflags (`main.version`); `go install` builds read it from the module version instead.
