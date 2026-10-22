@@ -53,7 +53,7 @@
 | ⬜   | 2.5  | `space` marks, `a` marks all visible, `s` syncs the marked repos with a spinner per row and live result glyphs `[A] tui.TestMarks, TestSyncFromTUI`           |
 | ⬜   | 2.6  | A sync with skipped or failed repos ends on the needs-attention view, grouped by reason; `!` opens it any time `[A] tui.TestAttentionView`                    |
 | ⬜   | 2.7  | `enter` opens lazygit in the repo; quitting lazygit returns to mrm with that row refreshed                                                                    |
-| ⬜   | 2.8  | `e`, `t`, `o`, `O`, `l`, `w`, `?` and `q` do what the key table says                                                                                          |
+| ⬜   | 2.8  | `e`, `t`, `o`, `p`, `P`, `b`, `l`, `w`, `?` and `q` do what the key table says                                                                                |
 | ⬜   | 2.9  | Usable at 80 x 24: no wrapped rows, columns truncate with `…` `[A] tui.TestRender`                                                                            |
 | ⬜   | 2.10 | `NO_COLOR=1` gives a readable glyph-only view; light and dark terminals are both readable                                                                     |
 
