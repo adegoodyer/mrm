@@ -33,8 +33,7 @@ html { font-size: 16px; }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 1rem; line-height: 1.45;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 16px 40px;
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
 }
 .mono, code, pre { font-family: var(--font-mono); font-size: 0.893rem; font-variant-numeric: tabular-nums; }
 button, input { font: inherit; color: inherit; }
@@ -42,7 +41,8 @@ button, input { font: inherit; color: inherit; }
 a { color: inherit; }
 [hidden] { display: none !important; }
 
-.app { container-type: inline-size; max-width: 1240px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+/* The app fills the window: no width cap, no frame; the top bar is the header. */
+.app { container-type: inline-size; min-height: 100vh; background: var(--surface); }
 .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
 .wordmark { font-family: var(--font-mono); font-weight: 700; font-size: 1.071rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; text-decoration: none; }
 .wordmark i { width: 1.25rem; height: 1.25rem; border-radius: 5px; background: var(--ink); display: inline-grid; place-items: center; color: var(--ink-fg); font-style: normal; font-size: 0.786rem; }
@@ -115,7 +115,7 @@ th { text-align: left; font-weight: 600; font-size: 0.821rem; text-transform: up
 td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: baseline; white-space: nowrap; }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: var(--row-hi); }
-td.notes { color: var(--muted); max-width: 26rem; overflow: hidden; text-overflow: ellipsis; }
+td.notes { color: var(--muted); max-width: max(26rem, 40cqw); overflow: hidden; text-overflow: ellipsis; }
 td .name { font-weight: 500; text-decoration: none; }
 td .name:hover { text-decoration: underline; }
 .grp { color: var(--muted); }

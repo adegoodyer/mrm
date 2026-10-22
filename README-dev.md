@@ -120,7 +120,7 @@ task docs:images    # Linux: needs python3 and util-linux script
 
 The SVGs follow the reader's light or dark theme (`prefers-color-scheme`) and place every character on a grid, so they line up whatever monospace font the reader has.
 
-Web screenshots: build a demo fleet with `bash docs/images/src/demo.sh /tmp/mrm-demo github`, then run `mrm web` against it with `HOME`, `GIT_CONFIG_NOSYSTEM=1` and the `XDG_*` variables pointing into `/tmp/mrm-demo` (as `mrm_in` in `src/make.sh` does). Take each page at 1280 px wide, 1.5x, once with the browser in light mode and once in dark: Overview 1280 x 1000, the `services/web` Repo page 1280 x 530. Save them as `docs/images/web-{overview,repo}-{light,dark}.png`, reduced to a 256-colour palette (about 40-85 KB each).
+Web screenshots: build a demo fleet with `bash docs/images/src/demo.sh /tmp/mrm-demo github`, then run `mrm web` against it with `HOME`, `GIT_CONFIG_NOSYSTEM=1` and the `XDG_*` variables pointing into `/tmp/mrm-demo` (as `mrm_in` in `src/make.sh` does). Take each page at 1280 px wide, 1.5x, once with the browser in light mode and once in dark: Overview 1280 x 1000, the `services/web` Repo page 1280 x 500. Save them as `docs/images/web-{overview,repo}-{light,dark}.png`, reduced to a 256-colour palette (about 40-85 KB each).
 
 ## Adding a Command
 1. `cmd/<name>.go` with a `cobra.Command`, registered in `init()`.
