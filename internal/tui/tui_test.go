@@ -464,3 +464,18 @@ func TestViewRemembered(t *testing.T) {
 	h3 := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state, Workspace: "work"}, 100, 24)
 	h3.waitFor("work · 4 repos") // -w wins
 }
+
+// The browser keys open a page for every marked repo.
+func TestOpenMarked(t *testing.T) {
+	repos, results := fixtures()
+	results[0].Status.RemoteURL = "git@github.com:acme/api.git"
+	results[1].Status.RemoteURL = "git@github.com:acme/web.git"
+	cfg := testConfig(t)
+	cfg.BrowserCmd = "true"
+	h := start(t, Options{Config: cfg, Repos: repos, Results: results, NoRefresh: true}, 100, 24)
+	h.waitFor("api")
+	h.keys("  ") // api, web (the cursor starts on api)
+	h.waitFor("2 marked")
+	h.keys("p")
+	h.waitFor("opened 2 pages")
+}

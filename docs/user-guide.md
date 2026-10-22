@@ -354,7 +354,7 @@ mrm status -f "is:not-default group:services"
 
 ![The interactive view](images/tui.svg)
 
-- **Targets.** An action applies to the marked repos; with none marked, to the group under the cursor (on a header) or the repo under it. Marks clear once an action starts.
+- **Targets.** Sync (`s`), fetch (`f`) and the browser keys (`o` `p` `P` `b`) act on the marked repos; with none marked, on the group under the cursor (on a header) or the repo under it. Opening more than 5 pages asks first. Marks clear once a sync or fetch starts. The other keys (`enter`, `e`, `t`, `l`, `L`) act on the repo under the cursor.
 - **One operation at a time**, each repo's row showing a spinner until it is done. A sync takes the same lock and writes the same history as `mrm sync`. When a sync leaves anything skipped or failed, the view switches to the needs-attention list.
 - **The mouse** selects a row with a click (a second click on a group header collapses or expands it) and scrolls with the wheel. While mrm has the mouse, most terminals still select text with `shift` held down; `tui.mouse: false` gives the mouse back entirely.
 - **The footer** shows as many keys as fit, most useful first, and changes with what you're on: a repo, a group header, marked repos, a filter. `?` lists them all.

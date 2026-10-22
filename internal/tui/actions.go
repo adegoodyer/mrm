@@ -145,35 +145,70 @@ const (
 	openBranch
 )
 
-// open opens the current repo's page on its forge.
+// maxTabs is how many browser tabs open without asking first.
+const maxTabs = 5
+
+// open opens a page for each target - the marked repos, else the group or
+// repo under the cursor - in the browser, asking first above maxTabs.
 func (u *ui) open(kind openKind) {
-	r, ok := u.currentRepo()
-	if !ok {
+	repos := u.targets()
+	if len(repos) == 0 {
 		u.warn("move to a repo first")
 		return
 	}
-	st := u.results[r.Path].Status
-	f := forge.Parse(st.RemoteURL, u.cfg.Forges)
-	var url string
-	var err error
-	switch kind {
-	case openPRs:
-		url, err = f.PRs()
-	case openCI:
-		url, err = f.CI()
-	case openBranch:
-		url, err = f.Branch(st.Branch)
-	default:
-		url, err = f.Web()
-	}
-	if err == nil {
-		err = browser.Open(u.cfg.BrowserCmd, url)
-	}
-	if err != nil {
-		u.warn(r.Display() + ": " + err.Error())
+	if len(repos) > maxTabs {
+		u.confirm(fmt.Sprintf("Open %d browser tabs?", len(repos)), names(repos), "open them", func() { u.openAll(kind, repos) })
 		return
 	}
-	u.say("opened " + url)
+	u.openAll(kind, repos)
+}
+
+func (u *ui) openAll(kind openKind, repos []model.Repo) {
+	var opened []string
+	var failed []string
+	for _, r := range repos {
+		st := u.results[r.Path].Status
+		f := forge.Parse(st.RemoteURL, u.cfg.Forges)
+		var url string
+		var err error
+		switch kind {
+		case openPRs:
+			url, err = f.PRs()
+		case openCI:
+			url, err = f.CI()
+		case openBranch:
+			url, err = f.Branch(st.Branch)
+		default:
+			url, err = f.Web()
+		}
+		if err == nil {
+			err = browser.Open(u.cfg.BrowserCmd, url)
+		}
+		if err != nil {
+			failed = append(failed, r.Display()+": "+err.Error())
+			continue
+		}
+		opened = append(opened, url)
+	}
+	switch {
+	case len(failed) > 0 && len(opened) == 0 && len(failed) == 1:
+		u.warn(failed[0])
+	case len(failed) > 0:
+		u.warn(fmt.Sprintf("opened %d, %d without a web page: %s", len(opened), len(failed), strings.Join(failed, "; ")))
+	case len(opened) == 1:
+		u.say("opened " + opened[0])
+	default:
+		u.say(fmt.Sprintf("opened %d pages", len(opened)))
+	}
+}
+
+// names lists repos one per line, for a confirmation.
+func names(repos []model.Repo) []string {
+	out := make([]string, len(repos))
+	for i, r := range repos {
+		out[i] = r.Display()
+	}
+	return out
 }
 
 type handoffKind int

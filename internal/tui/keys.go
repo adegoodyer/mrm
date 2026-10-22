@@ -119,7 +119,7 @@ func (u *ui) bindingFor(ev *tcell.EventKey) (binding, bool) {
 // helpText is the help overlay, from the table.
 func helpText(bs []binding) string {
 	var b strings.Builder
-	b.WriteString("[::d]Act and open keys apply to the marked repos, else the group or repo under the cursor.[::-]\n")
+	b.WriteString("[::d]s, f and the browser keys (o p P b) act on the marked repos, else the group or repo\nunder the cursor; the other keys act on the repo under the cursor.[::-]\n")
 	for _, sec := range sections {
 		fmt.Fprintf(&b, "\n[::b]%s[::-]\n", sec)
 		for _, k := range bs {

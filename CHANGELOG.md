@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pictures in the README and the guide - `mrm status`, `mrm sync`, the interactive view and its detail pane, the web UI in light and dark, how mrm fits together, and what sync does to each repo. The terminal pictures are mrm's real output on a demo fleet, rebuilt with `task docs:images`.
 
 ### Changed
+- In the interactive view, `o` `p` `P` `b` open a page for every marked repo (or every repo in the group under the cursor), asking first when that's more than 5 tabs. Before, they opened only the repo under the cursor. Questions like that one appear in mrm's own dialog: `y` to go ahead, `n` or `esc` to cancel.
 - Sync results read as sentences: `fast-forwarded main by 3 commits` and, in a dry run, `would fast-forward main by 3 commits` (was `main +3` and `would main +3`); a branch switch reads `switched from feature/x to main (merged)`.
 - The web UI uses the full width of the window instead of a centred 1240 px card, so wide screens show more of each repo's notes. Phones get the same stacked layout as before.
 - Interactive view keys:
