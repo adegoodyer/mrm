@@ -343,6 +343,8 @@ mrm status -f "is:not-default group:services"
 | `/`                         | filter as you type; `enter` keeps it, `esc` clears it                                                |
 | `!`                         | needs attention: everything not clean, grouped by reason                                             |
 | `l`                         | the detail pane                                                                                      |
+| `L`                         | the commit graph: every branch, tag and remote, newest first; `esc` closes it                        |
+| `ctrl+d` `ctrl+u`           | scroll the detail pane (or the graph) half a page; with the pane closed, move the list               |
 | `w`                         | pick a workspace from a list                                                                         |
 | `ctrl+k`                    | command palette: fuzzy search over every action, workspace and common filter                         |
 | `esc`                       | clear the filter, else leave the attention view, else clear marks                                    |

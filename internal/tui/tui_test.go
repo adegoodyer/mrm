@@ -403,3 +403,25 @@ func TestFooter(t *testing.T) {
 	h.keys("j ") // mark the repo below it
 	h.waitFor("1 marked", "A clear marks")
 }
+
+// L shows the commit graph of a real repo; esc closes it.
+func TestGraph(t *testing.T) {
+	f := gittest.New(t)
+	dir := f.Clone("app")
+	f.Push("master", "a.txt", "a\n")
+	gittest.Git(t, dir, "fetch", "-q")
+	gittest.Git(t, dir, "switch", "-q", "-c", "feature/x")
+	gittest.WriteFile(t, filepath.Join(dir, "b.txt"), "b\n")
+	gittest.Git(t, dir, "add", "b.txt")
+	gittest.Git(t, dir, "commit", "-q", "-m", "feat: b on a branch")
+	cfg, err := config.Parse([]byte("workspaces:\n  work:\n    roots: [" + filepath.Join(f.Root, "repos") + "]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	repos := []model.Repo{{Name: "app", Path: dir, Workspace: "work", Remote: "origin"}}
+	h := start(t, Options{Config: cfg, Repos: repos, NoRefresh: true}, 100, 24)
+	h.keys("jL")
+	h.waitFor("graph · esc closes", "feat: b on a branch", "feature/x", "origin/master")
+	h.key(tcell.KeyEscape)
+	h.waitFor("!graph · esc closes")
+}

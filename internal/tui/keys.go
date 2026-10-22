@@ -93,6 +93,9 @@ func bindings() []binding {
 		{secView, "/", "filter as you type: is:dirty ws:work tag:x branch:feat/* age:>30d -is:clean", []key{ch('/')}, func(u *ui) { u.startFilter() }, true},
 		{secView, "!", "needs attention: everything not clean, grouped by reason", []key{ch('!')}, func(u *ui) { u.toggleAttention() }, true},
 		{secView, "l", "detail pane", []key{ch('l')}, func(u *ui) { u.toggleDetail() }, true},
+		{secView, "L", "commit graph of every branch (esc closes)", []key{ch('L')}, func(u *ui) { u.openGraph() }, true},
+		{secView, "ctrl+d ctrl+u", "scroll the detail pane half a page (the list, when it's closed)", []key{{k: tcell.KeyCtrlD}}, func(u *ui) { u.scrollDetail(1) }, false},
+		{secView, "", "", []key{{k: tcell.KeyCtrlU}}, func(u *ui) { u.scrollDetail(-1) }, false},
 		{secView, "w", "pick a workspace (← → cycle them)", []key{ch('w')}, func(u *ui) { u.openWorkspaces() }, false},
 		{secView, "esc", "clear the filter, else leave the attention view, else clear marks", []key{{k: tcell.KeyEscape}}, func(u *ui) { u.escape() }, false},
 		{secView, "ctrl+k", "command palette", []key{{k: tcell.KeyCtrlK}}, func(u *ui) { u.openPalette() }, false},
@@ -185,4 +188,16 @@ func (u *ui) toggleAllGroups() {
 		}
 	}
 	u.setAllCollapsed(open)
+}
+
+// scrollDetail moves the detail pane half a page; with the pane closed it
+// moves the list instead.
+func (u *ui) scrollDetail(dir int) {
+	if !u.showDetail {
+		u.list.move(dir * max(u.list.height/2, 1))
+		return
+	}
+	_, _, _, h := u.detail.GetInnerRect()
+	row, _ := u.detail.GetScrollOffset()
+	u.detail.ScrollTo(max(row+dir*max(h/2, 1), 0), 0)
 }
