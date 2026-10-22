@@ -188,7 +188,7 @@ Global flags: `-w/--workspace`, `-t/--tag`, `-f/--filter "<query>"`, `--json`, `
 Every command that deletes or runs something beyond sync (`prune`, `schedule install|remove`, `exec`) asks first unless `--yes`. Without a terminal to ask on it refuses and says to add `--yes`, so a script never acts by accident. `prune --dry-run` asks nothing.
 
 ## TUI
-`mrm` on a terminal (stdin and stdout both TTYs, no `--json`); piped, it prints `mrm status`. `-w <one workspace>` and `-f` / `-t` set the starting view. tview on tcell (decided 2026-10-15). The list is a custom widget drawn cell by cell, so group headers span the full width and every column truncates with `…`. Opens from the cache at once (first frame 13 ms for 86 repos), then refreshes status in the background (no fetch unless `tui.fetch_on_start: true`).
+`mrm` on a terminal (stdin and stdout both TTYs, no `--json`); piped, it prints `mrm status`. `-w <one workspace>` and `-f` / `-t` set the starting view. tview on tcell (decided 2026-10-15). The list is a custom widget drawn cell by cell, so group headers span the full width and every column truncates with `…`. Opens from the cache at once (first frame 13 ms for 86 repos), then refreshes status in the background (no fetch unless `tui.fetch_on_start: true`). The workspace, collapsed groups and detail pane are restored from `$XDG_STATE_HOME/mrm/tui.json` (`-w` wins). The mouse selects and scrolls unless `tui.mouse: false`.
 
 ```
  mrm  all · 78 repos    ● 2  ↑ 1  ↓ 3  ✓ 71  ✗ 1                     synced 4m ago   ctrl+k

@@ -80,6 +80,7 @@ forge_cache: 10m          # how long forge answers are reused
 tui:
   open_cmd: lazygit
   fetch_on_start: false
+  mouse: true             # click and scroll; false keeps the terminal's own text selection
 
 web:
   port: 7420

@@ -188,6 +188,7 @@ forge_cache: 10m
 tui:
   open_cmd: lazygit               # what enter hands off to
   fetch_on_start: false
+  mouse: true                     # click and scroll in the list
 
 web:
   port: 7420
@@ -196,31 +197,32 @@ web:
 
 ### Settings Reference
 
-| Key                                    | Default     | Meaning                                                                                              |
-| -------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
-| `concurrency`                          | `8`         | repos worked on at once                                                                              |
-| `timeout`                              | `2m`        | limit for each git command; a fetch that takes longer fails with `timed out`                         |
-| `browser_cmd`                          | -           | command to open URLs; default `wslview` on WSL, else `xdg-open` or `open`                            |
-| `forges.<host>`                        | -           | the kind of a self-hosted forge: `github`, `gitlab`, `bitbucket` or `gitea`                          |
-| `workspaces.<name>.roots`              | (required)  | folders to look in; `~` is expanded                                                                  |
-| `workspaces.<name>.depth`              | `3`         | how many folders below a root to look                                                                |
-| `workspaces.<name>.ignore`             | -           | name or relative-path globs to skip                                                                  |
-| `workspaces.<name>.orgs`               | -           | `host/owner` on a forge, for [`mrm drift`](#drift)                                                   |
-| `workspaces.<name>.sync.remote`        | `origin`    | the remote to fetch and fast-forward from                                                            |
-| `workspaces.<name>.sync.ff_current`    | `false`     | also fast-forward a non-default current branch ([policies](#sync-policies))                          |
-| `workspaces.<name>.sync.switch_merged` | `false`     | switch away from a pushed branch that is merged ([policies](#sync-policies))                         |
-| `repos.<key>.branch`                   | -           | the default branch for that repo, instead of `origin/HEAD`                                           |
-| `repos.<key>.tags`                     | -           | labels for `-t` and `tag:`                                                                           |
-| `repos.<key>.sync`                     | `true`      | `false`: show the repo, never sync it                                                                |
-| `hooks.post_sync[]`                    | -           | `name`, `if_file`, `run` ([Hooks](#hooks))                                                           |
-| `notify.on`                            | `attention` | when to notify after a headless sync: `attention`, `always`, `never`                                 |
-| `notify.gotify` · `notify.ntfy`        | -           | `url`, and `token_cmd` or `token_env` ([Notifications](#notifications))                              |
-| `forge_tokens.<host>`                  | -           | `token_cmd` or `token_env`, and `user` for Bitbucket ([Pull requests and CI](#pull-requests-and-ci)) |
-| `forge_cache`                          | `10m`       | how long answers from forges are reused                                                              |
-| `tui.open_cmd`                         | `lazygit`   | what `enter` runs in the repo                                                                        |
-| `tui.fetch_on_start`                   | `false`     | fetch everything when the interactive view opens                                                     |
-| `web.port`                             | `7420`      | the web UI's port                                                                                    |
-| `web.text_size`                        | `medium`    | the web UI's default text size; each browser can change it                                           |
+| Key                                    | Default     | Meaning                                                                                                        |
+| -------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `concurrency`                          | `8`         | repos worked on at once                                                                                        |
+| `timeout`                              | `2m`        | limit for each git command; a fetch that takes longer fails with `timed out`                                   |
+| `browser_cmd`                          | -           | command to open URLs; default `wslview` on WSL, else `xdg-open` or `open`                                      |
+| `forges.<host>`                        | -           | the kind of a self-hosted forge: `github`, `gitlab`, `bitbucket` or `gitea`                                    |
+| `workspaces.<name>.roots`              | (required)  | folders to look in; `~` is expanded                                                                            |
+| `workspaces.<name>.depth`              | `3`         | how many folders below a root to look                                                                          |
+| `workspaces.<name>.ignore`             | -           | name or relative-path globs to skip                                                                            |
+| `workspaces.<name>.orgs`               | -           | `host/owner` on a forge, for [`mrm drift`](#drift)                                                             |
+| `workspaces.<name>.sync.remote`        | `origin`    | the remote to fetch and fast-forward from                                                                      |
+| `workspaces.<name>.sync.ff_current`    | `false`     | also fast-forward a non-default current branch ([policies](#sync-policies))                                    |
+| `workspaces.<name>.sync.switch_merged` | `false`     | switch away from a pushed branch that is merged ([policies](#sync-policies))                                   |
+| `repos.<key>.branch`                   | -           | the default branch for that repo, instead of `origin/HEAD`                                                     |
+| `repos.<key>.tags`                     | -           | labels for `-t` and `tag:`                                                                                     |
+| `repos.<key>.sync`                     | `true`      | `false`: show the repo, never sync it                                                                          |
+| `hooks.post_sync[]`                    | -           | `name`, `if_file`, `run` ([Hooks](#hooks))                                                                     |
+| `notify.on`                            | `attention` | when to notify after a headless sync: `attention`, `always`, `never`                                           |
+| `notify.gotify` · `notify.ntfy`        | -           | `url`, and `token_cmd` or `token_env` ([Notifications](#notifications))                                        |
+| `forge_tokens.<host>`                  | -           | `token_cmd` or `token_env`, and `user` for Bitbucket ([Pull requests and CI](#pull-requests-and-ci))           |
+| `forge_cache`                          | `10m`       | how long answers from forges are reused                                                                        |
+| `tui.open_cmd`                         | `lazygit`   | what `enter` runs in the repo                                                                                  |
+| `tui.fetch_on_start`                   | `false`     | fetch everything when the interactive view opens                                                               |
+| `tui.mouse`                            | `true`      | click a row to select it, scroll with the wheel; `false` leaves the mouse to the terminal (for selecting text) |
+| `web.port`                             | `7420`      | the web UI's port                                                                                              |
+| `web.text_size`                        | `medium`    | the web UI's default text size; each browser can change it                                                     |
 
 Environment: `MRM_CONFIG` picks the config file, `NO_COLOR` (or `--no-color`) turns colour off, and the XDG variables move mrm's files.
 
@@ -314,12 +316,13 @@ mrm status -f "is:not-default group:services"
 `-w work` and `-t terraform` are shortcuts for `ws:work` and `tag:terraform`.
 
 ## The Interactive View
-`mrm` on a terminal opens it (`mrm -w work -f is:dirty` starts on a workspace and filter). Piped, or with `--json`, `mrm` prints `mrm status` instead. It opens at once from the cache, then reads every repo again in the background; with `tui.fetch_on_start: true` it fetches too.
+`mrm` on a terminal opens it (`mrm -w work -f is:dirty` starts on a workspace and filter). Piped, or with `--json`, `mrm` prints `mrm status` instead. It opens at once from the cache, then reads every repo again in the background; with `tui.fetch_on_start: true` it fetches too. It reopens where you left it - the same workspace, collapsed groups and detail pane, kept in `~/.local/state/mrm/tui.json` - unless `-w` picks a workspace.
 
 ![The interactive view](images/tui.svg)
 
 - **Targets.** An action applies to the marked repos; with none marked, to the group under the cursor (on a header) or the repo under it. Marks clear once an action starts.
 - **One operation at a time**, each repo's row showing a spinner until it is done. A sync takes the same lock and writes the same history as `mrm sync`. When a sync leaves anything skipped or failed, the view switches to the needs-attention list.
+- **The mouse** selects a row with a click (a second click on a group header collapses or expands it) and scrolls with the wheel. While mrm has the mouse, most terminals still select text with `shift` held down; `tui.mouse: false` gives the mouse back entirely.
 - **The footer** shows as many keys as fit, most useful first, and changes with what you're on: a repo, a group header, marked repos, a filter. `?` lists them all.
 - **Quitting** while an operation runs needs `q` twice; git finishes what it started either way.
 

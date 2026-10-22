@@ -425,3 +425,42 @@ func TestGraph(t *testing.T) {
 	h.key(tcell.KeyEscape)
 	h.waitFor("!graph · esc closes")
 }
+
+// A click selects a row, a second click on a header collapses it, and the
+// wheel moves the cursor.
+func TestMouse(t *testing.T) {
+	repos, results := fixtures()
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 100, 24)
+	txt := h.waitFor("dotfiles")
+	row := -1
+	for i, line := range strings.Split(txt, "\n") {
+		if strings.Contains(line, "dotfiles") {
+			row = i
+		}
+	}
+	h.s.InjectMouse(20, row, tcell.Button1, tcell.ModNone)
+	h.s.InjectMouse(20, row, tcell.ButtonNone, tcell.ModNone)
+	h.waitCursor(func(it item) bool { return it.path == "/src/dotfiles" }, "click on dotfiles")
+	h.s.InjectMouse(20, row, tcell.WheelUp, tcell.ModNone)
+	h.waitCursor(func(it item) bool { return it.path != "/src/dotfiles" }, "wheel up")
+}
+
+// The workspace, collapsed groups and detail pane come back next time.
+func TestViewRemembered(t *testing.T) {
+	repos, results := fixtures()
+	state := filepath.Join(t.TempDir(), "tui.json")
+	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state}, 100, 24)
+	h.key(tcell.KeyRight) // personal
+	h.waitFor("personal · 1 repo")
+	h.key(tcell.KeyTab) // collapse the group under the cursor
+	h.waitFor("▸ personal")
+	h.u.app.Stop()
+	h.done <- <-h.done // saved on the way out; leave the result for cleanup
+	if _, err := os.Stat(state); err != nil {
+		t.Fatal("view not saved:", err)
+	}
+	h2 := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state}, 100, 24)
+	h2.waitFor("personal · 1 repo", "▸ personal")
+	h3 := start(t, Options{Repos: repos, Results: results, NoRefresh: true, StatePath: state, Workspace: "work"}, 100, 24)
+	h3.waitFor("work · 4 repos") // -w wins
+}

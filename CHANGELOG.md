@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `L` in the interactive view shows the repo's commit graph - every branch, tag and remote, newest first, in git's colours - in a scrollable window, without any extra tool. It reads at most the newest 300 commits and says when there are more.
+- The interactive view takes the mouse: click a row to select it (a second click on a group header collapses it) and scroll with the wheel. `tui.mouse: false` turns it off.
+- The interactive view reopens where you left it: the same workspace, collapsed groups and detail pane, from `~/.local/state/mrm/tui.json`. `-w` still picks the workspace.
 - `ctrl+d` / `ctrl+u` scroll the detail pane and the graph half a page; with the pane closed they move the list.
 - **User guide** (`docs/user-guide.md`): concepts (workspaces, discovery, groups, tags, the default branch, every state, flag and outcome), every config key with its default, status, sync rules and policies, filters, the interactive view's keys, the web UI and its security, `open`, `exec`, `prune`, `drift`, forge tokens per forge, hooks, schedules, notifications, scripting, completion, troubleshooting and uninstalling.
 - Pictures in the README and the guide - `mrm status`, `mrm sync`, the interactive view and its detail pane, the web UI in light and dark, how mrm fits together, and what sync does to each repo. The terminal pictures are mrm's real output on a demo fleet, rebuilt with `task docs:images`.

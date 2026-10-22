@@ -112,7 +112,11 @@ type Endpoint struct {
 type TUI struct {
 	OpenCmd      string `yaml:"open_cmd"`
 	FetchOnStart bool   `yaml:"fetch_on_start"`
+	Mouse        *bool  `yaml:"mouse"` // default true
 }
+
+// MouseOn reports whether the interactive view takes the mouse.
+func (t TUI) MouseOn() bool { return t.Mouse == nil || *t.Mouse }
 
 // Web settings (phase 3).
 type Web struct {

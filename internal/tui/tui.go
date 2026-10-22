@@ -42,6 +42,7 @@ type Options struct {
 	CachePath string           // default paths.StatusCache()
 	HistPath  string           // default paths.History()
 	Forge     *forgeapi.Client // PR and CI info; nil leaves it out
+	StatePath string           // where the view is remembered; "" doesn't (tests)
 }
 
 type ui struct {
@@ -128,6 +129,7 @@ func newUI(ctx context.Context, opts Options) (*ui, error) {
 		keys: bindings(),
 	}
 	u.build()
+	u.loadState()
 	u.load()
 	return u, nil
 }
@@ -196,6 +198,7 @@ func (u *ui) build() {
 	u.pages = tview.NewPages().AddPage("main", u.root, true, true)
 	u.app.SetRoot(u.pages, true).SetFocus(u.list)
 	u.app.SetInputCapture(u.onKey)
+	u.app.EnableMouse(u.cfg.TUI.MouseOn())
 	u.app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
 		// Refit the footer when the terminal is resized. This runs on the
 		// UI goroutine, inside a draw: change state only, never Draw.
@@ -219,7 +222,9 @@ func (u *ui) run() error {
 	stop := make(chan struct{})
 	go u.tick(stop)
 	defer close(stop)
-	return u.app.Run()
+	err := u.app.Run()
+	u.saveState()
+	return err
 }
 
 // tick animates spinners while an operation runs and expires footer
@@ -468,12 +473,17 @@ func (u *ui) onKey(ev *tcell.EventKey) *tcell.EventKey {
 	}
 	before, _ := u.list.current()
 	b.run(u)
-	// The detail pane follows the cursor.
+	u.cursorMoved(before)
+	return nil
+}
+
+// cursorMoved updates what follows the cursor - the detail pane and the
+// footer's hints - when it is on a different row than before.
+func (u *ui) cursorMoved(before item) {
 	if after, _ := u.list.current(); after != before {
 		u.updateDetail()
-		u.drawFooter() // its hints depend on what the cursor is on
+		u.drawFooter()
 	}
-	return nil
 }
 
 func (u *ui) quit() {

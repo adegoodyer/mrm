@@ -43,5 +43,6 @@ func runTUI(ctx context.Context) error {
 		Workspace: ws,
 		Query:     strings.TrimSpace(q),
 		Forge:     forgeapi.New(a.cfg, paths.ForgeCache()),
+		StatePath: paths.TUIState(),
 	})
 }
