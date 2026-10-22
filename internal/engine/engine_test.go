@@ -182,7 +182,7 @@ func TestSyncDryRun(t *testing.T) {
 
 	res := syncOne(t, repo(dir), true)
 	want(t, res, model.OutcomeWould, "")
-	if !strings.HasPrefix(res.Summary(), "would master +1") {
+	if !strings.HasPrefix(res.Summary(), "would fast-forward master by 1 commit") {
 		t.Fatalf("summary %q", res.Summary())
 	}
 	if after := gittest.Git(t, dir, "for-each-ref", "refs/heads"); after != before {

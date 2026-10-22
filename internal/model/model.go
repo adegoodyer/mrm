@@ -230,10 +230,7 @@ func (r Result) Summary() string {
 			}
 			s += a
 		}
-		if r.Outcome == OutcomeWould {
-			return "would " + s
-		}
-		return s
+		return s // the actions say "would …" themselves in a dry run
 	default:
 		return string(r.Outcome)
 	}

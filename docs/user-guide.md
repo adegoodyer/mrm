@@ -111,15 +111,15 @@ Each repo has one **state** - the first of these that applies - shown as a glyph
 ### Outcomes
 After a sync or fetch each repo has an **outcome**, shown in the live lines, the summary and the run history:
 
-| Outcome    | Meaning                                                                  |
-| ---------- | ------------------------------------------------------------------------ |
-| `synced`   | something moved: a branch was fast-forwarded                             |
-| `current`  | already up to date                                                       |
-| `fetched`  | fetched only (`mrm fetch`)                                               |
-| `would`    | a dry run: something would move                                          |
-| `excluded` | left alone on purpose: `sync: false` in the config, or no remote         |
-| `skipped`  | left alone because changing it wasn't safe; the reason says why          |
-| `failed`   | git failed - offline, no access, a timeout; the reason is in plain words |
+| Outcome    | Meaning                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| `synced`   | something moved: `fast-forwarded main by 3 commits`                                                                 |
+| `current`  | already up to date                                                                                                  |
+| `fetched`  | fetched only (`mrm fetch`)                                                                                          |
+| `would`    | a dry run (`--dry-run`): what a real sync would do, e.g. `would fast-forward main by 3 commits`. Nothing is changed |
+| `excluded` | left alone on purpose: `sync: false` in the config, or no remote                                                    |
+| `skipped`  | left alone because changing it wasn't safe; the reason says why                                                     |
+| `failed`   | git failed - offline, no access, a timeout; the reason is in plain words                                            |
 
 `skipped` and `failed` **need attention**: they are listed after the run, the exit code is `2`, and the interactive view and web UI group them in a needs-attention list.
 

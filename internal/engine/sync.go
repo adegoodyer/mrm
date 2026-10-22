@@ -37,6 +37,15 @@ func (e *Engine) sync(ctx context.Context, r model.Repo, dryRun bool) model.Resu
 		res.Status = e.status(ctx, r)
 		return res
 	}
+	// Actions read as sentences: "fast-forwarded main by 3 commits", or in
+	// a dry run "would fast-forward main by 3 commits".
+	ff := func(branch string, n int) string {
+		verb := "fast-forwarded"
+		if dryRun {
+			verb = "would fast-forward"
+		}
+		return fmt.Sprintf("%s %s by %s", verb, branch, commits(n))
+	}
 	act := func(a string) {
 		res.Actions = append(res.Actions, a)
 		if dryRun {
@@ -71,7 +80,11 @@ func (e *Engine) sync(ctx context.Context, r model.Repo, dryRun bool) model.Resu
 				}
 				st = e.status(ctx, r)
 			}
-			act(fmt.Sprintf("switched %s -> %s (merged)", from, def))
+			if dryRun {
+				act(fmt.Sprintf("would switch from %s to %s (merged)", from, def))
+			} else {
+				act(fmt.Sprintf("switched from %s to %s (merged)", from, def))
+			}
 			switched = true
 		}
 	}
@@ -82,7 +95,7 @@ func (e *Engine) sync(ctx context.Context, r model.Repo, dryRun bool) model.Resu
 			return skip(fmt.Sprintf("default branch %s diverged from %s/%s", def, rem, def))
 		}
 		if st.DefaultBehind > 0 {
-			act(fmt.Sprintf("%s +%d", def, st.DefaultBehind))
+			act(ff(def, st.DefaultBehind))
 		}
 	} else if st.Branch == def {
 		// 3 - fast-forward the default branch
@@ -100,7 +113,7 @@ func (e *Engine) sync(ctx context.Context, r model.Repo, dryRun bool) model.Resu
 					return fail("update "+def, err)
 				}
 			}
-			act(fmt.Sprintf("%s +%d", def, st.DefaultBehind))
+			act(ff(def, st.DefaultBehind))
 		}
 		// 5 - optionally fast-forward the current branch too
 		if r.FFCurrent {
@@ -156,7 +169,11 @@ func (e *Engine) ffCurrent(ctx context.Context, r model.Repo, st model.Status, d
 			return stop(model.OutcomeFailed, "fast-forward: "+err.Error())
 		}
 	}
-	act(fmt.Sprintf("%s +%d", st.Branch, st.Behind))
+	if dryRun {
+		act(fmt.Sprintf("would fast-forward %s by %s", st.Branch, commits(st.Behind)))
+	} else {
+		act(fmt.Sprintf("fast-forwarded %s by %s", st.Branch, commits(st.Behind)))
+	}
 	return nil
 }
 
@@ -166,4 +183,11 @@ func fileList(files []string) string {
 		return strings.Join(files, ", ")
 	}
 	return fmt.Sprintf("%s and %d more", strings.Join(files[:3], ", "), len(files)-3)
+}
+
+func commits(n int) string {
+	if n == 1 {
+		return "1 commit"
+	}
+	return fmt.Sprintf("%d commits", n)
 }
