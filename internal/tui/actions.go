@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rivo/tview"
+
 	"github.com/adegoodyer/mrm/internal/browser"
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/forge"
@@ -206,7 +208,7 @@ func (u *ui) openAll(kind openKind, repos []model.Repo) {
 func names(repos []model.Repo) []string {
 	out := make([]string, len(repos))
 	for i, r := range repos {
-		out[i] = r.Display()
+		out[i] = tview.Escape(r.Display())
 	}
 	return out
 }

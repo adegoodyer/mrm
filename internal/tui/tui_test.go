@@ -18,6 +18,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/gittest"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/trash"
 )
 
 func TestMain(m *testing.M) {
@@ -478,4 +479,47 @@ func TestOpenMarked(t *testing.T) {
 	h.waitFor("2 marked")
 	h.keys("p")
 	h.waitFor("opened 2 pages")
+}
+
+// d asks first, flags work that exists only here, and moves the repo to
+// the trash; n leaves it alone.
+func TestTrash(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", t.TempDir()) // never the real trash
+	paths.Reload()
+	f := gittest.New(t)
+	keep := f.Clone("keep")
+	gone := f.Clone("gone")
+	gittest.Commit(t, gone, "local.txt", "mine\n", "local only")
+	cfg, err := config.Parse([]byte("workspaces:\n  work:\n    roots: [" + filepath.Join(f.Root, "repos") + "]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	repos := []model.Repo{
+		{Name: "gone", Path: gone, Workspace: "work", Remote: "origin"},
+		{Name: "keep", Path: keep, Workspace: "work", Remote: "origin"},
+	}
+	h := start(t, Options{Config: cfg, Repos: repos, NoRefresh: true}, 100, 24)
+	h.waitCursor(func(it item) bool { return it.path == gone }, "start on gone")
+
+	h.keys("d")
+	h.waitFor("Move 1 repo to the trash?", "1 unpushed commit")
+	h.keys("n")
+	h.waitFor("cancelled")
+	if _, err := os.Stat(gone); err != nil {
+		t.Fatal("n should leave it:", err)
+	}
+
+	h.keys("d")
+	h.waitFor("Move 1 repo to the trash?")
+	h.keys("y")
+	h.waitFor("moved 1 repo to the trash", "!gone ")
+	if _, err := os.Stat(gone); !os.IsNotExist(err) {
+		t.Fatal("still on disk")
+	}
+	if _, err := os.Stat(filepath.Join(trash.Dir(), "files", "gone", ".git")); err != nil {
+		t.Fatal("not in the trash:", err)
+	}
+	if _, err := os.Stat(keep); err != nil {
+		t.Fatal("the other repo went too")
+	}
 }

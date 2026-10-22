@@ -21,7 +21,7 @@ func (u *ui) footerHints() (lead string, hints []hint) {
 	switch {
 	case len(u.marks) > 0:
 		lead = fmt.Sprintf("[fuchsia::b]%d marked[-::-]", len(u.marks))
-		hints = []hint{{"s", "sync"}, {"f", "fetch"}, {"space", "mark/unmark"}, {"a", "mark all shown"}, {"A", "clear marks"}, {"ctrl+k", "more"}}
+		hints = []hint{{"s", "sync"}, {"f", "fetch"}, {"space", "mark/unmark"}, {"a", "mark all shown"}, {"A", "clear marks"}, {"d", "trash"}, {"ctrl+k", "more"}}
 	case cur.header:
 		toggle := "collapse"
 		if cur.collapsed {
@@ -32,7 +32,7 @@ func (u *ui) footerHints() (lead string, hints []hint) {
 	default:
 		hints = []hint{{"/", "filter"}, {"space", "mark"}, {"s", "sync"}, {"f", "fetch"}, {"enter", u.cfg.TUI.OpenCmd},
 			{"l", "detail"}, {"o", "open"}, {"p", "PRs"}, attention, {"← →", "workspace"}, {"r", "refresh"},
-			{"shift+tab", "groups"}, {"e", "editor"}, {"t", "shell"}, {"ctrl+k", "more"}}
+			{"shift+tab", "groups"}, {"e", "editor"}, {"t", "shell"}, {"d", "trash"}, {"ctrl+k", "more"}}
 	}
 	if u.query != "" {
 		f := "[aqua]/" + tview.Escape(u.query) + "[-]  [::d]esc[::-] clear"

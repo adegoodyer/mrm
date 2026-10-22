@@ -33,6 +33,7 @@ func Isolate() (cleanup func()) {
 		"XDG_CONFIG_HOME":     filepath.Join(dir, "config"),
 		"XDG_STATE_HOME":      filepath.Join(dir, "state"),
 		"XDG_CACHE_HOME":      filepath.Join(dir, "cache"),
+		"XDG_DATA_HOME":       filepath.Join(dir, "data"), // the trash lives here
 		"XDG_RUNTIME_DIR":     "",
 	}
 	for k, v := range env {

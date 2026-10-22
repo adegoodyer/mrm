@@ -354,7 +354,8 @@ mrm status -f "is:not-default group:services"
 
 ![The interactive view](images/tui.svg)
 
-- **Targets.** Sync (`s`), fetch (`f`) and the browser keys (`o` `p` `P` `b`) act on the marked repos; with none marked, on the group under the cursor (on a header) or the repo under it. Opening more than 5 pages asks first. Marks clear once a sync or fetch starts. The other keys (`enter`, `e`, `t`, `l`, `L`) act on the repo under the cursor.
+- **Targets.** Sync (`s`), fetch (`f`), delete (`d`) and the browser keys (`o` `p` `P` `b`) act on the marked repos; with none marked, on the group under the cursor (on a header) or the repo under it. Opening more than 5 pages asks first. Marks clear once a sync or fetch starts. The other keys (`enter`, `e`, `t`, `l`, `L`) act on the repo under the cursor.
+- **Deleting repos.** `d` moves the targets' folders to your trash (`~/.local/share/Trash` on Linux and WSL, `~/.Trash` on macOS), so you can restore them from a file manager or by moving them back. First mrm reads each repo again and shows one confirmation listing them, flagging any with work that exists only on this machine - unpushed commits, uncommitted changes, untracked files, stashes; `y` goes ahead, `n` or `esc` cancels. It never touches a workspace root or a folder that isn't a git repo, and waits while a sync runs. A repo on another drive than your home (a Windows drive on WSL) goes to that drive's trash through `gio`, when it is installed.
 - **One operation at a time**, each repo's row showing a spinner until it is done. A sync takes the same lock and writes the same history as `mrm sync`. When a sync leaves anything skipped or failed, the view switches to the needs-attention list.
 - **The mouse** selects a row with a click (a second click on a group header collapses or expands it) and scrolls with the wheel. While mrm has the mouse, most terminals still select text with `shift` held down; `tui.mouse: false` gives the mouse back entirely.
 - **The footer** shows as many keys as fit, most useful first, and changes with what you're on: a repo, a group header, marked repos, a filter. `?` lists them all.
@@ -373,6 +374,7 @@ mrm status -f "is:not-default group:services"
 | `a` · `A`                   | mark everything shown · clear marks                                                                  |
 | `s` · `S`                   | sync the targets · sync everything shown                                                             |
 | `f` · `F`                   | fetch the targets · fetch everything shown                                                           |
+| `d`                         | move the targets' folders to the trash, after one confirmation ([below](#the-interactive-view))      |
 | `r`                         | read status again                                                                                    |
 | `o` · `p` · `P` · `b`       | open on the forge: the repo · its pull requests · its pipelines or actions (CI) · the current branch |
 | `enter`                     | hand off to `tui.open_cmd` (lazygit) in the repo; back to mrm when it exits                          |

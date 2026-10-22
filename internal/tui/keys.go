@@ -80,6 +80,7 @@ func bindings() []binding {
 		{secAct, "S", "sync everything shown", []key{ch('S')}, func(u *ui) { u.act(engine.OpSync, u.visible()) }, true},
 		{secAct, "f", "fetch the marked repos, else the group or repo", []key{ch('f')}, func(u *ui) { u.act(engine.OpFetch, u.targets()) }, true},
 		{secAct, "F", "fetch everything shown", []key{ch('F')}, func(u *ui) { u.act(engine.OpFetch, u.visible()) }, true},
+		{secAct, "d", "move the marked repos, else the group or repo, to the trash (asks first)", []key{ch('d')}, func(u *ui) { u.trashTargets() }, true},
 		{secAct, "r", "read status again", []key{ch('r')}, func(u *ui) { u.startOp(engine.OpStatus, u.repos, false, "reading") }, true},
 
 		{secOpen, "o", "open the repo on its forge", []key{ch('o')}, func(u *ui) { u.open(openWeb) }, true},
@@ -119,7 +120,7 @@ func (u *ui) bindingFor(ev *tcell.EventKey) (binding, bool) {
 // helpText is the help overlay, from the table.
 func helpText(bs []binding) string {
 	var b strings.Builder
-	b.WriteString("[::d]s, f and the browser keys (o p P b) act on the marked repos, else the group or repo\nunder the cursor; the other keys act on the repo under the cursor.[::-]\n")
+	b.WriteString("[::d]s, f, d and the browser keys (o p P b) act on the marked repos, else the group or repo\nunder the cursor; the other keys act on the repo under the cursor.[::-]\n")
 	for _, sec := range sections {
 		fmt.Fprintf(&b, "\n[::b]%s[::-]\n", sec)
 		for _, k := range bs {
