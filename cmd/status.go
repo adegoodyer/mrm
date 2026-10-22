@@ -36,7 +36,9 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	statusCmd.Flags().BoolVar(&flagStatusFetch, "fetch", false, "fetch every repo first")
-	statusCmd.Flags().BoolVar(&flagNoForge, "no-forge", false, "skip open PRs and CI from forges with a token")
+	statusCmd.Flags().BoolVar(&flagNoForge, "no-prs", false, "skip asking GitHub, GitLab and the rest for open PRs and CI")
+	statusCmd.Flags().BoolVar(&flagNoForge, "no-forge", false, "the name before 0.3.0 for --no-prs")
+	_ = statusCmd.Flags().MarkHidden("no-forge")
 	rootCmd.AddCommand(statusCmd)
 }
 
@@ -86,8 +88,8 @@ func rootsOf(a *app) []string {
 	return roots
 }
 
-// loadForge asks the forges with a token about open PRs and CI (cached),
-// unless --no-forge.
+// loadForge asks the git hosts that have a token about open PRs and CI
+// (cached), unless --no-prs.
 func (a *app) loadForge(ctx context.Context, results []model.Result, prog *term.Progress) {
 	fc := forgeapi.New(a.cfg, paths.ForgeCache())
 	if !fc.Any() || flagNoForge {
@@ -105,7 +107,7 @@ func (a *app) loadForge(ctx context.Context, results []model.Result, prog *term.
 		a.forge[path] = i
 		n++
 		if prog != nil {
-			prog.Status(fmt.Sprintf("asking forges %d", n))
+			prog.Status(fmt.Sprintf("asking for PRs and CI %d", n))
 		}
 		mu.Unlock()
 	})

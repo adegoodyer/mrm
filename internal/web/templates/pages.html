@@ -106,7 +106,7 @@
   <h1><span class="g s-{{.State}}">{{.Glyph}}</span>{{.Name}}</h1>
   <span class="path mono">{{.Path}}</span>
   <div class="spacer"></div>
-  {{if .Web}}<a class="btn" href="{{.Web}}" target="_blank" rel="noopener noreferrer">Open on forge</a>{{end}}
+  {{if .Web}}<a class="btn" href="{{.Web}}" target="_blank" rel="noopener noreferrer">Open on {{.HostName}}</a>{{end}}
   {{if .PRs}}<a class="btn" href="{{.PRs}}" target="_blank" rel="noopener noreferrer">Pull requests{{if .PRCount}} <span class="n">{{.PRCount}}</span>{{end}}</a>{{end}}
   {{if .CI}}<a class="btn" href="{{.CI}}" target="_blank" rel="noopener noreferrer">CI{{if .CIState}} <span class="ci-{{.CIState}}">{{.CIState}}</span>{{end}}</a>{{end}}
   <button class="btn" data-action="fetch" data-repo="{{.ID}}"{{if $.Busy.Busy}} disabled{{end}}>Fetch</button>
@@ -118,7 +118,7 @@
   <div><dt>Default</dt><dd class="mono">{{.Default}}</dd></div>
   <div><dt>Last run</dt><dd class="{{.LastRunClass}}">{{.LastRun}}</dd></div>
 </dl>
-{{if .ForgeErr}}<p class="count">Forge: {{.ForgeErr}}</p>{{end}}
+{{if .ForgeErr}}<p class="count">{{.HostName}} PRs and CI: {{.ForgeErr}}</p>{{end}}
 <div class="two">
   <section class="panel"><h2>Branches <span>{{len .Branches}}</span></h2>
     <ul class="list">{{range .Branches}}<li><span class="mono">{{if .Current}}*{{else}}&nbsp;{{end}} {{.Name}}</span><span class="track mono">{{.Track}}</span></li>{{end}}</ul>

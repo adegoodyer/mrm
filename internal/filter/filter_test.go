@@ -85,3 +85,18 @@ func TestForgeUsesSelfHostedMapping(t *testing.T) {
 		t.Fatal("mapped self-hosted host should be gitlab")
 	}
 }
+
+// host: matches the kind or the hostname; forge:, its old name, still works.
+func TestHostTerm(t *testing.T) {
+	r := model.Repo{Name: "api"}
+	st := model.Status{RemoteURL: "git@git.example.com:team/api.git"}
+	hosts := map[string]string{"git.example.com": "gitlab"}
+	for _, q := range []string{"host:gitlab", "host:git.example.com", "forge:gitlab"} {
+		if !MustParse(q).WithForges(hosts).Match(r, st) {
+			t.Errorf("%s should match", q)
+		}
+	}
+	if MustParse("host:github").WithForges(hosts).Match(r, st) {
+		t.Error("host:github matched a GitLab repo")
+	}
+}

@@ -350,7 +350,7 @@ func (u *ui) updateDetail() {
 // forgeLines are the detail pane's PR and CI lines.
 func forgeLines(i forgeapi.Info) string {
 	if i.Err != "" {
-		return "\nforge    [::d]" + tview.Escape(i.Err) + "[::-]"
+		return "\nPRs/CI   [::d]" + tview.Escape(i.Err) + "[::-]"
 	}
 	prs := fmt.Sprintf("%d open", i.PRs)
 	if i.PRsMore {

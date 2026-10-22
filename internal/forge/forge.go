@@ -20,6 +20,21 @@ const (
 	None      Kind = "" // no remote, or a local path
 )
 
+// Name is how the kind is written for people: GitHub, GitLab...
+func (k Kind) Name() string {
+	switch k {
+	case GitHub:
+		return "GitHub"
+	case GitLab:
+		return "GitLab"
+	case Bitbucket:
+		return "Bitbucket"
+	case Gitea:
+		return "Gitea"
+	}
+	return "the git host"
+}
+
 // Forge is a parsed remote.
 type Forge struct {
 	Kind Kind
@@ -117,7 +132,7 @@ func (f Forge) page(suffix map[Kind]string, what string) (string, error) {
 	}
 	s, ok := suffix[f.Kind]
 	if !ok {
-		return "", fmt.Errorf("don't know the %s page layout for %s (map it under `forges:` in the config)", what, f.Host)
+		return "", fmt.Errorf("don't know the %s page layout for %s (say which kind it is under `hosts:` in the config)", what, f.Host)
 	}
 	return base + s, nil
 }

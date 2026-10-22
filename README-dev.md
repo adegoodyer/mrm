@@ -22,9 +22,9 @@ internal/
   git/                  the git CLI: runner (no prompts, timeouts, process-group kill), status, safe ops
   engine/               worker pool + events; status, fetch, sync rules; workspace lock; post_sync hooks; prune
   fleet/                exec: a user command in many repos, parallel with line-prefixed output or serial
-  filter/               the query language (is:, ws:, tag:, branch:, forge:, age:, words, -negation)
-  forge/                remote URL -> web / PR / CI / branch URLs
-  forgeapi/             forge REST clients (GitHub, GitLab, Bitbucket, Gitea): open PRs, CI state, org listings; forge.json cache
+  filter/               the query language (is:, ws:, tag:, branch:, host:, age:, words, -negation)
+  forge/                remote URL -> web / PR / CI / branch URLs ("forge" is the code's word for a git host; users see "git host" or the site's name)
+  forgeapi/             forge REST clients (GitHub, GitLab, Bitbucket, Gitea): open PRs, CI state, org listings; hosts.json cache
   drift/                config keys with no repo; org repos with no clone
   schedule/             systemd user timer units for mrm sync
   secret/               token_cmd / token_env resolution, shared by notify and forgeapi
@@ -46,7 +46,7 @@ docs/                   user guide, spec, UAT, roadmap
 ## Rules
 - **Only `internal/engine` runs git against repos** (via `internal/git`). Front ends render engine events. `internal/fleet` runs the user's own command for `exec`; hooks run from the engine.
 - **Sync never changes work in progress**: no stash, reset, rebase, merge commit, force, branch delete. New sync behaviour needs a fixture test in `internal/engine/engine_test.go` proving a dirty tree is untouched. Branch deletes happen only in `prune`, after confirmation, with "merged" re-checked just before.
-- **Forge APIs are read-only and opt-in**: no token for a host, no request to it. Front ends ask in the background after an operation and paint cached answers first - never block a list on the network.
+- **Git host APIs are read-only and opt-in**: no token for a host, no request to it. Front ends ask in the background after an operation and paint cached answers first - never block a list on the network.
 - **Commands that delete or run things ask first** through `confirm()` in `cmd/confirm.go`: `--yes` skips it, and without a terminal it refuses rather than guessing.
 - **No secrets in config or logs.** Endpoints take `token_cmd` / `token_env`; never log their output.
 - **The TUI is tview, never Bubble Tea.** UI state is only touched on the UI goroutine: background work (engine runs, detail reads) hands results back with `app.QueueUpdateDraw`.

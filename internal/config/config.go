@@ -32,15 +32,21 @@ type Config struct {
 	Concurrency int                   `yaml:"concurrency"`
 	Timeout     Duration              `yaml:"timeout"`
 	BrowserCmd  string                `yaml:"browser_cmd"`
-	Forges      map[string]string     `yaml:"forges"`       // host -> github|gitlab|bitbucket|gitea
-	ForgeTokens map[string]ForgeToken `yaml:"forge_tokens"` // host -> token, for PR/CI counts and drift
-	ForgeCache  Duration              `yaml:"forge_cache"`  // how long forge answers are reused (default 10m)
-	Workspaces  map[string]*Workspace `yaml:"workspaces"`
-	Repos       map[string]Override   `yaml:"repos"`
-	Hooks       Hooks                 `yaml:"hooks"`
-	Notify      Notify                `yaml:"notify"`
-	TUI         TUI                   `yaml:"tui"`
-	Web         Web                   `yaml:"web"`
+	Forges      map[string]string     `yaml:"hosts"`       // self-hosted host -> github|gitlab|bitbucket|gitea
+	ForgeTokens map[string]ForgeToken `yaml:"host_tokens"` // host -> API token, for PR/CI counts and drift
+	ForgeCache  Duration              `yaml:"host_cache"`  // how long answers from the hosts' APIs are reused (default 10m)
+
+	// The names before 0.3.0, still read; Renamed lists the ones used.
+	OldForges      map[string]string     `yaml:"forges"`
+	OldForgeTokens map[string]ForgeToken `yaml:"forge_tokens"`
+	OldForgeCache  Duration              `yaml:"forge_cache"`
+	Renamed        []string              `yaml:"-"`
+	Workspaces     map[string]*Workspace `yaml:"workspaces"`
+	Repos          map[string]Override   `yaml:"repos"`
+	Hooks          Hooks                 `yaml:"hooks"`
+	Notify         Notify                `yaml:"notify"`
+	TUI            TUI                   `yaml:"tui"`
+	Web            Web                   `yaml:"web"`
 
 	// Path is where the config was loaded from; empty when there was no file.
 	Path string `yaml:"-"`
@@ -176,11 +182,41 @@ func Parse(data []byte) (*Config, error) {
 	if err := dec.Decode(cfg); err != nil && !errors.Is(err, io.EOF) {
 		return nil, explain(err)
 	}
+	if err := cfg.takeOldNames(); err != nil {
+		return nil, err
+	}
 	cfg.applyDefaults()
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 	return cfg, nil
+}
+
+// takeOldNames moves keys written with their pre-0.3.0 names (forges,
+// forge_tokens, forge_cache) to the new ones, and notes them for doctor.
+func (c *Config) takeOldNames() error {
+	type pair struct {
+		old, new string
+		oldSet   bool
+		newSet   bool
+		move     func()
+	}
+	for _, p := range []pair{
+		{"forges", "hosts", c.OldForges != nil, c.Forges != nil, func() { c.Forges = c.OldForges }},
+		{"forge_tokens", "host_tokens", c.OldForgeTokens != nil, c.ForgeTokens != nil, func() { c.ForgeTokens = c.OldForgeTokens }},
+		{"forge_cache", "host_cache", c.OldForgeCache.Duration != 0, c.ForgeCache.Duration != 0, func() { c.ForgeCache = c.OldForgeCache }},
+	} {
+		if !p.oldSet {
+			continue
+		}
+		if p.newSet {
+			return fmt.Errorf("both %s and %s are set: %s is the old name, keep only %s", p.old, p.new, p.old, p.new)
+		}
+		p.move()
+		c.Renamed = append(c.Renamed, p.old+" -> "+p.new)
+	}
+	c.OldForges, c.OldForgeTokens, c.OldForgeCache = nil, nil, Duration{}
+	return nil
 }
 
 // explain adds a hint to the common mistakes.
@@ -284,7 +320,7 @@ func (c *Config) Validate() error {
 	}
 	for host, t := range c.ForgeTokens {
 		if t.TokenCmd == "" && t.TokenEnv == "" {
-			errs = append(errs, fmt.Sprintf("forge_tokens.%s needs token_cmd or token_env", host))
+			errs = append(errs, fmt.Sprintf("host_tokens.%s needs token_cmd or token_env", host))
 		}
 	}
 	for _, ws := range c.Workspaces {
@@ -301,7 +337,7 @@ func (c *Config) Validate() error {
 		switch kind {
 		case "github", "gitlab", "bitbucket", "gitea":
 		default:
-			errs = append(errs, fmt.Sprintf("forges.%s must be github, gitlab, bitbucket or gitea, not %q", host, kind))
+			errs = append(errs, fmt.Sprintf("hosts.%s must be github, gitlab, bitbucket or gitea, not %q", host, kind))
 		}
 	}
 	if len(errs) > 0 {

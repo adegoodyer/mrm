@@ -164,7 +164,7 @@ func TestCompletion(t *testing.T) {
 		{[]string{"status", "-f", "is:di"}, "is:dirty,is:diverged"},
 		{[]string{"status", "-f", "ws:work -tag:"}, "ws:work -tag:frontend"},
 		{[]string{"status", "-f", "group:"}, "group:platform"},
-		{[]string{"status", "-f", "fo"}, "forge:"},
+		{[]string{"status", "-f", "ho"}, "host:"},
 		{[]string{"open", "bil"}, "billing-api"},
 		{[]string{"open", "platform/"}, "platform/billing-api"},
 	}

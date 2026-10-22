@@ -70,6 +70,10 @@ func runDoctor(ctx context.Context) error {
 		c.warn("no config at " + paths.Tilde(path) + " - using the current directory (mrm config init)")
 	default:
 		c.ok("config " + paths.Tilde(path))
+		for _, r := range cfg.Renamed {
+			old, new, _ := strings.Cut(r, " -> ")
+			c.warn(fmt.Sprintf("config: %s is now called %s - it still works, but rename it", old, new))
+		}
 		if fi.Mode().Perm()&0o022 != 0 {
 			c.warn(fmt.Sprintf("config is group- or world-writable (%s): it can run commands (hooks, token_cmd)", fi.Mode().Perm()))
 		}
@@ -143,10 +147,10 @@ func runDoctor(ctx context.Context) error {
 	for _, h := range hosts {
 		t := cfg.ForgeTokens[h]
 		if _, err := secret.Resolve(ctx, t.TokenCmd, t.TokenEnv); err != nil {
-			c.fail(fmt.Sprintf("forge_tokens.%s: %v", h, err))
+			c.fail(fmt.Sprintf("host_tokens.%s: %v", h, err))
 			continue
 		}
-		c.ok("forge token for " + h)
+		c.ok("API token for " + h)
 	}
 
 	if err := schedule.Available(); err != nil {

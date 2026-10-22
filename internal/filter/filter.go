@@ -25,7 +25,7 @@ type Filter struct {
 }
 
 // WithForges makes forge: terms recognise self-hosted hosts mapped under
-// `forges:` in the config.
+// `hosts:` in the config.
 func (f Filter) WithForges(hosts map[string]string) Filter {
 	f.forges = hosts
 	return f
@@ -40,7 +40,7 @@ type term struct {
 	dur   time.Duration
 }
 
-var keyOrder = []string{"is", "ws", "group", "tag", "branch", "forge", "age"}
+var keyOrder = []string{"is", "ws", "group", "tag", "branch", "host", "age"}
 
 var keys = func() map[string]bool {
 	m := map[string]bool{}
@@ -86,6 +86,9 @@ func Parse(q string) (Filter, error) {
 			w = w[1:]
 		}
 		k, v, ok := strings.Cut(w, ":")
+		if k == "forge" {
+			k = "host" // the name before 0.3.0
+		}
 		if !ok || !keys[k] {
 			t.value = strings.ToLower(w)
 			f.terms = append(f.terms, t)
@@ -130,7 +133,7 @@ func (f Filter) Empty() bool { return len(f.terms) == 0 }
 func (f Filter) NeedsStatus() bool {
 	for _, t := range f.terms {
 		switch t.key {
-		case "is", "branch", "forge", "age":
+		case "is", "branch", "host", "age":
 			return true
 		}
 	}
@@ -176,8 +179,10 @@ func (t term) match(r model.Repo, st model.Status, forges map[string]string) boo
 	case "branch":
 		ok, _ := filepath.Match(t.value, st.Branch)
 		return ok
-	case "forge":
-		return string(forge.Parse(st.RemoteURL, forges).Kind) == strings.ToLower(t.value)
+	case "host":
+		// The kind (host:github) or the hostname (host:git.example.com).
+		f := forge.Parse(st.RemoteURL, forges)
+		return string(f.Kind) == strings.ToLower(t.value) || f.Host == strings.ToLower(t.value)
 	case "age":
 		if st.LastCommit.IsZero() {
 			return false

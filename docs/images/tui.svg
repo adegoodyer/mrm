@@ -111,8 +111,8 @@
 <text class="dim" x="429.6 438.0 446.4 454.8 463.2 471.6 480.0 488.4 496.8 505.2 513.6 522.0 530.4 538.8" y="366" xml:space="preserve">mark all shown</text>
 <text class="t b" x="564.0" y="366" xml:space="preserve">A</text>
 <text class="dim" x="580.8 589.2 597.6 606.0 614.4 622.8 631.2 639.6 648.0 656.4 664.8" y="366" xml:space="preserve">clear marks</text>
-<text class="t b" x="690.0 698.4 706.8 715.2 723.6 732.0" y="366" xml:space="preserve">ctrl+k</text>
-<text class="dim" x="748.8 757.2 765.6 774.0" y="366" xml:space="preserve">more</text>
-<text class="t b" x="799.2" y="366" xml:space="preserve">?</text>
-<text class="dim" x="816.0 824.4 832.8 841.2" y="366" xml:space="preserve">help</text>
+<text class="t b" x="690.0" y="366" xml:space="preserve">d</text>
+<text class="dim" x="706.8 715.2 723.6 732.0 740.4" y="366" xml:space="preserve">trash</text>
+<text class="t b" x="765.6" y="366" xml:space="preserve">?</text>
+<text class="dim" x="782.4 790.8 799.2 807.6" y="366" xml:space="preserve">help</text>
 </svg>

@@ -7,6 +7,7 @@ Everything about using mrm, from the ideas it is built on to every setting. New 
     - [Workspaces and Roots](#workspaces-and-roots)
     - [Discovery](#discovery)
     - [Groups and Tags](#groups-and-tags)
+    - [Git Hosts](#git-hosts)
     - [The Default Branch](#the-default-branch)
     - [States and Flags](#states-and-flags)
     - [Outcomes](#outcomes)
@@ -24,7 +25,7 @@ Everything about using mrm, from the ideas it is built on to every setting. New 
   - [Filters](#filters)
   - [The Interactive View](#the-interactive-view)
   - [The Web UI](#the-web-ui)
-  - [Opening Repos on the Forge](#opening-repos-on-the-forge)
+  - [Opening Repos in the Browser](#opening-repos-in-the-browser)
   - [Working Across Repos](#working-across-repos)
     - [exec](#exec)
     - [prune](#prune)
@@ -77,8 +78,18 @@ repos:
 
 Then `-t terraform`, or `tag:terraform` in a filter.
 
+### Git Hosts
+A repo's **git host** is the site its remote points at: GitHub, GitLab, Bitbucket, Gitea or Codeberg (Codeberg runs Gitea). mrm works out which from the remote URL, `git@github.com:acme/api.git` → GitHub, and uses that to open pages in your browser, to ask for pull requests and CI with an [API token](#pull-requests-and-ci), and for [`mrm drift`](#drift). Self-hosted ones whose name doesn't say what they are go under `hosts:` in the config:
+
+```yaml
+hosts:
+  git.example.com: gitlab       # github | gitlab | bitbucket | gitea
+```
+
+Before 0.3.0 the config called these *forges*: `forges:`, `forge_tokens:`, `forge_cache:` and the `forge:` filter. The old names still work, and `mrm doctor` says to rename them.
+
 ### The Default Branch
-Sync brings each repo's **default branch** up to date - the branch the forge calls default (`main`, `master`, `develop`). mrm reads it from `origin/HEAD`, which git sets when you clone. Forges let you change the default later, and a clone doesn't notice, so mrm re-checks `origin/HEAD` on a fetch when it was last checked over a day ago. With no `origin/HEAD` at all, mrm guesses `main`, then `master`, and `mrm doctor` lists the repo with the command that fixes it. To pin a branch for one repo, set `branch:` in its [exception](#per-repo-exceptions).
+Sync brings each repo's **default branch** up to date - the branch your git host calls default (`main`, `master`, `develop`). mrm reads it from `origin/HEAD`, which git sets when you clone. GitHub, GitLab and the rest let you change the default later, and a clone doesn't notice, so mrm re-checks `origin/HEAD` on a fetch when it was last checked over a day ago. With no `origin/HEAD` at all, mrm guesses `main`, then `master`, and `mrm doctor` lists the repo with the command that fixes it. To pin a branch for one repo, set `branch:` in its [exception](#per-repo-exceptions).
 
 ### States and Flags
 Each repo has one **state** - the first of these that applies - shown as a glyph and a colour:
@@ -95,16 +106,16 @@ Each repo has one **state** - the first of these that applies - shown as a glyph
 
 **Flags** add detail any state can have. They show as notes and work in filters as `is:<flag>`:
 
-| Flag             | Meaning                                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `stash`          | there are stashes                                                                                                  |
-| `untracked`      | untracked files (they don't make a repo dirty, and sync ignores them)                                              |
-| `not-default`    | on a branch other than the default; the note says which, and how far the default branch is behind                  |
-| `detached`       | `HEAD` is detached                                                                                                 |
-| `no-upstream`    | the current branch tracks nothing                                                                                  |
-| `upstream-gone`  | the current branch's upstream was deleted on the remote                                                            |
-| `stale-branches` | local branches whose upstream is gone - usually merged and deleted on the forge; [`mrm prune`](#prune) tidies them |
-| `no-remote`      | the repo has no remote; it is listed but never fetched                                                             |
+| Flag             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `stash`          | there are stashes                                                                                                     |
+| `untracked`      | untracked files (they don't make a repo dirty, and sync ignores them)                                                 |
+| `not-default`    | on a branch other than the default; the note says which, and how far the default branch is behind                     |
+| `detached`       | `HEAD` is detached                                                                                                    |
+| `no-upstream`    | the current branch tracks nothing                                                                                     |
+| `upstream-gone`  | the current branch's upstream was deleted on the remote                                                               |
+| `stale-branches` | local branches whose upstream is gone - usually merged and deleted on the git host; [`mrm prune`](#prune) tidies them |
+| `no-remote`      | the repo has no remote; it is listed but never fetched                                                                |
 
 `is:ahead` matches any repo with commits to push. A branch whose upstream is gone is counted as stale, not as unpushed work: its commits were pushed once.
 
@@ -142,7 +153,7 @@ concurrency: 8                    # repos worked on at once
 timeout: 2m                       # per git command, per repo
 browser_cmd: ""                   # how to open URLs; default wslview on WSL, else xdg-open / open
 
-forges:                           # self-hosted forges, by host, so URLs and filters work
+hosts:                            # self-hosted git hosts, by hostname, so URLs and filters work
   git.example.com: gitlab         # github | gitlab | bitbucket | gitea
 
 workspaces:
@@ -183,10 +194,10 @@ notify:
     url: <ntfy-url>/<topic>
     token_env: MRM_NTFY_TOKEN
 
-forge_tokens:
+host_tokens:
   github.com:
     token_cmd: gh auth token
-forge_cache: 10m
+host_cache: 10m
 
 tui:
   open_cmd: lazygit               # what enter hands off to
@@ -205,11 +216,11 @@ web:
 | `concurrency`                          | `8`         | repos worked on at once                                                                                        |
 | `timeout`                              | `2m`        | limit for each git command; a fetch that takes longer fails with `timed out`                                   |
 | `browser_cmd`                          | -           | command to open URLs; default `wslview` on WSL, else `xdg-open` or `open`                                      |
-| `forges.<host>`                        | -           | the kind of a self-hosted forge: `github`, `gitlab`, `bitbucket` or `gitea`                                    |
+| `hosts.<hostname>`                     | -           | the kind of a self-hosted git host: `github`, `gitlab`, `bitbucket` or `gitea`                                 |
 | `workspaces.<name>.roots`              | (required)  | folders to look in; `~` is expanded                                                                            |
 | `workspaces.<name>.depth`              | `3`         | how many folders below a root to look                                                                          |
 | `workspaces.<name>.ignore`             | -           | name or relative-path globs to skip                                                                            |
-| `workspaces.<name>.orgs`               | -           | `host/owner` on a forge, for [`mrm drift`](#drift)                                                             |
+| `workspaces.<name>.orgs`               | -           | `host/owner` on GitHub, GitLab, Bitbucket or Gitea, for [`mrm drift`](#drift)                                  |
 | `workspaces.<name>.sync.remote`        | `origin`    | the remote to fetch and fast-forward from                                                                      |
 | `workspaces.<name>.sync.ff_current`    | `false`     | also fast-forward a non-default current branch ([policies](#sync-policies))                                    |
 | `workspaces.<name>.sync.switch_merged` | `false`     | switch away from a pushed branch that is merged ([policies](#sync-policies))                                   |
@@ -220,8 +231,8 @@ web:
 | `hooks.post_sync[]`                    | -           | `name`, `if_file`, `run` ([Hooks](#hooks))                                                                     |
 | `notify.on`                            | `attention` | when to notify after a headless sync: `attention`, `always`, `never`                                           |
 | `notify.gotify` · `notify.ntfy`        | -           | `url`, and `token_cmd` or `token_env` ([Notifications](#notifications))                                        |
-| `forge_tokens.<host>`                  | -           | `token_cmd` or `token_env`, and `user` for Bitbucket ([Pull requests and CI](#pull-requests-and-ci))           |
-| `forge_cache`                          | `10m`       | how long answers from forges are reused                                                                        |
+| `host_tokens.<hostname>`               | -           | `token_cmd` or `token_env`, and `user` for Bitbucket ([Pull requests and CI](#pull-requests-and-ci))           |
+| `host_cache`                           | `10m`       | how long PR and CI answers are reused                                                                          |
 | `tui.open_cmd`                         | `lazygit`   | what `enter` runs in the repo                                                                                  |
 | `tui.fetch_on_start`                   | `false`     | fetch everything when the interactive view opens                                                               |
 | `tui.mouse`                            | `true`      | click a row to select it, scroll with the wheel; `false` leaves the mouse to the terminal (for selecting text) |
@@ -260,7 +271,7 @@ Columns: state glyph, name (`group/name`), current branch, ahead `↑` and behin
 
 - `--fetch` fetches every repo first, so behind counts are current. Without it they are as of the last fetch - by mrm or by you.
 - `-f`, `-w`, `-t` choose repos ([Filters](#filters)).
-- With [forge tokens](#pull-requests-and-ci), notes include open pull requests and a failing or running CI. `--no-forge` skips the forges.
+- With [API tokens](#pull-requests-and-ci), notes include open pull requests and a failing or running CI. `--no-prs` skips asking for them.
 - `--json` prints everything for scripts ([Scripting](#scripting)).
 
 Reading status took about half a second for 86 repos on a laptop. The result is cached, so the interactive view and the web UI open at once.
@@ -328,17 +339,17 @@ A sync takes a lock per workspace, so a timer firing while you sync by hand can'
 ## Filters
 One query language everywhere: `-f "<query>"` on the command line, `/` in the interactive view, the filter box in the web UI. Terms are combined with AND; `-` in front of a term negates it.
 
-| Term                    | Matches                                                                                                                     |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `api`                   | repos whose name or path contains `api` (plain substring, not fuzzy)                                                        |
-| `is:<state>`            | `error`, `conflict`, `diverged`, `dirty`, `unpushed`, `behind`, `clean`                                                     |
-| `is:<flag>`             | `stash`, `untracked`, `not-default`, `detached`, `no-upstream`, `upstream-gone`, `stale-branches`, `no-remote`, and `ahead` |
-| `ws:<name>`             | workspace                                                                                                                   |
-| `group:<name>`          | group folder                                                                                                                |
-| `tag:<name>`            | tag from the config                                                                                                         |
-| `branch:<glob>`         | current branch, e.g. `branch:feature/*`                                                                                     |
-| `forge:<kind>`          | `github`, `gitlab`, `bitbucket`, `gitea` (self-hosted hosts via `forges:`)                                                  |
-| `age:>30d` · `age:<12h` | last commit older or newer than; `d` days, `w` weeks, or a duration like `12h`                                              |
+| Term                      | Matches                                                                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `api`                     | repos whose name or path contains `api` (plain substring, not fuzzy)                                                        |
+| `is:<state>`              | `error`, `conflict`, `diverged`, `dirty`, `unpushed`, `behind`, `clean`                                                     |
+| `is:<flag>`               | `stash`, `untracked`, `not-default`, `detached`, `no-upstream`, `upstream-gone`, `stale-branches`, `no-remote`, and `ahead` |
+| `ws:<name>`               | workspace                                                                                                                   |
+| `group:<name>`            | group folder                                                                                                                |
+| `tag:<name>`              | tag from the config                                                                                                         |
+| `branch:<glob>`           | current branch, e.g. `branch:feature/*`                                                                                     |
+| `host:<kind or hostname>` | `github`, `gitlab`, `bitbucket`, `gitea` or a hostname like `git.example.com`; map self-hosted ones under `hosts:`          |
+| `age:>30d` · `age:<12h`   | last commit older or newer than; `d` days, `w` weeks, or a duration like `12h`                                              |
 
 ```bash
 mrm status -f "is:dirty ws:work"
@@ -361,35 +372,35 @@ mrm status -f "is:not-default group:services"
 - **The footer** shows as many keys as fit, most useful first, and changes with what you're on: a repo, a group header, marked repos, a filter. `?` lists them all.
 - **Quitting** while an operation runs needs `q` twice; git finishes what it started either way.
 
-| Key                         | Action                                                                                               |
-| --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `j` `k` `↑` `↓`             | move                                                                                                 |
-| `J` `K` `shift+↓` `shift+↑` | move 10                                                                                              |
-| `g` `Home` · `G` `End`      | top · bottom                                                                                         |
-| `PgUp` `PgDn`               | page up, page down                                                                                   |
-| `tab`                       | collapse or expand the group                                                                         |
-| `shift+tab`                 | collapse every group, or expand them all when all are collapsed                                      |
-| `←` `→`                     | previous or next workspace; *all* is one of them, and the cycle wraps                                |
-| `space`                     | mark the repo, or the whole group on its header                                                      |
-| `a` · `A`                   | mark everything shown · clear marks                                                                  |
-| `s` · `S`                   | sync the targets · sync everything shown                                                             |
-| `f` · `F`                   | fetch the targets · fetch everything shown                                                           |
-| `d`                         | move the targets' folders to the trash, after one confirmation ([below](#the-interactive-view))      |
-| `r`                         | read status again                                                                                    |
-| `o` · `p` · `P` · `b`       | open on the forge: the repo · its pull requests · its pipelines or actions (CI) · the current branch |
-| `enter`                     | hand off to `tui.open_cmd` (lazygit) in the repo; back to mrm when it exits                          |
-| `e` · `t`                   | `$VISUAL`/`$EDITOR` · `$SHELL` in the repo                                                           |
-| `/`                         | filter as you type; `enter` keeps it, `esc` clears it                                                |
-| `!`                         | needs attention: everything not clean, grouped by reason                                             |
-| `l`                         | the detail pane                                                                                      |
-| `L`                         | the commit graph: every branch, tag and remote, newest first; `esc` closes it                        |
-| `ctrl+d` `ctrl+u`           | scroll the detail pane (or the graph) half a page; with the pane closed, move the list               |
-| `w`                         | pick a workspace from a list                                                                         |
-| `ctrl+k`                    | command palette: fuzzy search over every action, workspace and common filter                         |
-| `esc`                       | clear the filter, else leave the attention view, else clear marks                                    |
-| `?` · `q`                   | help · quit                                                                                          |
+| Key                         | Action                                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `j` `k` `↑` `↓`             | move                                                                                                   |
+| `J` `K` `shift+↓` `shift+↑` | move 10                                                                                                |
+| `g` `Home` · `G` `End`      | top · bottom                                                                                           |
+| `PgUp` `PgDn`               | page up, page down                                                                                     |
+| `tab`                       | collapse or expand the group                                                                           |
+| `shift+tab`                 | collapse every group, or expand them all when all are collapsed                                        |
+| `←` `→`                     | previous or next workspace; *all* is one of them, and the cycle wraps                                  |
+| `space`                     | mark the repo, or the whole group on its header                                                        |
+| `a` · `A`                   | mark everything shown · clear marks                                                                    |
+| `s` · `S`                   | sync the targets · sync everything shown                                                               |
+| `f` · `F`                   | fetch the targets · fetch everything shown                                                             |
+| `d`                         | move the targets' folders to the trash, after one confirmation ([below](#the-interactive-view))        |
+| `r`                         | read status again                                                                                      |
+| `o` · `p` · `P` · `b`       | open in the browser: the repo · its pull requests · its pipelines or actions (CI) · the current branch |
+| `enter`                     | hand off to `tui.open_cmd` (lazygit) in the repo; back to mrm when it exits                            |
+| `e` · `t`                   | `$VISUAL`/`$EDITOR` · `$SHELL` in the repo                                                             |
+| `/`                         | filter as you type; `enter` keeps it, `esc` clears it                                                  |
+| `!`                         | needs attention: everything not clean, grouped by reason                                               |
+| `l`                         | the detail pane                                                                                        |
+| `L`                         | the commit graph: every branch, tag and remote, newest first; `esc` closes it                          |
+| `ctrl+d` `ctrl+u`           | scroll the detail pane (or the graph) half a page; with the pane closed, move the list                 |
+| `w`                         | pick a workspace from a list                                                                           |
+| `ctrl+k`                    | command palette: fuzzy search over every action, workspace and common filter                           |
+| `esc`                       | clear the filter, else leave the attention view, else clear marks                                      |
+| `?` · `q`                   | help · quit                                                                                            |
 
-The **detail pane** (`l`) shows the repo's path and forge URL, branch and upstream, the default branch, the last run's outcome, open PRs and CI (with [tokens](#pull-requests-and-ci)), every branch with its tracking, stashes, and the last 12 commits:
+The **detail pane** (`l`) shows the repo's path and web address, branch and upstream, the default branch, the last run's outcome, open PRs and CI (with [tokens](#pull-requests-and-ci)), every branch with its tracking, stashes, and the last 12 commits:
 
 ![The detail pane](images/tui-detail.svg)
 
@@ -401,7 +412,7 @@ Colours come from your terminal's palette, so light and dark themes both work. U
 | Page         | Shows                                                                                                                                                                                           |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Overview** | a state bar per workspace; **needs attention**, grouped by reason; **work at risk** - unpushed commits, stashes, dirty trees older than a day, stale branches; every repo in a filterable table |
-| **Repo**     | state, branch and upstream, default branch, last run, branches, stashes, the last 20 commits; buttons to open the repo, its PRs and its CI on the forge                                         |
+| **Repo**     | state, branch and upstream, default branch, last run, branches, stashes, the last 20 commits; buttons to open the repo, its PRs and its CI in the browser                                       |
 | **Activity** | every sync and fetch from the history - from the CLI, the interactive view or the page - with each repo's outcome                                                                               |
 | **Settings** | text size (Small, Medium, Large, Extra large) and theme (System, Light, Dark) for this browser; the config as loaded, with secrets hidden                                                       |
 
@@ -409,7 +420,7 @@ Sync or fetch one repo, a workspace, the filtered set or everything. Rows update
 
 **Security.** The server listens on 127.0.0.1 only. The token in the address is new each run and becomes a cookie after the first page; requests without it are refused, as are requests whose `Host` isn't `127.0.0.1` or `localhost` (DNS rebinding) and actions without the token header (cross-site requests). The page loads nothing from the internet - fonts are built in - and offers only status, fetch and sync: no `exec`, hooks or `prune`.
 
-## Opening Repos on the Forge
+## Opening Repos in the Browser
 `mrm open [repo]` works out the web address from the remote and opens it. With no repo, it uses the repo you are in. A repo is matched by name, then `group/name`, then part of its name or path.
 
 ```bash
@@ -420,7 +431,7 @@ mrm open --branch         # the current branch of the repo you're in
 mrm open api --print      # print the URL instead
 ```
 
-GitHub, GitLab, Bitbucket and Gitea/Codeberg are recognised by host; map self-hosted hosts under `forges:`. URLs open with `browser_cmd`, else `wslview` on WSL, else `xdg-open` or `open`.
+GitHub, GitLab, Bitbucket and Gitea/Codeberg are recognised by host; map self-hosted ones under `hosts:`. URLs open with `browser_cmd`, else `wslview` on WSL, else `xdg-open` or `open`.
 
 ## Working Across Repos
 
@@ -448,10 +459,10 @@ mrm prune --dry-run       # list them
 mrm prune -w work         # delete the merged ones, after one confirmation
 ```
 
-Candidates are local branches **merged** into the remote default branch, or whose **upstream is gone** (deleted on the forge). Merged ones are deleted after you confirm. A gone-upstream branch that isn't merged - usually because it was squash-merged - may hold the only copy of its commits, so it is listed and kept unless you add `--force`. The current branch and the default branch are never candidates, and "merged" is checked again just before each delete. Run `mrm fetch` first so merged and gone are current.
+Candidates are local branches **merged** into the remote default branch, or whose **upstream is gone** (deleted on the git host). Merged ones are deleted after you confirm. A gone-upstream branch that isn't merged - usually because it was squash-merged - may hold the only copy of its commits, so it is listed and kept unless you add `--force`. The current branch and the default branch are never candidates, and "merged" is checked again just before each delete. Run `mrm fetch` first so merged and gone are current.
 
 ### drift
-Find what's out of step between your disk, your config and your forges:
+Find what's out of step between your disk, your config and GitHub, GitLab, Bitbucket or Gitea:
 
 ```bash
 mrm drift
@@ -459,15 +470,15 @@ mrm drift -w work --archived
 ```
 
 1. **Config entries with no repo**: keys under `repos:` that name one repo or path (no glob characters) and match nothing on disk - usually a repo that was renamed or removed.
-2. **Org repos not cloned**: for each workspace's `orgs` (`host/owner`, an org or a user), the forge's repo list compared, by remote URL, with every clone in every workspace. Each missing repo comes with a `git clone` command into the workspace's first root. Archived repos are counted, and listed with `--archived`; names matching the workspace's `ignore` globs are counted as ignored. This needs a [forge token](#pull-requests-and-ci); for the token's own GitHub account, private repos are included.
+2. **Org repos not cloned**: for each workspace's `orgs` (`host/owner`, an org or a user), the host's repo list compared, by remote URL, with every clone in every workspace. Each missing repo comes with a `git clone` command into the workspace's first root. Archived repos are counted, and listed with `--archived`; names matching the workspace's `ignore` globs are counted as ignored. This needs a [API token](#pull-requests-and-ci); for the token's own GitHub account, private repos are included.
 
 mrm only reports - it never clones. Exit code `2` when there is drift.
 
 ## Pull Requests and CI
-Give mrm a read-only token per forge host and it shows each repo's open pull requests and the state of the latest CI run on its default branch - in `mrm status`, the interactive view (rows and the detail pane) and the web UI (rows and the Repo page). Tokens also let [`mrm drift`](#drift) list org repos.
+Give mrm a read-only API token per git host and it shows each repo's open pull requests and the state of the latest CI run on its default branch - in `mrm status`, the interactive view (rows and the detail pane) and the web UI (rows and the Repo page). Tokens also let [`mrm drift`](#drift) list org repos.
 
 ```yaml
-forge_tokens:
+host_tokens:
   github.com:
     token_cmd: gh auth token
   gitlab.com:
@@ -479,7 +490,7 @@ forge_tokens:
     token_env: CODEBERG_TOKEN
 ```
 
-| Forge            | Token                                                                                                                                                                           |
+| Git host         | Token                                                                                                                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitHub           | `gh auth token` if you use the GitHub CLI; or a fine-grained token with read-only Metadata, Pull requests and Actions                                                           |
 | GitLab           | a personal access token with `read_api`                                                                                                                                         |
@@ -488,9 +499,9 @@ forge_tokens:
 
 - Hosts without a token are never contacted.
 - Rows show `3 PRs` (`100+ PRs` past a hundred), and `CI failed` or `CI running`; a passing CI isn't news, so it shows only in the detail pane and on the Repo page.
-- Answers are cached for `forge_cache` (10 minutes) in `~/.cache/mrm/forge.json`, so running `mrm status` again makes no requests; failures are retried after a minute. The interactive view and web UI show cached answers at once and ask again in the background after each operation.
-- `mrm status --no-forge` skips the forges for one run. `mrm doctor` checks that each token resolves.
-- A private repo the token can't see shows `forge: not found - a private repo the token can't see?`.
+- Answers are cached for `host_cache` (10 minutes) in `~/.cache/mrm/hosts.json`, so running `mrm status` again makes no requests; failures are retried after a minute. The interactive view and web UI show cached answers at once and ask again in the background after each operation.
+- `mrm status --no-prs` skips asking for one run. `mrm doctor` checks that each token resolves.
+- A private repo the token can't see shows `PRs/CI: not found - a private repo the token can't see?`.
 
 ## Hooks
 Commands to run after a sync moves a repo:
@@ -539,7 +550,7 @@ notify:
 The message has the counts, then each repo that needs attention with its reason; on Gotify it is sent at a higher priority when something does. The interactive view and the web UI don't notify - you're looking at them.
 
 ## Scripting
-Everything works without a terminal. Colour turns off when output isn't a terminal, and `--json` gives one object per repo with every status field, its flags, its last outcome and forge info:
+Everything works without a terminal. Colour turns off when output isn't a terminal, and `--json` gives one object per repo with every status field, its flags, its last outcome and PR and CI info:
 
 ```bash
 mrm status --json | jq -r '.[] | select(.state == "behind") | .name'
@@ -567,22 +578,22 @@ mrm completion fish > ~/.config/fish/completions/mrm.fish
 Open a new shell, then press Tab (twice to list options). Re-run after upgrading mrm so new commands complete too.
 
 ## Troubleshooting
-Start with `mrm doctor`: it checks git, the config, every root and repo, ssh, notification and forge tokens and schedules, and prints how to fix what's wrong. `-v` writes debug detail to `~/.local/state/mrm/mrm.log`.
+Start with `mrm doctor`: it checks git, the config, every root and repo, ssh, notification and API tokens and schedules, and prints how to fix what's wrong. `-v` writes debug detail to `~/.local/state/mrm/mrm.log`.
 
-| Problem                                                  | Cause and fix                                                                                                                                                      |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| a repo is missing from the list                          | it is deeper than `depth`, matches an `ignore` glob, is inside a hidden folder, or is under another repo. Raise `depth` or adjust `ignore`                         |
-| `failed: ssh key rejected` / every ssh repo fails        | mrm can't answer a passphrase prompt. Load your key into an agent (`ssh-add`) in the shell you run mrm from, or for timers, in your session's agent                |
-| `failed: remote repo not found, or no access`            | the repo was deleted or moved on the forge, or your account lost access. `git -C <repo> remote -v` shows where it points                                           |
-| `failed: can't resolve the remote host - offline?`       | no network or VPN for that host. The rest of the run carries on                                                                                                    |
-| `failed: timed out`                                      | a fetch took longer than `timeout`. Raise it for huge repos, or check the network                                                                                  |
-| `skipped: dirty` / `diverged` / `merge in progress`      | working as intended: mrm won't touch it. Commit, stash, rebase or finish the merge yourself (`enter` in the interactive view opens lazygit there), then sync again |
-| the wrong default branch                                 | `origin/HEAD` is stale or missing: `git -C <repo> remote set-head origin --auto`, or pin it with `branch:` under `repos:`                                          |
-| `sync already running for workspace work`                | another mrm (maybe a timer) is syncing it. Wait, or check the pid it names                                                                                         |
-| a browser doesn't open on WSL                            | install `wslu` (for `wslview`) or set `browser_cmd`                                                                                                                |
-| `forge: not found - a private repo the token can't see?` | the token lacks access to that repo or org. Check its scopes above                                                                                                 |
-| completion doesn't work                                  | open a new shell after installing it; bash needs the bash-completion package                                                                                       |
-| `schedules: no systemd user instance`                    | see [Scheduled sync](#scheduled-sync) for WSL and macOS                                                                                                            |
+| Problem                                                   | Cause and fix                                                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| a repo is missing from the list                           | it is deeper than `depth`, matches an `ignore` glob, is inside a hidden folder, or is under another repo. Raise `depth` or adjust `ignore`                         |
+| `failed: ssh key rejected` / every ssh repo fails         | mrm can't answer a passphrase prompt. Load your key into an agent (`ssh-add`) in the shell you run mrm from, or for timers, in your session's agent                |
+| `failed: remote repo not found, or no access`             | the repo was deleted or moved on the git host, or your account lost access. `git -C <repo> remote -v` shows where it points                                        |
+| `failed: can't resolve the remote host - offline?`        | no network or VPN for that host. The rest of the run carries on                                                                                                    |
+| `failed: timed out`                                       | a fetch took longer than `timeout`. Raise it for huge repos, or check the network                                                                                  |
+| `skipped: dirty` / `diverged` / `merge in progress`       | working as intended: mrm won't touch it. Commit, stash, rebase or finish the merge yourself (`enter` in the interactive view opens lazygit there), then sync again |
+| the wrong default branch                                  | `origin/HEAD` is stale or missing: `git -C <repo> remote set-head origin --auto`, or pin it with `branch:` under `repos:`                                          |
+| `sync already running for workspace work`                 | another mrm (maybe a timer) is syncing it. Wait, or check the pid it names                                                                                         |
+| a browser doesn't open on WSL                             | install `wslu` (for `wslview`) or set `browser_cmd`                                                                                                                |
+| `PRs/CI: not found - a private repo the token can't see?` | the token lacks access to that repo or org. Check its scopes above                                                                                                 |
+| completion doesn't work                                   | open a new shell after installing it; bash needs the bash-completion package                                                                                       |
+| `schedules: no systemd user instance`                     | see [Scheduled sync](#scheduled-sync) for WSL and macOS                                                                                                            |
 
 ## Uninstall
 ```bash

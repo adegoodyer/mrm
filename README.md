@@ -127,7 +127,7 @@ In short: if a fast-forward is safe, mrm does it; otherwise it leaves the repo e
 
 Mark repos with `space` (or a whole group on its header), then `s` to sync or `f` to fetch them; with nothing marked, the action applies to the group or repo under the cursor. `/` filters as you type, `!` shows only what needs attention, `←` `→` step through workspaces, and `enter` hands off to lazygit in that repo. `o`, `p`, `P` and `b` open the repo, its pull requests, its pipelines and its branch in your browser, `L` shows the commit graph, and `ctrl+k` opens a command palette with everything else. The mouse works too, and mrm reopens where you left it. `l` opens a detail pane:
 
-<p align="center"><img src="docs/images/tui-detail.svg" alt="The detail pane for one repo: path, forge URL, state, branch and upstream, changes, pull requests, CI failed with a link, branches and recent commits"></p>
+<p align="center"><img src="docs/images/tui-detail.svg" alt="The detail pane for one repo: path, web address, state, branch and upstream, changes, pull requests, CI failed with a link, branches and recent commits"></p>
 
 All the keys are in the [user guide](docs/user-guide.md#the-interactive-view), or press `?`.
 
@@ -151,21 +151,21 @@ Light and dark themes and four text sizes are on the Settings page.
 ## Commands
 Every command takes `-w <workspace>`, `-t <tag>` and `-f "<filter>"` to choose repos, `--json` for scripts and `--no-color`. `mrm <command> --help` has examples.
 
-| Command                              | Does                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------- |
-| `mrm`                                | the interactive view (on a terminal; piped, it prints `mrm status`)                   |
-| `mrm status`                         | one line per repo; `--fetch` fetches first                                            |
-| `mrm sync`                           | fetch and fast-forward what is safe to; `--dry-run` says what it would do             |
-| `mrm fetch`                          | fetch only                                                                            |
-| `mrm web`                            | the web UI; `--open`, `--port`                                                        |
-| `mrm open [repo]`                    | the repo on GitHub, GitLab, Bitbucket or Gitea; `--pr`, `--ci`, `--branch`, `--print` |
-| `mrm exec -- <command>`              | run a command in every repo, in parallel; `--serial` for interactive ones             |
-| `mrm prune`                          | delete local branches that are already merged, after asking                           |
-| `mrm drift`                          | config entries with no repo, and repos in your forge orgs you haven't cloned          |
-| `mrm schedule install\|list\|remove` | sync on a timer (systemd)                                                             |
-| `mrm config init\|edit\|path`        | write, edit or locate the config                                                      |
-| `mrm doctor`                         | check git, the config, folders, repos, ssh and tokens                                 |
-| `mrm completion bash\|zsh\|fish`     | shell completion ([setup](docs/user-guide.md#shell-completion))                       |
+| Command                              | Does                                                                                               |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `mrm`                                | the interactive view (on a terminal; piped, it prints `mrm status`)                                |
+| `mrm status`                         | one line per repo; `--fetch` fetches first                                                         |
+| `mrm sync`                           | fetch and fast-forward what is safe to; `--dry-run` says what it would do                          |
+| `mrm fetch`                          | fetch only                                                                                         |
+| `mrm web`                            | the web UI; `--open`, `--port`                                                                     |
+| `mrm open [repo]`                    | the repo on GitHub, GitLab, Bitbucket or Gitea; `--pr`, `--ci`, `--branch`, `--print`              |
+| `mrm exec -- <command>`              | run a command in every repo, in parallel; `--serial` for interactive ones                          |
+| `mrm prune`                          | delete local branches that are already merged, after asking                                        |
+| `mrm drift`                          | config entries with no repo, and repos in your GitHub, GitLab or Bitbucket orgs you haven't cloned |
+| `mrm schedule install\|list\|remove` | sync on a timer (systemd)                                                                          |
+| `mrm config init\|edit\|path`        | write, edit or locate the config                                                                   |
+| `mrm doctor`                         | check git, the config, folders, repos, ssh and tokens                                              |
+| `mrm completion bash\|zsh\|fish`     | shell completion ([setup](docs/user-guide.md#shell-completion))                                    |
 
 Filters work the same everywhere - on the command line, in the interactive view and in the web UI:
 
@@ -173,21 +173,21 @@ Filters work the same everywhere - on the command line, in the interactive view 
 mrm status -f "is:behind ws:work"
 mrm sync -f "tag:terraform -is:dirty"
 mrm status -f "age:>90d"              # last commit over 90 days ago
-mrm status -f "branch:feature/* forge:gitlab"
+mrm status -f "branch:feature/* host:gitlab"
 ```
 
 ## How It Works
-<p align="center"><img src="docs/images/how-it-works.svg" alt="How mrm fits together: workspaces in the config are discovered; one engine runs git with no prompts and a timeout; the CLI, the interactive view and the web UI show the results; a cache and history are kept in XDG folders; forges are asked optionally; timers, hooks and notifications run around a sync"></p>
+<p align="center"><img src="docs/images/how-it-works.svg" alt="How mrm fits together: workspaces in the config are discovered; one engine runs git with no prompts and a timeout; the CLI, the interactive view and the web UI show the results; a cache and history are kept in XDG folders; GitHub, GitLab and the rest are asked optionally for PRs and CI; timers, hooks and notifications run around a sync"></p>
 
 mrm runs the `git` you already have, with your ssh keys and credentials, so anything you can `git fetch` by hand it can too. Prompts are switched off and every git command has a timeout, so a repo that wants a password fails with a plain reason instead of hanging the run. It keeps its files in the standard places:
 
 | What                    | Where                                                          |
 | ----------------------- | -------------------------------------------------------------- |
 | config                  | `~/.config/mrm/config.yaml` (`$XDG_CONFIG_HOME`)               |
-| status and forge caches | `~/.cache/mrm/` (`$XDG_CACHE_HOME`)                            |
+| status and PR/CI caches | `~/.cache/mrm/` (`$XDG_CACHE_HOME`)                            |
 | run history and log     | `~/.local/state/mrm/runs.jsonl`, `mrm.log` (`$XDG_STATE_HOME`) |
 
-`mrm config path` prints them for your machine.
+`mrm config path` prints them for your machine. (A repo's *git host* is the site its remote points at - GitHub, GitLab, Bitbucket or Gitea.)
 
 ## Learn More
 The [user guide](docs/user-guide.md) covers everything in depth:
@@ -197,7 +197,7 @@ The [user guide](docs/user-guide.md) covers everything in depth:
 - [Syncing](docs/user-guide.md#syncing) - the rules, sync policies, locks, exit codes
 - [Filters](docs/user-guide.md#filters) - the full query language
 - [Working across repos](docs/user-guide.md#working-across-repos) - `exec`, `prune`, `drift`
-- [Pull requests and CI](docs/user-guide.md#pull-requests-and-ci) - forge tokens
+- [Pull requests and CI](docs/user-guide.md#pull-requests-and-ci) - API tokens for GitHub, GitLab, Bitbucket and Gitea
 - [Scheduled sync and notifications](docs/user-guide.md#scheduled-sync)
 - [Scripting](docs/user-guide.md#scripting) - JSON output and exit codes
 - [Troubleshooting](docs/user-guide.md#troubleshooting) - common problems and their fixes

@@ -191,3 +191,26 @@ func TestEmptyFileIsDefaults(t *testing.T) {
 		t.Fatalf("err %v", err)
 	}
 }
+
+// The pre-0.3.0 names forges, forge_tokens and forge_cache still load, and
+// are noted for doctor; old and new together is an error.
+func TestOldHostNames(t *testing.T) {
+	ws := "workspaces:\n  work:\n    roots: [/tmp]\n"
+	cfg, err := Parse([]byte(ws + "forges:\n  git.example.com: gitlab\nforge_tokens:\n  github.com:\n    token_env: GH\nforge_cache: 5m\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Forges["git.example.com"] != "gitlab" || cfg.ForgeTokens["github.com"].TokenEnv != "GH" || cfg.ForgeCache.Minutes() != 5 {
+		t.Fatalf("old names not taken: %+v", cfg)
+	}
+	if len(cfg.Renamed) != 3 {
+		t.Fatalf("renamed %v", cfg.Renamed)
+	}
+	if _, err := Parse([]byte(ws + "forge_cache: 5m\nhost_cache: 5m\n")); err == nil || !strings.Contains(err.Error(), "keep only host_cache") {
+		t.Fatalf("both names: %v", err)
+	}
+	cfg, err = Parse([]byte(ws + "hosts:\n  git.example.com: gitlab\nhost_cache: 2m\n"))
+	if err != nil || cfg.Forges["git.example.com"] != "gitlab" || len(cfg.Renamed) != 0 {
+		t.Fatalf("new names: %+v %v", cfg, err)
+	}
+}

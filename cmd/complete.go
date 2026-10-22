@@ -107,7 +107,7 @@ func completeFilter(_ *cobra.Command, _ []string, toComplete string) ([]string, 
 	switch key {
 	case "is":
 		values = filter.IsValues()
-	case "forge":
+	case "host":
 		values = []string{"github", "gitlab", "bitbucket", "gitea", "unknown"}
 	case "age":
 		values = []string{">1d", ">7d", ">30d", ">90d", ">1y", "<1d", "<7d"}

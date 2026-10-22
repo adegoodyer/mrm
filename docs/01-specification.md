@@ -46,7 +46,7 @@ Anyone who works across many repositories - dozens for a team's services, more a
 | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | discovering repos under roots, with ignore globs and nested group folders              | single-repo git work - staging, committing, rebasing (hand off to lazygit) |
 | status of every repo: branch, ahead/behind, dirty, stashes, unpushed work, last commit | rewriting history, resolving conflicts, deleting work                      |
-| safe sync (fetch + fast-forward) of all or a filtered set                              | creating PRs or other forge write operations                               |
+| safe sync (fetch + fast-forward) of all or a filtered set                              | creating PRs or other writes to the git host                               |
 | interactive TUI with live updates and bulk actions                                     | a hosted or multi-user web UI                                              |
 | local web UI with an overview of everything                                            | native Windows (Linux, macOS and WSL only)                                 |
 | opening a repo, its PRs or its CI in the browser                                       | issue tracker integration                                                  |
@@ -75,28 +75,28 @@ The **engine** is the only thing that runs git. Front ends send it requests (sta
 ## Decisions
 Recorded so they are not argued again. Revisit only if the reason stops holding.
 
-| Topic                                 | Decision                                                                                                                                                                                                   | Why                                                                                                                                                                           | Considered                             |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Home                                  | its **own repo** `adegoodyer/mrm` (decided 2026-10-14)                                                                                                                                                     | config, TUI, web server and releases make it a product, not a script                                                                                                          | a script in a dotfiles or scripts repo |
-| Language                              | **Go**, one static binary                                                                                                                                                                                  | fast, single binary, easy to install                                                                                                                                          | Python, Rust                           |
-| Stack                                 | **cobra, adrg/xdg, zap, yaml.v3**; plain ANSI for CLI colour                                                                                                                                               | small, well-known dependencies                                                                                                                                                | kong, urfave/cli                       |
-| No viper                              | config decoded with **yaml.v3 into typed structs**, strict (unknown keys are errors); mrm never rewrites the file (decided 2026-10-14)                                                                     | viper lowercases keys and splits them on `.`, which breaks repo keys that are paths and globs; writing the file back would drop comments                                      | viper                                  |
-| TUI library                           | **tview on tcell**, never Bubble Tea (decided 2026-10-14/15); the repo list is a custom tview primitive, overlays use tview's input, list and pages                                                        | maintainer preference                                                                                                                                                         | Bubble Tea                             |
-| Git access                            | **shell out to `git -C <repo>`**, `GIT_TERMINAL_PROMPT=0`, `ssh -o BatchMode=yes`, a timeout per repo                                                                                                      | uses the ssh-agent, credential helpers and config already set up; nothing can hang on a prompt                                                                                | go-git (slower, auth is separate work) |
-| Repo list                             | **discovered**, not declared; config holds exceptions only                                                                                                                                                 | hand-kept lists drift: repos get cloned and never added                                                                                                                       | a declared list                        |
-| Default branch                        | from **`origin/HEAD`**, **re-checked by fetch at most once a day** (`git remote set-head --auto`; the ref file's age decides), overridable per repo; fall back to `main` then `master` on the remote       | `origin/HEAD` is set at clone time and goes stale when a forge's default changes (seen on real repos: `develop` locally, `master` on the forge); `doctor` flags a missing one | always configured                      |
-| Sync policy                           | **fetch + fast-forward only**, only when clean; never switch branch, stash, reset, rebase or merge by default                                                                                              | a sync must never change work in progress                                                                                                                                     | checkout + pull                        |
-| Default branch when on another branch | updated in place from the fetched remote ref with `git fetch . origin/<b>:<b>` (git refuses a non-fast-forward)                                                                                            | the feature branch is untouched and the default is still current for the next `switch`                                                                                        | switching to it and back               |
-| Status priority                       | one **primary state** per repo by precedence ([Status](#status)) plus flags                                                                                                                                | a list needs one glyph per row; the flags carry the detail                                                                                                                    | many columns of booleans               |
-| Concurrency                           | bounded worker pool, default **8**, one sync per workspace at a time (lock file)                                                                                                                           | the network is the bottleneck; a timer and a manual run must not collide                                                                                                      | unbounded goroutines                   |
-| Cache                                 | last status per repo in `$XDG_CACHE_HOME/mrm/status.json`                                                                                                                                                  | TUI and web UI paint at once, then refresh                                                                                                                                    | no cache                               |
-| TUI                                   | a **fleet view**: one dense, grouped, live list with a command palette and filters; `enter` hands off to lazygit                                                                                           | lazygit already does one repo well; mrm is the view across all of them                                                                                                        | lazygit-style fixed panels             |
-| Web UI                                | **Go templates + plain JS + SSE**, hand-written CSS, embedded with `go:embed` (htmx dropped 2026-10-15: four interactions don't need a library, and with no third-party code the CSP allows only `'self'`) | no Node toolchain; live updates with no client framework                                                                                                                      | SPA (React/Svelte)                     |
-| Web access                            | bind **127.0.0.1** only, random token per run (swapped for an HttpOnly SameSite=Strict cookie on first visit), Host header check, token header on every POST, CSP `'self'` with no inline script or style  | it can run git in every repo                                                                                                                                                  | open on the LAN                        |
-| Config format                         | **YAML**                                                                                                                                                                                                   | the common config language of dev tooling (Taskfile, Helm, Kubernetes)                                                                                                        | TOML                                   |
-| Secrets                               | never in config: `*_cmd` (e.g. `pass show ...`) or `*_env` only                                                                                                                                            | config files get copied and committed                                                                                                                                         | literal tokens                         |
-| No config                             | the current directory is the only root (depth 3)                                                                                                                                                           | useful on first run and on other machines                                                                                                                                     | refuse to run                          |
-| Name                                  | **mrm** (decided 2026-10-14)                                                                                                                                                                               | short; an npm package of the same name exists but only matters if both are on `PATH`                                                                                          | gitfleet, herd                         |
+| Topic                                 | Decision                                                                                                                                                                                                   | Why                                                                                                                                                                                   | Considered                             |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Home                                  | its **own repo** `adegoodyer/mrm` (decided 2026-10-14)                                                                                                                                                     | config, TUI, web server and releases make it a product, not a script                                                                                                                  | a script in a dotfiles or scripts repo |
+| Language                              | **Go**, one static binary                                                                                                                                                                                  | fast, single binary, easy to install                                                                                                                                                  | Python, Rust                           |
+| Stack                                 | **cobra, adrg/xdg, zap, yaml.v3**; plain ANSI for CLI colour                                                                                                                                               | small, well-known dependencies                                                                                                                                                        | kong, urfave/cli                       |
+| No viper                              | config decoded with **yaml.v3 into typed structs**, strict (unknown keys are errors); mrm never rewrites the file (decided 2026-10-14)                                                                     | viper lowercases keys and splits them on `.`, which breaks repo keys that are paths and globs; writing the file back would drop comments                                              | viper                                  |
+| TUI library                           | **tview on tcell**, never Bubble Tea (decided 2026-10-14/15); the repo list is a custom tview primitive, overlays use tview's input, list and pages                                                        | maintainer preference                                                                                                                                                                 | Bubble Tea                             |
+| Git access                            | **shell out to `git -C <repo>`**, `GIT_TERMINAL_PROMPT=0`, `ssh -o BatchMode=yes`, a timeout per repo                                                                                                      | uses the ssh-agent, credential helpers and config already set up; nothing can hang on a prompt                                                                                        | go-git (slower, auth is separate work) |
+| Repo list                             | **discovered**, not declared; config holds exceptions only                                                                                                                                                 | hand-kept lists drift: repos get cloned and never added                                                                                                                               | a declared list                        |
+| Default branch                        | from **`origin/HEAD`**, **re-checked by fetch at most once a day** (`git remote set-head --auto`; the ref file's age decides), overridable per repo; fall back to `main` then `master` on the remote       | `origin/HEAD` is set at clone time and goes stale when the git host's default changes (seen on real repos: `develop` locally, `master` on the git host); `doctor` flags a missing one | always configured                      |
+| Sync policy                           | **fetch + fast-forward only**, only when clean; never switch branch, stash, reset, rebase or merge by default                                                                                              | a sync must never change work in progress                                                                                                                                             | checkout + pull                        |
+| Default branch when on another branch | updated in place from the fetched remote ref with `git fetch . origin/<b>:<b>` (git refuses a non-fast-forward)                                                                                            | the feature branch is untouched and the default is still current for the next `switch`                                                                                                | switching to it and back               |
+| Status priority                       | one **primary state** per repo by precedence ([Status](#status)) plus flags                                                                                                                                | a list needs one glyph per row; the flags carry the detail                                                                                                                            | many columns of booleans               |
+| Concurrency                           | bounded worker pool, default **8**, one sync per workspace at a time (lock file)                                                                                                                           | the network is the bottleneck; a timer and a manual run must not collide                                                                                                              | unbounded goroutines                   |
+| Cache                                 | last status per repo in `$XDG_CACHE_HOME/mrm/status.json`                                                                                                                                                  | TUI and web UI paint at once, then refresh                                                                                                                                            | no cache                               |
+| TUI                                   | a **fleet view**: one dense, grouped, live list with a command palette and filters; `enter` hands off to lazygit                                                                                           | lazygit already does one repo well; mrm is the view across all of them                                                                                                                | lazygit-style fixed panels             |
+| Web UI                                | **Go templates + plain JS + SSE**, hand-written CSS, embedded with `go:embed` (htmx dropped 2026-10-15: four interactions don't need a library, and with no third-party code the CSP allows only `'self'`) | no Node toolchain; live updates with no client framework                                                                                                                              | SPA (React/Svelte)                     |
+| Web access                            | bind **127.0.0.1** only, random token per run (swapped for an HttpOnly SameSite=Strict cookie on first visit), Host header check, token header on every POST, CSP `'self'` with no inline script or style  | it can run git in every repo                                                                                                                                                          | open on the LAN                        |
+| Config format                         | **YAML**                                                                                                                                                                                                   | the common config language of dev tooling (Taskfile, Helm, Kubernetes)                                                                                                                | TOML                                   |
+| Secrets                               | never in config: `*_cmd` (e.g. `pass show ...`) or `*_env` only                                                                                                                                            | config files get copied and committed                                                                                                                                                 | literal tokens                         |
+| No config                             | the current directory is the only root (depth 3)                                                                                                                                                           | useful on first run and on other machines                                                                                                                                             | refuse to run                          |
+| Name                                  | **mrm** (decided 2026-10-14)                                                                                                                                                                               | short; an npm package of the same name exists but only matters if both are on `PATH`                                                                                                  | gitfleet, herd                         |
 
 ## Concepts
 | Term      | Meaning                                                                                                                                     |
@@ -106,7 +106,7 @@ Recorded so they are not argued again. Revisit only if the reason stops holding.
 | repo      | a folder containing `.git`. Discovery **does not descend into a repo**, so submodules and `.worktrees/` inside it are not listed separately |
 | group     | the folders between the root and the repo (`platform` for `~/work/platform/billing-api`); empty for top-level repos                         |
 | tag       | free labels from config (`backend`, `terraform`), matched by repo name or path glob                                                         |
-| forge     | detected from the remote URL: GitHub, GitLab, Bitbucket, Gitea/Codeberg, or unknown                                                         |
+| git host  | detected from the remote URL: GitHub, GitLab, Bitbucket, Gitea/Codeberg, or unknown                                                         |
 
 Folders under a root that are not repos (`~/work/logs`, `~/work/scratch`) are ignored silently; group folders are walked.
 
@@ -115,7 +115,7 @@ Read with `git status --porcelain=v2 --branch --show-stash` plus `for-each-ref` 
 
 | Field        | Detail                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| identity     | name, path, workspace, group, tags, remote URL, forge                                                                         |
+| identity     | name, path, workspace, group, tags, remote URL, git host                                                                      |
 | branch       | current branch (or detached), default branch, upstream, ahead/behind upstream, default branch ahead/behind `origin/<default>` |
 | working tree | staged, modified, untracked, conflicted counts; merge/rebase/cherry-pick in progress                                          |
 | work at risk | stash count; unpushed commits (on branches never pushed, or ahead of a live upstream); stale branches (upstream gone)         |
@@ -136,7 +136,7 @@ Read with `git status --porcelain=v2 --branch --show-stash` plus `for-each-ref` 
 
 Flags shown alongside: `stash`, `untracked`, `detached`, `no-remote`, `upstream-gone`, `no-upstream`, `not-default` (on a branch other than the default), `stale-branches`.
 
-A branch whose upstream is gone - deleted on the forge after a merge, then pruned by a fetch - is **stale**, not unpushed: its commits were pushed once. Counting them as unpushed flagged 28 of 86 real repos as work at risk after the first `fetch --prune`, all of them old `develop` branches. Stale branches are a flag (listed by `prune` in phase 4); a stale branch with commits added after its last push can't be told apart once pruned.
+A branch whose upstream is gone - deleted on the git host after a merge, then pruned by a fetch - is **stale**, not unpushed: its commits were pushed once. Counting them as unpushed flagged 28 of 86 real repos as work at risk after the first `fetch --prune`, all of them old `develop` branches. Stale branches are a flag (listed by `prune` in phase 4); a stale branch with commits added after its last push can't be told apart once pruned.
 
 ## Sync
 Per repo, in the worker pool:
@@ -162,28 +162,28 @@ One query language in the CLI (`--filter`), the TUI (`/`) and the web UI (search
 | ------------------------------------------- | ------------------------------------------------------------------------- |
 | `is:<state or flag>`                        | `is:dirty`, `is:behind`, `is:unpushed`, `is:stash`, `is:not-default`, ... |
 | `ws:<name>` · `group:<name>` · `tag:<name>` | workspace, group, tag                                                     |
-| `branch:<glob>` · `forge:<name>`            | current branch, forge                                                     |
+| `branch:<glob>` · `host:<name>`             | current branch, git host                                                  |
 | `age:>30d` · `age:<1d`                      | last commit age                                                           |
 | `-<term>`                                   | negation, e.g. `-tag:archived`                                            |
 
 ## CLI
 Global flags: `-w/--workspace`, `-t/--tag`, `-f/--filter "<query>"`, `--json`, `--no-color` (and `NO_COLOR`), `-c/--config <path>`, `-v/--verbose`.
 
-| Command                                  | Does                                                                                                                                                                                                                    |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mrm`                                    | the TUI on a terminal, otherwise `mrm status`                                                                                                                                                                           |
-| `mrm status`                             | one line per repo (glyph, name, branch, ahead/behind, flags, age, open PRs and CI problems when [forge tokens](#forge-apis) are set); `--json` for scripts; `--fetch` to fetch first; `--no-forge` skips the forge APIs |
-| `mrm sync`                               | headless fetch + fast-forward with a live progress line per repo, then the summary; `--dry-run` says what it would do                                                                                                   |
-| `mrm fetch`                              | step 1 of sync only                                                                                                                                                                                                     |
-| `mrm web`                                | serve the web UI; `--open` opens the browser, `--port` (default 7420)                                                                                                                                                   |
-| `mrm open <repo> [--pr\|--ci\|--branch]` | the repo, its PRs, its CI or the current branch on the forge                                                                                                                                                            |
-| `mrm exec -- <cmd>`                      | run a command in every matching repo, in parallel, output prefixed by repo; `--serial` for interactive commands ([Exec](#exec))                                                                                         |
-| `mrm prune`                              | list local branches already merged or with a gone upstream; delete the merged ones after confirmation ([Prune](#prune))                                                                                                 |
-| `mrm drift`                              | exact `repos:` keys that match nothing on disk, and (with a forge token) repos in a workspace's `orgs` not cloned anywhere ([Drift](#drift))                                                                            |
-| `mrm schedule install\|list\|remove`     | a systemd user timer for `mrm sync` ([Scheduling](#scheduling))                                                                                                                                                         |
-| `mrm config init\|edit\|path`            | write a commented default, open it in `$EDITOR`, print the paths                                                                                                                                                        |
-| `mrm doctor`                             | git version, config valid, roots exist, repos with no `origin/HEAD`, ssh agent loaded, config permissions, notify and forge tokens resolve, systemd user instance                                                       |
-| `mrm version`                            | version, commit, build date                                                                                                                                                                                             |
+| Command                                  | Does                                                                                                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mrm`                                    | the TUI on a terminal, otherwise `mrm status`                                                                                                                                                                             |
+| `mrm status`                             | one line per repo (glyph, name, branch, ahead/behind, flags, age, open PRs and CI problems when [API tokens](#git-host-apis) are set); `--json` for scripts; `--fetch` to fetch first; `--no-prs` skips the git host APIs |
+| `mrm sync`                               | headless fetch + fast-forward with a live progress line per repo, then the summary; `--dry-run` says what it would do                                                                                                     |
+| `mrm fetch`                              | step 1 of sync only                                                                                                                                                                                                       |
+| `mrm web`                                | serve the web UI; `--open` opens the browser, `--port` (default 7420)                                                                                                                                                     |
+| `mrm open <repo> [--pr\|--ci\|--branch]` | the repo, its PRs, its CI or the current branch in the browser                                                                                                                                                            |
+| `mrm exec -- <cmd>`                      | run a command in every matching repo, in parallel, output prefixed by repo; `--serial` for interactive commands ([Exec](#exec))                                                                                           |
+| `mrm prune`                              | list local branches already merged or with a gone upstream; delete the merged ones after confirmation ([Prune](#prune))                                                                                                   |
+| `mrm drift`                              | exact `repos:` keys that match nothing on disk, and (with an API token) repos in a workspace's `orgs` not cloned anywhere ([Drift](#drift))                                                                               |
+| `mrm schedule install\|list\|remove`     | a systemd user timer for `mrm sync` ([Scheduling](#scheduling))                                                                                                                                                           |
+| `mrm config init\|edit\|path`            | write a commented default, open it in `$EDITOR`, print the paths                                                                                                                                                          |
+| `mrm doctor`                             | git version, config valid, roots exist, repos with no `origin/HEAD`, ssh agent loaded, config permissions, notify and API tokens resolve, systemd user instance                                                           |
+| `mrm version`                            | version, commit, build date                                                                                                                                                                                               |
 
 Every command that deletes or runs something beyond sync (`prune`, `schedule install|remove`, `exec`) asks first unless `--yes`. Without a terminal to ask on it refuses and says to add `--yes`, so a script never acts by accident. `prune --dry-run` asks nothing.
 
@@ -208,36 +208,36 @@ Every command that deletes or runs something beyond sync (`prune`, `schedule ins
 - **Operations** run one at a time through the engine, streaming a live row per repo; a sync takes the same workspace lock as `mrm sync` and writes the same cache and run history. A sync that leaves anything skipped or failed ends on the needs-attention view.
 - **Quit** while an operation runs needs `q` twice; git finishes what it started.
 
-| Key                                      | Action                                                                                                                                    |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `j/k` `↑/↓` `g/G` `Home/End` `PgUp/PgDn` | move                                                                                                                                      |
-| `tab` (or `enter` on a header)           | collapse / expand the group                                                                                                               |
-| `/`                                      | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                                               |
-| `ctrl+k`                                 | command palette - ranked fuzzy search over every action, workspace and common filter                                                      |
-| `space` · `a` · `A`                      | mark the repo (or the whole group on a header), mark everything shown, clear marks                                                        |
-| `s` · `S`                                | sync the targets / everything shown                                                                                                       |
-| `f` · `F`                                | fetch the targets / everything shown                                                                                                      |
-| `r`                                      | refresh status                                                                                                                            |
-| `o` · `p` · `P` · `b`                    | open on forge: the repo / its PRs / its pipelines (CI) / the current branch                                                               |
-| `enter`                                  | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                                                   |
-| `e` · `t`                                | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                                                |
-| `l`                                      | detail pane: path, forge URL, upstream, default branch, last run, open PRs and CI state, branches with tracking, stashes, last 12 commits |
-| `!`                                      | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states                                   |
-| `w`                                      | switch workspace                                                                                                                          |
-| `esc`                                    | clear the filter, else leave the attention view, else clear marks                                                                         |
-| `?` · `q`                                | help, quit                                                                                                                                |
+| Key                                      | Action                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `j/k` `↑/↓` `g/G` `Home/End` `PgUp/PgDn` | move                                                                                                                                        |
+| `tab` (or `enter` on a header)           | collapse / expand the group                                                                                                                 |
+| `/`                                      | filter as you type ([Filters](#filters)); `enter` keeps it, `esc` clears it                                                                 |
+| `ctrl+k`                                 | command palette - ranked fuzzy search over every action, workspace and common filter                                                        |
+| `space` · `a` · `A`                      | mark the repo (or the whole group on a header), mark everything shown, clear marks                                                          |
+| `s` · `S`                                | sync the targets / everything shown                                                                                                         |
+| `f` · `F`                                | fetch the targets / everything shown                                                                                                        |
+| `r`                                      | refresh status                                                                                                                              |
+| `o` · `p` · `P` · `b`                    | open in the browser: the repo / its PRs / its pipelines (CI) / the current branch                                                           |
+| `enter`                                  | hand off to `tui.open_cmd` (default `lazygit`) in the repo; the row refreshes on return                                                     |
+| `e` · `t`                                | `$VISUAL`/`$EDITOR` / `$SHELL` in the repo                                                                                                  |
+| `l`                                      | detail pane: path, web address, upstream, default branch, last run, open PRs and CI state, branches with tracking, stashes, last 12 commits |
+| `!`                                      | needs-attention view: everything not clean, grouped by reason - failures first, then skips, then states                                     |
+| `w`                                      | switch workspace                                                                                                                            |
+| `esc`                                    | clear the filter, else leave the attention view, else clear marks                                                                           |
+| `?` · `q`                                | help, quit                                                                                                                                  |
 
 Colours are the terminal's own ANSI palette on its default background, so light and dark themes both read; tcell drops colour under `NO_COLOR` (or `--no-color`) and bold, dim and reverse still carry the meaning.
 
 ## Web UI
 `mrm web` serves `http://127.0.0.1:7420/?token=<random>`, printed and opened with `--open` (`-w` limits the workspaces, `--port` overrides `web.port`). Go templates, about 150 lines of plain JS, live updates over SSE, hand-written CSS with light/dark/system themes, responsive from 360 px; fonts (Instrument Sans, JetBrains Mono, OFL) embedded so it works offline. Every font size is in `rem`, so one root size scales all text: Small 14 px, Medium 16 px (default), Large 18 px, Extra large 20 px - picked on the Settings page and saved per browser, with `web.text_size` as the default. Mockups: drafted 2026-10-15, text enlarged and the size setting added on review.
 
-| Page                | Shows                                                                                                                                                                                     | Actions                                           |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| **Overview** (home) | state counts per workspace; **needs attention** list; **work at risk** (unpushed commits, stashes, dirty trees older than a day); filterable table of every repo; last sync per workspace | sync / fetch all, a workspace or the filtered set |
-| **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, forge links with the open PR count and CI state                                                          | sync, fetch, open on forge                        |
-| **Activity**        | sync runs from `runs.jsonl`: when, what, duration, outcome per repo                                                                                                                       | -                                                 |
-| **Settings**        | Appearance (this browser): text size and theme. Config as loaded, its path and validation errors                                                                                          | - (edit with `mrm config edit`)                   |
+| Page                | Shows                                                                                                                                                                                     | Actions                                              |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Overview** (home) | state counts per workspace; **needs attention** list; **work at risk** (unpushed commits, stashes, dirty trees older than a day); filterable table of every repo; last sync per workspace | sync / fetch all, a workspace or the filtered set    |
+| **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, links to the repo, PRs and CI with the open PR count and CI state                                        | sync, fetch, open on GitHub (or the repo's git host) |
+| **Activity**        | sync runs from `runs.jsonl`: when, what, duration, outcome per repo                                                                                                                       | -                                                    |
+| **Settings**        | Appearance (this browser): text size and theme. Config as loaded, its path and validation errors                                                                                          | - (edit with `mrm config edit`)                      |
 
 The web UI offers only what the engine offers - no `exec`, no hooks, no `prune`. One operation at a time; a sync takes the same workspace lock as `mrm sync` and the TUI, and writes the same cache and history.
 
@@ -246,9 +246,9 @@ The web UI offers only what the engine offers - no `exec`, no hooks, no `prune`.
 **Long groups.** Needs attention and Work at risk show at most 8 repos per group; the rest are a "+ N more" link to the overview filtered to them (`is:stale-branches`), so one large group can't push everything else off the page.
 
 ## Open in Browser
-The web URL is derived from the remote (`git@host:owner/repo.git` or `https://...`); hosts mapped to a forge in config cover self-hosted ones.
+The web URL is derived from the remote (`git@host:owner/repo.git` or `https://...`); self-hosted hosts mapped under `hosts:` in config are covered too.
 
-| Forge            | PRs                 | CI             |
+| Git host         | PRs                 | CI             |
 | ---------------- | ------------------- | -------------- |
 | GitHub           | `/pulls`            | `/actions`     |
 | GitLab           | `/-/merge_requests` | `/-/pipelines` |
@@ -257,18 +257,20 @@ The web URL is derived from the remote (`git@host:owner/repo.git` or `https://..
 
 The browser is opened with `browser_cmd` if set, else `wslview` on WSL, else `xdg-open` / `open`.
 
-## Forge APIs
-With a token for a host under `forge_tokens`, mrm asks that forge, read-only, for each repo's open PR count and the state of the latest CI run on the default branch. No token, no request: hosts without one are never contacted. One token per host (decided 2026-10-19, closing Q1: the clients live in mrm rather than in a module shared with other tools, since mrm needs only counts and org listings).
+## Git Host APIs
+A **git host** is the site a remote points at: GitHub, GitLab, Bitbucket, Gitea/Codeberg. Until 0.3.0 the user-facing word was *forge* (`forges:`, `forge_tokens:`, `forge_cache:`, the `forge:` filter); those names are still read, and `doctor` asks for the new ones (`hosts:`, `host_tokens:`, `host_cache:`, `host:`). The code keeps `forge` in package names (`internal/forge`, `internal/forgeapi`) and the `--json` field.
 
-| Forge            | Open PRs                                  | CI                                           | Auth                                         |
+With a token for a host under `host_tokens`, mrm asks that host's API, read-only, for each repo's open PR count and the state of the latest CI run on the default branch. No token, no request: hosts without one are never contacted. One token per host (decided 2026-10-19, closing Q1: the clients live in mrm rather than in a module shared with other tools, since mrm needs only counts and org listings).
+
+| Git host         | Open PRs                                  | CI                                           | Auth                                         |
 | ---------------- | ----------------------------------------- | -------------------------------------------- | -------------------------------------------- |
 | GitHub           | `pulls?state=open` (100+ shown as `100+`) | latest Actions run on the default branch     | `Bearer` token                               |
 | GitLab           | `merge_requests?state=opened` (`X-Total`) | latest pipeline on the default branch        | `PRIVATE-TOKEN`                              |
 | Bitbucket        | `pullrequests?state=OPEN` (`size`)        | latest pipeline targeting the default branch | API token with `user` (Basic), else `Bearer` |
 | Gitea / Codeberg | `pulls?state=open` (`X-Total-Count`)      | combined commit status of the default branch | `token`                                      |
 
-- **Where it shows**: notes in `mrm status` ("3 PRs", "CI failed", "CI running" - a passing CI isn't news) and its `--json` (`forge`), the TUI rows and detail pane, the web rows and Repo page. A repo the token can't see shows "forge: not found - a private repo the token can't see?".
-- **Speed**: answers are cached in `$XDG_CACHE_HOME/mrm/forge.json` for `forge_cache` (default 10m; errors are retried after a minute), so a second `mrm status` makes no requests. The TUI and web UI paint cached answers at once and ask in the background; status asks after reading git, at `concurrency` requests at a time.
+- **Where it shows**: notes in `mrm status` ("3 PRs", "CI failed", "CI running" - a passing CI isn't news) and its `--json` (the `forge` field), the TUI rows and detail pane, the web rows and Repo page. A repo the token can't see shows "PRs/CI: not found - a private repo the token can't see?".
+- **Speed**: answers are cached in `$XDG_CACHE_HOME/mrm/hosts.json` for `host_cache` (default 10m; errors are retried after a minute), so a second `mrm status` makes no requests. The TUI and web UI paint cached answers at once and ask in the background; status asks after reading git, at `concurrency` requests at a time.
 
 ## Exec
 `mrm exec [-w|-t|-f] -- <cmd> [args]` runs the command in each matching repo's top folder, `concurrency` at a time. Output is prefixed by the repo name a whole line at a time, so parallel output never interleaves mid-line. `--serial` runs one repo at a time with the terminal attached, for interactive commands. The command is run directly, not through a shell (`-- sh -c '...'` for pipes). A summary lists the repos where it failed; exit code 2 if any did. Asks first unless `--yes`.
@@ -283,7 +285,7 @@ With a token for a host under `forge_tokens`, mrm asks that forge, read-only, fo
 `mrm drift` reports, and never clones:
 
 1. Keys under `repos:` that name one repo or path (no glob characters) and match nothing on disk - usually a repo that was renamed or removed. Glob keys are left out: matching nothing may be what they mean.
-2. For each selected workspace's `orgs` (`host/owner`, an org or a user), the forge's repo list compared by remote URL with every clone in every workspace. Missing repos are listed with a `git clone` command into the workspace's first root; archived ones are counted and listed with `--archived`; names matching the workspace's `ignore` globs are counted as ignored. For the token's own GitHub account, private repos are included.
+2. For each selected workspace's `orgs` (`host/owner`, an org or a user), the host's repo list compared by remote URL with every clone in every workspace. Missing repos are listed with a `git clone` command into the workspace's first root; archived ones are counted and listed with `--archived`; names matching the workspace's `ignore` globs are counted as ignored. For the token's own GitHub account, private repos are included.
 
 Exit code 2 when there is drift; `--json` for scripts.
 
@@ -293,7 +295,7 @@ Exit code 2 when there is drift; `--json` for scripts.
 | config           | `$XDG_CONFIG_HOME/mrm/config.yaml` (`~/.config/mrm/config.yaml`) |
 | run history, log | `$XDG_STATE_HOME/mrm/runs.jsonl`, `mrm.log`                      |
 | status cache     | `$XDG_CACHE_HOME/mrm/status.json`                                |
-| forge cache      | `$XDG_CACHE_HOME/mrm/forge.json`                                 |
+| PR/CI cache      | `$XDG_CACHE_HOME/mrm/hosts.json`                                 |
 | sync lock        | `$XDG_RUNTIME_DIR/mrm/<workspace>.lock` (state dir if unset)     |
 
 Precedence: flags > config > defaults. The environment picks the file (`MRM_CONFIG`, below `-c`) and turns colour off (`NO_COLOR`); settings themselves come only from the file.
@@ -340,7 +342,7 @@ notify:
     url: <ntfy-url>/<topic>
     token_env: MRM_NTFY_TOKEN
 
-forge_tokens:                     # read-only API tokens, per host
+host_tokens:                      # read-only API tokens, per host
   github.com:
     token_cmd: gh auth token
   gitlab.com:
@@ -348,7 +350,7 @@ forge_tokens:                     # read-only API tokens, per host
   bitbucket.org:
     user: <email>                 # Bitbucket API tokens use Basic auth
     token_cmd: pass show bitbucket/mrm
-forge_cache: 10m                  # how long forge answers are reused
+host_cache: 10m                   # how long PR and CI answers are reused
 
 tui:
   open_cmd: lazygit
@@ -368,13 +370,13 @@ After a headless `mrm sync` (also from the timer), per `notify.on`: `attention` 
 `mrm schedule install -w work --on "Mon..Fri 08:30"` writes `mrm-sync-work.service` and `.timer` to `~/.config/systemd/user/` with `Persistent=true` (catches up after the machine was off) and enables it. `schedule list` and `schedule remove` manage them. Needs systemd (on WSL, enable it in `/etc/wsl.conf`); `doctor` says when it is not available.
 
 ## Security
-| Entry point / asset                  | Risk                                                         | Mitigation                                                                                                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| web UI                               | another local process or a web page drives git in every repo | 127.0.0.1 only; random token per run (cookie after first load); `Host` must be `127.0.0.1`/`localhost` (DNS rebinding); POSTs need the token header (CSRF); no `exec` or hooks from the web |
-| secrets (Gotify, ntfy, forge tokens) | leaked from config or logs                                   | only `*_cmd` / `*_env` fields exist; never logged; redacted in `--verbose` and the Settings page                                                                                            |
-| git auth                             | a prompt hangs a worker or a run                             | `GIT_TERMINAL_PROMPT=0`, `GIT_SSH_COMMAND` with `BatchMode=yes`, timeout per command                                                                                                        |
-| config                               | hooks and `exec` run commands from it                        | the config is trusted input; `doctor` warns if it is group- or world-writable                                                                                                               |
-| working trees                        | a sync loses or tangles work                                 | the [sync rules](#sync); tests prove a dirty tree is byte-identical after a sync                                                                                                            |
+| Entry point / asset                | Risk                                                         | Mitigation                                                                                                                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| web UI                             | another local process or a web page drives git in every repo | 127.0.0.1 only; random token per run (cookie after first load); `Host` must be `127.0.0.1`/`localhost` (DNS rebinding); POSTs need the token header (CSRF); no `exec` or hooks from the web |
+| secrets (Gotify, ntfy, API tokens) | leaked from config or logs                                   | only `*_cmd` / `*_env` fields exist; never logged; redacted in `--verbose` and the Settings page                                                                                            |
+| git auth                           | a prompt hangs a worker or a run                             | `GIT_TERMINAL_PROMPT=0`, `GIT_SSH_COMMAND` with `BatchMode=yes`, timeout per command                                                                                                        |
+| config                             | hooks and `exec` run commands from it                        | the config is trusted input; `doctor` warns if it is group- or world-writable                                                                                                               |
+| working trees                      | a sync loses or tangles work                                 | the [sync rules](#sync); tests prove a dirty tree is byte-identical after a sync                                                                                                            |
 
 ## Non-Functional Requirements
 | Requirement                           | Target                                                             |
@@ -393,18 +395,18 @@ After a headless `mrm sync` (also from the timer), per `notify.on`: `attention` 
 | 1 - core + headless | config (XDG), discovery, status, sync, fetch, open, filters, `--json`, cache, history, Gotify/ntfy, `doctor` |
 | 2 - TUI             | the fleet view, palette, filters, marks, bulk actions, hand-off, needs-attention view                        |
 | 3 - web UI          | Overview, Repo, Activity, Settings, live over SSE                                                            |
-| 4 - extras          | `exec`, hooks, `prune`, `drift`, `schedule`, forge PR/CI counts                                              |
+| 4 - extras          | `exec`, hooks, `prune`, `drift`, `schedule`, PR/CI counts from git hosts                                     |
 
 ## Out of Scope
 - single-repo git operations (lazygit does it)
-- cloning, archiving or creating repos on a forge
+- cloning, archiving or creating repos on a git host
 - a hosted or shared web UI
 - issue trackers (branch-name ticket keys may come later)
 - native Windows
 
 ## Open Questions
-| #      | Question                                               | Leaning                                                                                                                                             |
-| ------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~Q1~~ | ~~share forge clients with another tool as a module?~~ | closed 2026-10-19: no - mrm needs only PR counts, CI state and org listings, so its clients live in `internal/forgeapi` ([Forge APIs](#forge-apis)) |
-| ~~Q2~~ | ~~TUI library~~                                        | closed 2026-10-15: tview, with the list drawn as a custom primitive (tview's table can't span group headers across columns)                         |
-| Q3     | should `switch_merged` default to true?                | decide after a few weeks of phase 1 use                                                                                                             |
+| #      | Question                                                          | Leaning                                                                                                                                                   |
+| ------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~Q1~~ | ~~share the git host API clients with another tool as a module?~~ | closed 2026-10-19: no - mrm needs only PR counts, CI state and org listings, so its clients live in `internal/forgeapi` ([Git Host APIs](#git-host-apis)) |
+| ~~Q2~~ | ~~TUI library~~                                                   | closed 2026-10-15: tview, with the list drawn as a custom primitive (tview's table can't span group headers across columns)                               |
+| Q3     | should `switch_merged` default to true?                           | decide after a few weeks of phase 1 use                                                                                                                   |

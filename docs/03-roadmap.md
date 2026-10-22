@@ -90,9 +90,14 @@ Ideas from using 0.2.0, for 0.3.0.
 | ✅ 2026-10-22 | 5.6  | mouse (`tui.mouse`); the view reopens where you left it                                                                            |
 | ✅ 2026-10-22 | 5.7  | `ff_dirty` sync policy                                                                                                             |
 | ✅ 2026-10-22 | 5.8  | docs: sync step by step with the exact git commands; compared with `git pull`                                                      |
-| ⬜            | 5.9  | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
-| ⬜            | 5.10 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
-| ⬜            | 5.11 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
+| ✅ 2026-10-22 | 5.9  | web UI full width; `master` is the only branch                                                                                     |
+| ✅ 2026-10-22 | 5.10 | sync results as sentences (`would fast-forward main by 3 commits`)                                                                 |
+| ✅ 2026-10-22 | 5.11 | browser keys open every marked repo (asks above 5); mrm's own confirm dialog                                                       |
+| ✅ 2026-10-22 | 5.12 | `d` moves repos to the trash after one confirmation                                                                                |
+| ✅ 2026-10-22 | 5.13 | "forge" becomes "git host": UI, docs and config (`hosts:`, `host_tokens:`, `host_cache:`, `host:`; old names still read)           |
+| ⬜            | 5.14 | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
+| ⬜            | 5.15 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
+| ⬜            | 5.16 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
 
 ## Releases
 

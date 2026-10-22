@@ -115,7 +115,7 @@ type repoVM struct {
 	ID, Name, Display, WS, Path, State, Glyph, Error     string
 	Branch, Upstream, AB, Default, LastRun, LastRunClass string
 	Web, PRs, CI                                         string
-	PRCount, CIState, ForgeErr                           string
+	PRCount, CIState, ForgeErr, HostName                 string
 	Branches                                             []branchVM
 	Stashes                                              []string
 	Commits                                              []commitVM
@@ -455,6 +455,7 @@ func (s *Server) repoPage(w http.ResponseWriter, r *http.Request) {
 	}
 	f := forge.Parse(st.RemoteURL, s.cfg.Forges)
 	vm.Web, _ = f.Web()
+	vm.HostName = f.Kind.Name()
 	vm.PRs, _ = f.PRs()
 	vm.CI, _ = f.CI()
 	s.mu.Lock()

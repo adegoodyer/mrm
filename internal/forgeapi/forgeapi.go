@@ -1,7 +1,7 @@
 // Package forgeapi asks GitHub, GitLab, Bitbucket Cloud and Gitea for what
 // git can't tell: open pull requests, the default branch's CI status, and
 // the repos in an org (for mrm drift). Only hosts with a token in
-// forge_tokens are contacted; answers are cached on disk.
+// host_tokens are contacted; answers are cached on disk.
 package forgeapi
 
 import (
@@ -412,7 +412,7 @@ func (c *Client) OrgRepos(ctx context.Context, org string) ([]OrgRepo, error) {
 	f := forge.Parse("https://"+org+"/x", c.Kinds)
 	f.Host, f.Path = host, owner
 	if _, ok := c.Tokens[host]; !ok {
-		return nil, fmt.Errorf("no token for %s in forge_tokens", host)
+		return nil, fmt.Errorf("no token for %s in host_tokens", host)
 	}
 	switch f.Kind {
 	case forge.GitHub:
@@ -424,7 +424,7 @@ func (c *Client) OrgRepos(ctx context.Context, org string) ([]OrgRepo, error) {
 	case forge.Gitea:
 		return c.giteaOrg(ctx, f, owner)
 	}
-	return nil, fmt.Errorf("%s: unknown forge (map it under forges:)", host)
+	return nil, fmt.Errorf("%s: unknown git host (say which kind it is under hosts:)", host)
 }
 
 func (c *Client) githubOrg(ctx context.Context, f forge.Forge, owner string) ([]OrgRepo, error) {
@@ -574,7 +574,7 @@ func linkNext(link string) string {
 func Notes(i Info) []string {
 	var n []string
 	if i.Err != "" {
-		return []string{"forge: " + i.Err}
+		return []string{"PRs/CI: " + i.Err}
 	}
 	switch {
 	case i.PRsMore:

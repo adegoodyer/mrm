@@ -83,10 +83,10 @@ func bindings() []binding {
 		{secAct, "d", "move the marked repos, else the group or repo, to the trash (asks first)", []key{ch('d')}, func(u *ui) { u.trashTargets() }, true},
 		{secAct, "r", "read status again", []key{ch('r')}, func(u *ui) { u.startOp(engine.OpStatus, u.repos, false, "reading") }, true},
 
-		{secOpen, "o", "open the repo on its forge", []key{ch('o')}, func(u *ui) { u.open(openWeb) }, true},
+		{secOpen, "o", "open the repo in the browser (GitHub, GitLab, Bitbucket, Gitea)", []key{ch('o')}, func(u *ui) { u.open(openWeb) }, true},
 		{secOpen, "p", "open its pull requests", []key{ch('p')}, func(u *ui) { u.open(openPRs) }, true},
 		{secOpen, "P", "open its pipelines / actions (CI)", []key{ch('P')}, func(u *ui) { u.open(openCI) }, true},
-		{secOpen, "b", "open the current branch on the forge", []key{ch('b')}, func(u *ui) { u.open(openBranch) }, true},
+		{secOpen, "b", "open the current branch in the browser", []key{ch('b')}, func(u *ui) { u.open(openBranch) }, true},
 		{secOpen, "enter", "hand off to lazygit (tui.open_cmd); back to mrm when it exits", []key{{k: tcell.KeyEnter}}, func(u *ui) { u.enter() }, true},
 		{secOpen, "e", "$VISUAL / $EDITOR in the repo", []key{ch('e')}, func(u *ui) { u.handoff(handoffEditor) }, true},
 		{secOpen, "t", "$SHELL in the repo", []key{ch('t')}, func(u *ui) { u.handoff(handoffShell) }, true},

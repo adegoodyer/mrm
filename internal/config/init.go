@@ -21,8 +21,9 @@ concurrency: 8            # repos worked on at once
 timeout: 2m               # per repo, per git command
 browser_cmd: ""           # default: wslview on WSL, else xdg-open / open
 
-# Self-hosted forges, by host, so "open" knows their URL layout.
-# forges:
+# Self-hosted git hosts (GitHub Enterprise, GitLab, Gitea...), by hostname,
+# so mrm knows their URL layout and API.
+# hosts:
 #   git.example.com: gitlab
 
 workspaces:
@@ -68,7 +69,7 @@ notify:
 
 # Read-only API tokens, by host, for open PR counts, CI state and mrm drift.
 # Hosts without one are never contacted.
-forge_tokens: {}
+host_tokens: {}
 #   github.com:
 #     token_cmd: gh auth token
 #   gitlab.com:
@@ -76,7 +77,7 @@ forge_tokens: {}
 #   bitbucket.org:
 #     user: <email>       # Bitbucket API tokens use Basic auth
 #     token_cmd: pass show bitbucket/mrm
-forge_cache: 10m          # how long forge answers are reused
+host_cache: 10m           # how long PR and CI answers are reused
 
 tui:
   open_cmd: lazygit

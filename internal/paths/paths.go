@@ -33,7 +33,7 @@ func CacheDir() string { return filepath.Join(xdg.CacheHome, App) }
 func StatusCache() string { return filepath.Join(CacheDir(), "status.json") }
 
 // ForgeCache holds the last answers from forge APIs.
-func ForgeCache() string { return filepath.Join(CacheDir(), "forge.json") }
+func ForgeCache() string { return filepath.Join(CacheDir(), "hosts.json") }
 
 // TUIState is the interactive view's last workspace, groups and panes.
 func TUIState() string { return filepath.Join(StateDir(), "tui.json") }
