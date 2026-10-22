@@ -145,7 +145,7 @@ Per repo, in the worker pool:
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | 1   | `git fetch --prune origin` (remote configurable), then `git remote set-head origin --auto` if `origin/HEAD` was last checked over a day ago (a second network round trip; every time, it doubled sync time) - not when the branch is overridden in config | `error: <git message>` on failure or timeout                 |
 | 2   | conflict in progress                                                                                                                                                                                                                                      | `conflict` - nothing else runs                               |
-| 3   | on the default branch: if strictly behind and the tracked files are clean, `git merge --ff-only @{u}`                                                                                                                                                     | `dirty`, `diverged`                                          |
+| 3   | on the default branch: if strictly behind and the tracked files are clean, `git merge --ff-only @{u}`. With `ff_dirty: true`, also when dirty, if `git diff --name-only HEAD` and `git diff --name-only HEAD @{u}` share no file                          | `dirty`, `diverged`                                          |
 | 4   | on another branch: update the default branch in place with `git fetch . origin/<default>:<default>` (local, no second network trip)                                                                                                                       | `default diverged`                                           |
 | 5   | on another branch with `ff_current: true`: fast-forward it too if clean and strictly behind its upstream                                                                                                                                                  | `dirty`, `diverged`                                          |
 | 6   | with `switch_merged: true`: if clean and the current branch was pushed (has an upstream, even a gone one) and is fully merged into the default, switch to the default - before steps 3-5                                                                  | - (stays put)                                                |
@@ -312,6 +312,7 @@ workspaces:
     sync:
       ff_current: false
       switch_merged: false
+      ff_dirty: false             # fast-forward over local changes the update doesn't touch
   personal:
     roots: [~/src]
 

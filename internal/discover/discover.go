@@ -39,6 +39,7 @@ func Workspace(cfg *config.Config, ws *config.Workspace) ([]model.Repo, []error)
 			r.NoSync = res.NoSync
 			r.Remote = ws.Sync.Remote
 			r.FFCurrent = ws.Sync.FFCurrent
+			r.FFDirty = ws.Sync.FFDirty
 			r.SwitchMerged = ws.Sync.SwitchMerged
 			repos = append(repos, r)
 		}

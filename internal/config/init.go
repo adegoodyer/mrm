@@ -36,6 +36,7 @@ workspaces:
       remote: origin
       ff_current: false   # also fast-forward a non-default current branch
       switch_merged: false # switch to the default branch when the current one is merged
+      ff_dirty: false     # fast-forward over local changes the update doesn't touch
 {{- end}}
 
 # Exceptions only - repos are discovered. Keys are repo names, name globs,

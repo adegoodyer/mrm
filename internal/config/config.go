@@ -62,6 +62,7 @@ type SyncPolicy struct {
 	Remote       string `yaml:"remote"`
 	FFCurrent    bool   `yaml:"ff_current"`
 	SwitchMerged bool   `yaml:"switch_merged"`
+	FFDirty      bool   `yaml:"ff_dirty"` // fast-forward over local changes the update doesn't touch
 }
 
 // Override is a per-repo exception, keyed by repo name or path glob.

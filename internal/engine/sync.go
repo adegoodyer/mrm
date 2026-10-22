@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/adegoodyer/mrm/internal/model"
 )
@@ -134,14 +135,35 @@ func (e *Engine) ffCurrent(ctx context.Context, r model.Repo, st model.Status, d
 		return nil // current (maybe ahead: that's unpushed work, not a sync problem)
 	case st.Ahead > 0:
 		return stop(model.OutcomeSkipped, fmt.Sprintf("diverged (%d ahead, %d behind %s)", st.Ahead, st.Behind, st.Upstream))
-	case st.Dirty():
+	case st.Dirty() && (!r.FFDirty || st.Conflicted > 0):
 		return stop(model.OutcomeSkipped, fmt.Sprintf("dirty (%d behind %s)", st.Behind, st.Upstream))
+	case st.Dirty():
+		// ff_dirty: safe when the update touches none of the changed files.
+		both, err := e.Git.Overlap(ctx, r.Path, "@{u}")
+		if err != nil {
+			return stop(model.OutcomeFailed, "compare local changes: "+err.Error())
+		}
+		if len(both) > 0 {
+			return stop(model.OutcomeSkipped, fmt.Sprintf("dirty: the update changes %s too", fileList(both)))
+		}
 	}
 	if !dryRun {
 		if err := e.Git.FastForward(ctx, r.Path); err != nil {
+			if st.Dirty() {
+				// git's own check, behind ours: it refused, nothing changed.
+				return stop(model.OutcomeSkipped, "dirty: "+err.Error())
+			}
 			return stop(model.OutcomeFailed, "fast-forward: "+err.Error())
 		}
 	}
 	act(fmt.Sprintf("%s +%d", st.Branch, st.Behind))
 	return nil
+}
+
+// fileList is "a.go, b.go and 3 more".
+func fileList(files []string) string {
+	if len(files) <= 3 {
+		return strings.Join(files, ", ")
+	}
+	return fmt.Sprintf("%s and %d more", strings.Join(files[:3], ", "), len(files)-3)
 }

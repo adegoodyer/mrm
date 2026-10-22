@@ -153,6 +153,7 @@ workspaces:
       remote: origin
       ff_current: false           # also fast-forward a non-default current branch
       switch_merged: false        # leave a merged branch for the default one
+      ff_dirty: false             # fast-forward over local changes the update doesn't touch
   personal:
     roots: [~/src]
 
@@ -210,6 +211,7 @@ web:
 | `workspaces.<name>.sync.remote`        | `origin`    | the remote to fetch and fast-forward from                                                                      |
 | `workspaces.<name>.sync.ff_current`    | `false`     | also fast-forward a non-default current branch ([policies](#sync-policies))                                    |
 | `workspaces.<name>.sync.switch_merged` | `false`     | switch away from a pushed branch that is merged ([policies](#sync-policies))                                   |
+| `workspaces.<name>.sync.ff_dirty`      | `false`     | fast-forward a dirty repo when the update touches none of its changed files ([policies](#sync-policies))       |
 | `repos.<key>.branch`                   | -           | the default branch for that repo, instead of `origin/HEAD`                                                     |
 | `repos.<key>.tags`                     | -           | labels for `-t` and `tag:`                                                                                     |
 | `repos.<key>.sync`                     | `true`      | `false`: show the repo, never sync it                                                                          |
@@ -279,12 +281,13 @@ For each repo, the first rule that matches decides what happens:
 Every run is appended to the history (`~/.local/state/mrm/runs.jsonl`), which the web UI's Activity page shows. Exit codes: `0` every repo synced or current, `2` some need attention, `1` mrm itself failed (a bad config, say).
 
 ### Sync Policies
-Two opt-in behaviours, set per workspace under `sync:`:
+Three opt-in behaviours, set per workspace under `sync:`:
 
-| Setting               | What it does                                                                                                                                                                              |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ff_current: true`    | on a non-default branch, also fast-forward that branch when it is clean and strictly behind its upstream                                                                                  |
-| `switch_merged: true` | when the current branch was pushed, is clean, and is fully merged into the remote default branch, switch to the default branch first (then sync it). Branches never pushed are left alone |
+| Setting               | What it does                                                                                                                                                                                                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ff_current: true`    | on a non-default branch, also fast-forward that branch when it is clean and strictly behind its upstream                                                                                                                                                                                                                                          |
+| `switch_merged: true` | when the current branch was pushed, is clean, and is fully merged into the remote default branch, switch to the default branch first (then sync it). Branches never pushed are left alone                                                                                                                                                         |
+| `ff_dirty: true`      | fast-forward a repo with uncommitted changes when the update changes none of the same files - your edits stay as they are. If it would touch one, the repo is skipped and the reason names the files (`dirty: the update changes README.md too`). This is what `git pull` would do, minus the merge; see [Sync, step by step](#sync-step-by-step) |
 
 `remote:` changes the remote from `origin`, for workspaces that use `upstream` or another name.
 

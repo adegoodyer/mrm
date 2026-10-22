@@ -130,7 +130,8 @@ def sync_rules(path):
                                "your branch is left alone (ff_current: true moves it too)"], "✓", "default branch updated", "ok"),
         ("On the default branch, not behind", ["ahead is unpushed work, not a sync problem"], "·", "current", "neu"),
         ("Ahead and behind", ["rebase or merge it yourself"], "!", "skipped: diverged", "warn"),
-        ("Tracked files changed", ["untracked files don't count"], "!", "skipped: dirty", "warn"),
+        ("Tracked files changed", ["untracked files don't count; with ff_dirty, only files",
+                                   "the update also changes"], "!", "skipped: dirty", "warn"),
         ("Clean and strictly behind", ["git merge --ff-only"], "✓", "synced", "ok"),
     ]
     gap, top = 16, 126

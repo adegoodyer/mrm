@@ -551,3 +551,37 @@ func TestPrune(t *testing.T) {
 		t.Fatal("--force did not delete the unmerged branch")
 	}
 }
+
+// ff_dirty: a fast-forward over local changes the update doesn't touch
+// goes ahead and keeps them; one that would touch them is skipped, naming
+// the files, with the tree exactly as it was. Without ff_dirty, see
+// TestSyncSkipsDirty.
+func TestSyncFFDirty(t *testing.T) {
+	f := gittest.New(t)
+	dir := f.Clone("app")
+	gittest.WriteFile(t, filepath.Join(dir, "README.md"), "local edit\n")
+	f.Push("master", "a.txt", "a\n")
+	r := repo(dir)
+	r.FFDirty = true
+
+	want(t, syncOne(t, r, true), model.OutcomeWould, "")
+	want(t, syncOne(t, r, false), model.OutcomeSynced, "")
+	if gittest.Head(t, dir, "HEAD") != gittest.Head(t, dir, "origin/master") {
+		t.Fatal("not fast-forwarded")
+	}
+	if gittest.ReadFile(t, filepath.Join(dir, "README.md")) != "local edit\n" {
+		t.Fatal("local edit lost")
+	}
+
+	f.Push("master", "README.md", "upstream edit\n")
+	before := gittest.Git(t, dir, "status", "--porcelain=v2")
+	head := gittest.Head(t, dir, "HEAD")
+	want(t, syncOne(t, r, true), model.OutcomeSkipped, "README.md")
+	want(t, syncOne(t, r, false), model.OutcomeSkipped, "the update changes README.md too")
+	if gittest.Head(t, dir, "HEAD") != head || gittest.Git(t, dir, "status", "--porcelain=v2") != before {
+		t.Fatal("repo changed")
+	}
+	if gittest.ReadFile(t, filepath.Join(dir, "README.md")) != "local edit\n" {
+		t.Fatal("local edit lost")
+	}
+}
