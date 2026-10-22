@@ -296,7 +296,7 @@ Exit code 2 when there is drift; `--json` for scripts.
 | forge cache      | `$XDG_CACHE_HOME/mrm/forge.json`                                 |
 | sync lock        | `$XDG_RUNTIME_DIR/mrm/<workspace>.lock` (state dir if unset)     |
 
-Precedence: flags > `MRM_*` environment > config > defaults.
+Precedence: flags > config > defaults. The environment picks the file (`MRM_CONFIG`, below `-c`) and turns colour off (`NO_COLOR`); settings themselves come only from the file.
 
 ```yaml
 concurrency: 8
