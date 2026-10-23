@@ -174,7 +174,22 @@ func (a *app) printSummary(w io.Writer, op string, results []model.Result, took 
 		return
 	}
 	if offline(attention, len(results)) {
+		// One line per distinct reason, not the same error for every repo.
 		fmt.Fprintln(w, a.style.Red("every fetch failed - offline?"))
+		fmt.Fprintln(w, "\n"+a.style.Bold("Needs attention"))
+		count := map[string]int{}
+		var reasons []string
+		for _, r := range attention {
+			if count[r.Reason] == 0 {
+				reasons = append(reasons, r.Reason)
+			}
+			count[r.Reason]++
+		}
+		sort.Strings(reasons)
+		for _, reason := range reasons {
+			fmt.Fprintf(w, "  %s %s  failed: %s\n", a.style.Red("✗"), repoCount(count[reason]), reason)
+		}
+		return
 	}
 	sort.SliceStable(attention, func(i, j int) bool {
 		if attention[i].Outcome != attention[j].Outcome {
