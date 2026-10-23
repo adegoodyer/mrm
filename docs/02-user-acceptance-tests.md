@@ -64,7 +64,7 @@
 | ✅ 2026-10-23 | 3.1 | `mrm web --open` opens the Overview in the browser (Windows browser on WSL) |
 | ✅ 2026-10-23 | 3.2 | The Overview shows state counts per workspace, the needs-attention list, work at risk (long groups capped with a "+ N more" filter link) and the filterable table `[A] web.TestOverview` (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | 3.3 | Starting a sync from the web updates rows live over SSE in every open tab; a sync started from the TUI or CLI shows in the top bar while it runs and its results appear when it finishes `[A] web.TestSyncStreamsAndRecords, TestExternalLockShown` |
-| ⬜   | 3.4 | The Repo page shows branches, stashes, last 20 commits, last sync results and working links to the repo, its PRs and its CI `[A] web.TestRepoPage`                                                                                                  |
+| ✅ 2026-10-23 | 3.4 | The Repo page shows branches, stashes, last 20 commits, last sync results and working links to the repo, its PRs and its CI `[A] web.TestRepoPage` (checked 2026-10-23: buttons open the repo, its PRs and its CI; 20 commits on a long repo) |
 | ✅ 2026-10-23 | 3.5 | The Activity page lists past runs from `runs.jsonl` with outcome per repo `[A] web.TestSyncStreamsAndRecords` (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | 3.6 | The Settings page shows the loaded config with secrets hidden, and text size and theme apply at once and stick per browser `[A] web.TestSettingsHidesSecrets` for the config |
 | ✅ 2026-10-23 | 3.7 | Light, dark and system themes; every page at 360, 768 and 1440 px with no horizontal page scroll (checked 2026-10-15 in Chrome at 1440, 768 and 518 px - Chrome's minimum window; below that the same layout applies) (and 2026-10-23 at 360 px in Chrome device mode, light and dark) |
@@ -77,7 +77,7 @@
 | ✅ 2026-10-23 | 4.2 | A `post_sync` hook runs only in repos matching `if_file` and only when `HEAD` moved; a failing hook is reported without failing the sync `[A] engine.TestPostSyncHooks` (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | 4.3 | `mrm prune` lists merged and upstream-gone branches and deletes only what is confirmed; never the current or default branch; without a terminal it refuses unless `--yes` `[A] engine.TestPrune, cmd.TestConfirmWithoutTerminal` (dry run checked 2026-10-19 on a real tree: 42 merged branches in 22 repos) (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | 4.4 | `mrm drift` lists exact `repos:` keys missing on disk and, with an API token, org repos not cloned, each with a clone command; archived ones only with `--archived` `[A] drift.TestStaleKeys, TestCompareOrg, forgeapi.TestOrgRepos` (checked 2026-10-19 against a real GitHub account: 93 listed, 45 not cloned, 18 archived) (automated tests pass, 2026-10-23) |
-| ⬜   | 4.5 | `mrm schedule install -w work --on "Mon..Fri 08:30"` creates and enables a user timer; it runs while no terminal is open and catches up after the machine was off; `schedule remove` removes it `[A] schedule.TestInstallListRemove, TestBadCalendar` for the units                                                                    |
+| ✅ 2026-10-23 | 4.5 | `mrm schedule install -w work --on "Mon..Fri 08:30"` creates and enables a user timer; it runs while no terminal is open and catches up after the machine was off; `schedule remove` removes it `[A] schedule.TestInstallListRemove, TestBadCalendar` for the units (checked 2026-10-23 on WSL with a 2-minute timer: ran with no terminal open once linger was on, and caught up after `wsl --shutdown`) |
 | ⬜   | 4.6 | With API tokens configured, open PR count and last CI status show in status, the TUI and the web UI; hosts without a token are never contacted `[A] forgeapi.TestInfoPerForge, TestCache, TestTokens, tui.TestForgeInfo, web.TestForgeInfo` (checked 2026-10-19 on 37 real GitHub repos: 2.4 s)                                        |
 
 ## 5 - Polish
@@ -137,8 +137,8 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 | ------------------- | ---------- | ------- | -------------- |
 | 1 - core + headless | 1.1 - 1.20 | 20 / 20 | ✅              |
 | 2 - TUI             | 2.1 - 2.10 | 10 / 10 | ✅              |
-| 3 - web UI          | 3.1 - 3.7  | 6 / 7   | ⬜              |
-| 4 - extras          | 4.1 - 4.6  | 4 / 6   | ⬜              |
+| 3 - web UI          | 3.1 - 3.7  | 7 / 7   | ✅              |
+| 4 - extras          | 4.1 - 4.6  | 5 / 6   | ⬜              |
 | 5 - polish          | 5.1 - 5.14 | 14 / 14 | ✅              |
 | cross-cutting       | X.1 - X.5  | 4 / 5   | ⬜              |
 | nasty cases         | N.1 - N.16 | 16 / 16 | ✅              |

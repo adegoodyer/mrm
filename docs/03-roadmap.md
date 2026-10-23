@@ -64,7 +64,7 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 | ✅ 2026-10-15 | 3.3 | SSE stream of rows, panels and busy state; the shared runner (`internal/runner`) used by the TUI and the web UI; other mrm processes noticed through their lock and the status cache |
 | ✅ 2026-10-15 | 3.4 | Overview, Repo, Activity, Settings pages; long groups capped with a filter link                                                                                                      |
 | ✅ 2026-10-15 | 3.5 | tests: security, pages, filter, a sync streamed over SSE on a fixture repo, history, secrets hidden, external lock; layout checked in Chrome at 1440/768/518 px                      |
-| ⬜            | 3.6 | UAT walkthrough of phase 3 in your browser (light and dark, text sizes, a real sync from the page)                                                                                   |
+| ✅ 2026-10-23 | 3.6 | UAT walkthrough of phase 3 in your browser (light and dark, text sizes, a real sync from the page)                                                                                   |
 
 ## Phase 4 - Extras
 
