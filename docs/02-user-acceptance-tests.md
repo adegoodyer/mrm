@@ -107,7 +107,7 @@
 | ✅ 2026-10-23 | X.2 | The web UI refuses requests without the token, with a `Host` other than `127.0.0.1`/`localhost`, and POSTs without the token header `[A] web.TestSecurity` (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | X.3 | The web UI is not reachable from another machine on the LAN (checked 2026-10-23: listening on 127.0.0.1:7420 only; the LAN address refuses the connection) |
 | ✅ 2026-10-23 | X.4 | `task check` (fmt, vet, race tests) is clean; release binaries for linux/darwin amd64/arm64 build (checked 2026-10-23: `task check` clean; `task release:snapshot` built all four archives) |
-| ⬜   | X.5 | `go install github.com/adegoodyer/mrm@latest` works on a clean machine                                                                                                                                                     |
+| ✅ 2026-10-23 | X.5 | `go install github.com/adegoodyer/mrm@latest` works on a clean machine (checked 2026-10-23: downloaded and installed v0.3.0 from the module proxy) |
 
 ## The Nasty Cases
 
@@ -140,5 +140,5 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 | 3 - web UI          | 3.1 - 3.7  | 7 / 7   | ✅              |
 | 4 - extras          | 4.1 - 4.6  | 5 / 6   | ⬜              |
 | 5 - polish          | 5.1 - 5.14 | 14 / 14 | ✅              |
-| cross-cutting       | X.1 - X.5  | 4 / 5   | ⬜              |
+| cross-cutting       | X.1 - X.5  | 5 / 5   | ✅              |
 | nasty cases         | N.1 - N.16 | 16 / 16 | ✅              |
