@@ -123,6 +123,12 @@ func TestStatusJSONAndFilter(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), &rows); err != nil || len(rows) != 1 || rows[0]["name"] != "beta" {
 		t.Fatalf("filter: %v %s", err, out)
 	}
+
+	// A filter that matches nothing is an empty answer, not an error.
+	out, code = run(t, "status", "-c", cfg, "--json", "-f", "is:error")
+	if code != 0 || strings.TrimSpace(out) != "[]" {
+		t.Fatalf("no match: exit %d, %q", code, out)
+	}
 }
 
 func TestOpenPrint(t *testing.T) {

@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - A repo deleted while the interactive view or the web UI is open no longer stays listed as `missing` until restart. `r` in the interactive view, and each load of the web Overview, look for repos again: deleted ones drop off and repos cloned since appear.
 - A failed fetch is remembered with the repo's status, so it stays `error` (`✗`, `is:error`, the web UI) with `last fetch failed: …` until a fetch works again. Before, the next status read - starting the interactive view, say - made it look fine. The spec and the guide already described it this way.
+- `mrm status` or `mrm sync` with a filter that matches nothing says "no repos match the filter" (or prints `[]` with `--json`) and exits 0. Before, it claimed no repos were found under the roots and exited 1, like a bad config.
 
 ## [0.2.0] - 2026-10-19
 

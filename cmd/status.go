@@ -52,7 +52,7 @@ func runStatus(ctx context.Context, fetch bool) error {
 		return err
 	}
 	if len(repos) == 0 {
-		return fmt.Errorf("no repos found under %v", rootsOf(a))
+		return noRepos(a)
 	}
 	verb := "reading"
 	if fetch {
@@ -76,6 +76,20 @@ func runStatus(ctx context.Context, fetch bool) error {
 		return a.printJSON(results)
 	}
 	a.printStatus(os.Stdout, results)
+	return nil
+}
+
+// noRepos explains an empty selection. A filter that matches nothing is
+// an answer, not an error; no repos under the roots at all is one.
+func noRepos(a *app) error {
+	if flagFilter == "" && len(flagTags) == 0 {
+		return fmt.Errorf("no repos found under %v", rootsOf(a))
+	}
+	if flagJSON {
+		fmt.Println("[]")
+	} else {
+		fmt.Fprintln(os.Stderr, "no repos match the filter")
+	}
 	return nil
 }
 

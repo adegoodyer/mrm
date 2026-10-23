@@ -73,7 +73,7 @@ func runSync(ctx context.Context, op engine.Op, dryRun bool) error {
 		return err
 	}
 	if len(repos) == 0 {
-		return fmt.Errorf("no repos found under %v", rootsOf(a))
+		return noRepos(a)
 	}
 
 	started := time.Now()
