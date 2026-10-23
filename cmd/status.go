@@ -103,7 +103,7 @@ func rootsOf(a *app) []string {
 	return roots
 }
 
-// loadForge asks the git hosts that have a token about open PRs and CI
+// loadForge asks the VCS hosts that have a token about open PRs and CI
 // (cached), unless --no-prs.
 func (a *app) loadForge(ctx context.Context, results []model.Result, prog *term.Progress) {
 	fc := forgeapi.New(a.cfg, paths.ForgeCache())

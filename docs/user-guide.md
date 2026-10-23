@@ -7,7 +7,7 @@ Everything about using mrm, from the ideas it is built on to every setting. New 
     - [Workspaces and Roots](#workspaces-and-roots)
     - [Discovery](#discovery)
     - [Groups and Tags](#groups-and-tags)
-    - [Git Hosts](#git-hosts)
+    - [VCS Hosts](#vcs-hosts)
     - [The Default Branch](#the-default-branch)
     - [States and Flags](#states-and-flags)
     - [Outcomes](#outcomes)
@@ -78,8 +78,8 @@ repos:
 
 Then `-t terraform`, or `tag:terraform` in a filter.
 
-### Git Hosts
-A repo's **git host** is the site its remote points at: GitHub, GitLab, Bitbucket, Gitea or Codeberg (Codeberg runs Gitea). mrm works out which from the remote URL, `git@github.com:acme/api.git` → GitHub, and uses that to open pages in your browser, to ask for pull requests and CI with an [API token](#pull-requests-and-ci), and for [`mrm drift`](#drift). Self-hosted ones whose name doesn't say what they are go under `hosts:` in the config:
+### VCS Hosts
+A repo's **VCS host** is the site its remote points at: GitHub, GitLab, Bitbucket, Gitea or Codeberg (Codeberg runs Gitea). mrm works out which from the remote URL, `git@github.com:acme/api.git` → GitHub, and uses that to open pages in your browser, to ask for pull requests and CI with an [API token](#pull-requests-and-ci), and for [`mrm drift`](#drift). Self-hosted ones whose name doesn't say what they are go under `hosts:` in the config:
 
 ```yaml
 hosts:
@@ -89,7 +89,7 @@ hosts:
 Before 0.3.0 the config called these *forges*: `forges:`, `forge_tokens:`, `forge_cache:` and the `forge:` filter. The old names still work, and `mrm doctor` says to rename them.
 
 ### The Default Branch
-Sync brings each repo's **default branch** up to date - the branch your git host calls default (`main`, `master`, `develop`). mrm reads it from `origin/HEAD`, which git sets when you clone. GitHub, GitLab and the rest let you change the default later, and a clone doesn't notice, so mrm re-checks `origin/HEAD` on a fetch when it was last checked over a day ago. With no `origin/HEAD` at all, mrm guesses `main`, then `master`, and `mrm doctor` lists the repo with the command that fixes it. To pin a branch for one repo, set `branch:` in its [exception](#per-repo-exceptions).
+Sync brings each repo's **default branch** up to date - the branch your VCS host calls default (`main`, `master`, `develop`). mrm reads it from `origin/HEAD`, which git sets when you clone. GitHub, GitLab and the rest let you change the default later, and a clone doesn't notice, so mrm re-checks `origin/HEAD` on a fetch when it was last checked over a day ago. With no `origin/HEAD` at all, mrm guesses `main`, then `master`, and `mrm doctor` lists the repo with the command that fixes it. To pin a branch for one repo, set `branch:` in its [exception](#per-repo-exceptions).
 
 ### States and Flags
 Each repo has one **state** - the first of these that applies - shown as a glyph and a colour:
@@ -114,7 +114,7 @@ Each repo has one **state** - the first of these that applies - shown as a glyph
 | `detached`       | `HEAD` is detached                                                                                                    |
 | `no-upstream`    | the current branch tracks nothing                                                                                     |
 | `upstream-gone`  | the current branch's upstream was deleted on the remote                                                               |
-| `stale-branches` | local branches whose upstream is gone - usually merged and deleted on the git host; [`mrm prune`](#prune) tidies them |
+| `stale-branches` | local branches whose upstream is gone - usually merged and deleted on the VCS host; [`mrm prune`](#prune) tidies them |
 | `no-remote`      | the repo has no remote; it is listed but never fetched                                                                |
 
 `is:ahead` matches any repo with commits to push. A branch whose upstream is gone is counted as stale, not as unpushed work: its commits were pushed once.
@@ -153,7 +153,7 @@ concurrency: 8                    # repos worked on at once
 timeout: 30s                      # per git command, per repo
 browser_cmd: ""                   # how to open URLs; default wslview on WSL, else xdg-open / open
 
-hosts:                            # self-hosted git hosts, by hostname, so URLs and filters work
+hosts:                            # self-hosted VCS hosts, by hostname, so URLs and filters work
   git.example.com: gitlab         # github | gitlab | bitbucket | gitea
 
 workspaces:
@@ -216,7 +216,7 @@ web:
 | `concurrency`                          | `8`         | repos worked on at once                                                                                        |
 | `timeout`                              | `30s`       | limit for each git command; a fetch that takes longer fails with `timed out`                                   |
 | `browser_cmd`                          | -           | command to open URLs; default `wslview` on WSL, else `xdg-open` or `open`                                      |
-| `hosts.<hostname>`                     | -           | the kind of a self-hosted git host: `github`, `gitlab`, `bitbucket` or `gitea`                                 |
+| `hosts.<hostname>`                     | -           | the kind of a self-hosted VCS host: `github`, `gitlab`, `bitbucket` or `gitea`                                 |
 | `workspaces.<name>.roots`              | (required)  | folders to look in; `~` is expanded                                                                            |
 | `workspaces.<name>.depth`              | `3`         | how many folders below a root to look                                                                          |
 | `workspaces.<name>.ignore`             | -           | name or relative-path globs to skip                                                                            |
@@ -277,7 +277,7 @@ Columns: state glyph, name (`group/name`), current branch, ahead `↑` and behin
 Reading status took about half a second for 86 repos on a laptop. The result is cached, so the interactive view and the web UI open at once.
 
 ## Syncing
-`mrm sync` fetches every repo and fast-forwards what is safe to, 8 at a time (the ones that were slowest last time first, so a slow git host doesn't hold up the end), with a live line for each repo as it finishes and a summary at the end:
+`mrm sync` fetches every repo and fast-forwards what is safe to, 8 at a time (the ones that were slowest last time first, so a slow VCS host doesn't hold up the end), with a live line for each repo as it finishes and a summary at the end:
 
 ![mrm sync](images/sync.svg)
 
@@ -460,7 +460,7 @@ mrm prune --dry-run       # list them
 mrm prune -w work         # delete the merged ones, after one confirmation
 ```
 
-Candidates are local branches **merged** into the remote default branch, or whose **upstream is gone** (deleted on the git host). Merged ones are deleted after you confirm. A gone-upstream branch that isn't merged - usually because it was squash-merged - may hold the only copy of its commits, so it is listed and kept unless you add `--force`. The current branch and the default branch are never candidates, and "merged" is checked again just before each delete. Run `mrm fetch` first so merged and gone are current.
+Candidates are local branches **merged** into the remote default branch, or whose **upstream is gone** (deleted on the VCS host). Merged ones are deleted after you confirm. A gone-upstream branch that isn't merged - usually because it was squash-merged - may hold the only copy of its commits, so it is listed and kept unless you add `--force`. The current branch and the default branch are never candidates, and "merged" is checked again just before each delete. Run `mrm fetch` first so merged and gone are current.
 
 ### drift
 Find what's out of step between your disk, your config and GitHub, GitLab, Bitbucket or Gitea:
@@ -476,7 +476,7 @@ mrm drift -w work --archived
 mrm only reports - it never clones. Exit code `2` when there is drift.
 
 ## Pull Requests and CI
-Give mrm a read-only API token per git host and it shows each repo's open pull requests and the state of the latest CI run on its default branch - in `mrm status`, the interactive view (rows and the detail pane) and the web UI (rows and the Repo page). Tokens also let [`mrm drift`](#drift) list org repos.
+Give mrm a read-only API token per VCS host and it shows each repo's open pull requests and the state of the latest CI run on its default branch - in `mrm status`, the interactive view (rows and the detail pane) and the web UI (rows and the Repo page). Tokens also let [`mrm drift`](#drift) list org repos.
 
 ```yaml
 host_tokens:
@@ -491,7 +491,7 @@ host_tokens:
     token_env: CODEBERG_TOKEN
 ```
 
-| Git host         | Token                                                                                                                                                                           |
+| VCS host         | Token                                                                                                                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitHub           | `gh auth token` if you use the GitHub CLI; or a fine-grained token with read-only Metadata, Pull requests and Actions                                                           |
 | GitLab           | a personal access token with `read_api`                                                                                                                                         |
@@ -585,7 +585,7 @@ Start with `mrm doctor`: it checks git, the config, every root and repo, ssh, no
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | a repo is missing from the list                           | it is deeper than `depth`, matches an `ignore` glob, is inside a hidden folder, or is under another repo. Raise `depth` or adjust `ignore`                         |
 | `failed: ssh key rejected` / every ssh repo fails         | mrm can't answer a passphrase prompt. Load your key into an agent (`ssh-add`) in the shell you run mrm from, or for timers, in your session's agent                |
-| `failed: remote repo not found, or no access`             | the repo was deleted or moved on the git host, or your account lost access. `git -C <repo> remote -v` shows where it points                                        |
+| `failed: remote repo not found, or no access`             | the repo was deleted or moved on the VCS host, or your account lost access. `git -C <repo> remote -v` shows where it points                                        |
 | `failed: can't resolve the remote host - offline?`        | no network or VPN for that host. The rest of the run carries on                                                                                                    |
 | `failed: timed out`                                       | a fetch took longer than `timeout`. Raise it for huge repos, or check the network                                                                                  |
 | `skipped: dirty` / `diverged` / `merge in progress`       | working as intended: mrm won't touch it. Commit, stash, rebase or finish the merge yourself (`enter` in the interactive view opens lazygit there), then sync again |

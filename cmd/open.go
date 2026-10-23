@@ -26,7 +26,7 @@ var (
 var openCmd = &cobra.Command{
 	Use:   "open [repo]",
 	Short: "Open a repo, its pull requests, its CI or its branch in the browser",
-	Long: `Open a repo in the browser on its git host (GitHub, GitLab, Bitbucket, Gitea/Codeberg),
+	Long: `Open a repo in the browser on its VCS host (GitHub, GitLab, Bitbucket, Gitea/Codeberg),
 working out the web URL from the remote. With no repo, the repo you are in.
 A repo is matched by name, by group/name, then by part of its name or path.`,
 	Example: `  mrm open api

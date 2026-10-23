@@ -424,7 +424,7 @@ func (c *Client) OrgRepos(ctx context.Context, org string) ([]OrgRepo, error) {
 	case forge.Gitea:
 		return c.giteaOrg(ctx, f, owner)
 	}
-	return nil, fmt.Errorf("%s: unknown git host (say which kind it is under hosts:)", host)
+	return nil, fmt.Errorf("%s: unknown VCS host (say which kind it is under hosts:)", host)
 }
 
 func (c *Client) githubOrg(ctx context.Context, f forge.Forge, owner string) ([]OrgRepo, error) {

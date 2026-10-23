@@ -22,11 +22,11 @@ var flagDriftArchived bool
 var driftCmd = &cobra.Command{
 	Use:   "drift",
 	Short: "Find config entries with no repo, and org repos not cloned",
-	Long: `Compare the disk with what the config and your git hosts say.
+	Long: `Compare the disk with what the config and your VCS hosts say.
 
 Exact-name and exact-path keys under repos: that match no repo on disk are
 listed (glob keys are not: matching nothing may be what they mean). For each
-workspace's orgs, the org's repos are listed from its git host (a token in
+workspace's orgs, the org's repos are listed from its VCS host (a token in
 host_tokens is needed) and compared by remote URL with every clone in every
 workspace; the ones not cloned are printed with a clone command. Archived
 repos are counted, and listed with --archived. Repos matching the

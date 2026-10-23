@@ -187,7 +187,7 @@ mrm runs the `git` you already have, with your ssh keys and credentials, so anyt
 | status and PR/CI caches | `~/.cache/mrm/` (`$XDG_CACHE_HOME`)                            |
 | run history and log     | `~/.local/state/mrm/runs.jsonl`, `mrm.log` (`$XDG_STATE_HOME`) |
 
-`mrm config path` prints them for your machine. (A repo's *git host* is the site its remote points at - GitHub, GitLab, Bitbucket or Gitea.)
+`mrm config path` prints them for your machine. (A repo's *VCS host* is the site its remote points at - GitHub, GitLab, Bitbucket or Gitea.)
 
 ## Learn More
 The [user guide](docs/user-guide.md) covers everything in depth:

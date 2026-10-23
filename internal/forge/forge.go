@@ -32,7 +32,7 @@ func (k Kind) Name() string {
 	case Gitea:
 		return "Gitea"
 	}
-	return "the git host"
+	return "the VCS host"
 }
 
 // Forge is a parsed remote.

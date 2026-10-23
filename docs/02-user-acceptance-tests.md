@@ -38,7 +38,7 @@
 | ✅ 2026-10-23 | 1.15 | Each run is appended to `runs.jsonl` in the state dir with start, duration and outcome per repo |
 | ✅ 2026-10-23 | 1.16 | `mrm doctor` reports git version, config validity, missing roots, repos with no `origin/HEAD`, ssh agent with no keys and a world-writable config |
 | ⬜   | 1.17 | `mrm sync` replaces a hand-rolled update script in daily use for at least a week, on more than one workspace                                                                                                                                                                                    |
-| ⬜   | 1.18 | A fetch refreshes a stale `origin/HEAD` (seen on real repos: `develop` locally, `master` on the git host), at most once a day per repo; a sync of ~80 repos with nothing to pull takes under 30 s `[A] engine.TestFetchRefreshesStaleDefault`                                                   |
+| ⬜   | 1.18 | A fetch refreshes a stale `origin/HEAD` (seen on real repos: `develop` locally, `master` on the VCS host), at most once a day per repo; a sync of ~80 repos with nothing to pull takes under 30 s `[A] engine.TestFetchRefreshesStaleDefault`                                                   |
 | ✅ 2026-10-23 | 1.19 | Tab completes workspaces after `-w`, tags after `-t`, filter terms after `-f` (keys, `is:` values, your workspaces, tags and groups) and repo names for `mrm open` `[A] cmd.TestCompletion` |
 | ⬜   | 1.20 | `host:` (and its old name `forge:`) matches self-hosted hosts mapped under `hosts:` (or the old `forges:`) `[A] filter.TestForgeUsesSelfHostedMapping, TestHostTerm, config.TestOldHostNames`                                                                                                   |
 
@@ -127,7 +127,7 @@
 | ⬜   | N.13 | Repo path with spaces or non-ASCII characters                                                              | listed, synced and opened correctly `[A] engine.TestSyncOddPath`                                                                                                                           |
 | ⬜   | N.14 | Untracked files on a clean default branch that is behind                                                   | fast-forwarded; untracked files untouched (unless the incoming commit adds the same path, then failed with git's message and the file kept) `[A] engine.TestSyncUntracked`                 |
 | ⬜   | N.15 | `switch_merged: true` and a brand-new branch with no commits yet (an ancestor of the default, so "merged") | left alone: only a branch that was pushed is switched away from `[A] engine.TestSwitchMerged`                                                                                              |
-| ⬜   | N.16 | A local branch whose upstream was deleted on the git host and pruned by a fetch (an old `develop`)         | not counted as unpushed; flag `stale-branches`, "1 stale branch" in the row; a never-pushed branch still counts `[A] engine.TestStaleBranchIsNotUnpushed, TestNeverPushedBranchIsUnpushed` |
+| ⬜   | N.16 | A local branch whose upstream was deleted on the VCS host and pruned by a fetch (an old `develop`)         | not counted as unpushed; flag `stale-branches`, "1 stale branch" in the row; a never-pushed branch still counts `[A] engine.TestStaleBranchIsNotUnpushed, TestNeverPushedBranchIsUnpushed` |
 
 ## Sign-Off
 mrm is done for a phase when every box in that phase and the cross-cutting rows it touches are ticked or annotated.

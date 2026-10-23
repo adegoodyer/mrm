@@ -21,7 +21,7 @@ concurrency: 8            # repos worked on at once
 timeout: 30s              # per repo, per git command
 browser_cmd: ""           # default: wslview on WSL, else xdg-open / open
 
-# Self-hosted git hosts (GitHub Enterprise, GitLab, Gitea...), by hostname,
+# Self-hosted VCS hosts (GitHub Enterprise, GitLab, Gitea...), by hostname,
 # so mrm knows their URL layout and API.
 # hosts:
 #   git.example.com: gitlab

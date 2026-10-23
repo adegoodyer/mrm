@@ -46,7 +46,7 @@ Anyone who works across many repositories - dozens for a team's services, more a
 | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | discovering repos under roots, with ignore globs and nested group folders              | single-repo git work - staging, committing, rebasing (hand off to lazygit) |
 | status of every repo: branch, ahead/behind, dirty, stashes, unpushed work, last commit | rewriting history, resolving conflicts, deleting work                      |
-| safe sync (fetch + fast-forward) of all or a filtered set                              | creating PRs or other writes to the git host                               |
+| safe sync (fetch + fast-forward) of all or a filtered set                              | creating PRs or other writes to the VCS host                               |
 | interactive TUI with live updates and bulk actions                                     | a hosted or multi-user web UI                                              |
 | local web UI with an overview of everything                                            | native Windows (Linux, macOS and WSL only)                                 |
 | opening a repo, its PRs or its CI in the browser                                       | issue tracker integration                                                  |
@@ -84,7 +84,7 @@ Recorded so they are not argued again. Revisit only if the reason stops holding.
 | TUI library                           | **tview on tcell**, never Bubble Tea (decided 2026-10-14/15); the repo list is a custom tview primitive, overlays use tview's input, list and pages                                                        | maintainer preference                                                                                                                                                                 | Bubble Tea                             |
 | Git access                            | **shell out to `git -C <repo>`**, `GIT_TERMINAL_PROMPT=0`, `ssh -o BatchMode=yes`, a timeout per repo                                                                                                      | uses the ssh-agent, credential helpers and config already set up; nothing can hang on a prompt                                                                                        | go-git (slower, auth is separate work) |
 | Repo list                             | **discovered**, not declared; config holds exceptions only                                                                                                                                                 | hand-kept lists drift: repos get cloned and never added                                                                                                                               | a declared list                        |
-| Default branch                        | from **`origin/HEAD`**, **re-checked by fetch at most once a day** (`git remote set-head --auto`; the ref file's age decides), overridable per repo; fall back to `main` then `master` on the remote       | `origin/HEAD` is set at clone time and goes stale when the git host's default changes (seen on real repos: `develop` locally, `master` on the git host); `doctor` flags a missing one | always configured                      |
+| Default branch                        | from **`origin/HEAD`**, **re-checked by fetch at most once a day** (`git remote set-head --auto`; the ref file's age decides), overridable per repo; fall back to `main` then `master` on the remote       | `origin/HEAD` is set at clone time and goes stale when the VCS host's default changes (seen on real repos: `develop` locally, `master` on the VCS host); `doctor` flags a missing one | always configured                      |
 | Sync policy                           | **fetch + fast-forward only**, only when clean; never switch branch, stash, reset, rebase or merge by default                                                                                              | a sync must never change work in progress                                                                                                                                             | checkout + pull                        |
 | Default branch when on another branch | updated in place from the fetched remote ref with `git fetch . origin/<b>:<b>` (git refuses a non-fast-forward)                                                                                            | the feature branch is untouched and the default is still current for the next `switch`                                                                                                | switching to it and back               |
 | Status priority                       | one **primary state** per repo by precedence ([Status](#status)) plus flags                                                                                                                                | a list needs one glyph per row; the flags carry the detail                                                                                                                            | many columns of booleans               |
@@ -106,7 +106,7 @@ Recorded so they are not argued again. Revisit only if the reason stops holding.
 | repo      | a folder containing `.git`. Discovery **does not descend into a repo**, so submodules and `.worktrees/` inside it are not listed separately |
 | group     | the folders between the root and the repo (`platform` for `~/work/platform/billing-api`); empty for top-level repos                         |
 | tag       | free labels from config (`backend`, `terraform`), matched by repo name or path glob                                                         |
-| git host  | detected from the remote URL: GitHub, GitLab, Bitbucket, Gitea/Codeberg, or unknown                                                         |
+| VCS host  | detected from the remote URL: GitHub, GitLab, Bitbucket, Gitea/Codeberg, or unknown                                                         |
 
 Folders under a root that are not repos (`~/work/logs`, `~/work/scratch`) are ignored silently; group folders are walked.
 
@@ -115,7 +115,7 @@ Read with `git status --porcelain=v2 --branch --show-stash` plus `for-each-ref` 
 
 | Field        | Detail                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| identity     | name, path, workspace, group, tags, remote URL, git host                                                                      |
+| identity     | name, path, workspace, group, tags, remote URL, VCS host                                                                      |
 | branch       | current branch (or detached), default branch, upstream, ahead/behind upstream, default branch ahead/behind `origin/<default>` |
 | working tree | staged, modified, untracked, conflicted counts; merge/rebase/cherry-pick in progress                                          |
 | work at risk | stash count; unpushed commits (on branches never pushed, or ahead of a live upstream); stale branches (upstream gone)         |
@@ -136,7 +136,7 @@ Read with `git status --porcelain=v2 --branch --show-stash` plus `for-each-ref` 
 
 Flags shown alongside: `stash`, `untracked`, `detached`, `no-remote`, `upstream-gone`, `no-upstream`, `not-default` (on a branch other than the default), `stale-branches`.
 
-A branch whose upstream is gone - deleted on the git host after a merge, then pruned by a fetch - is **stale**, not unpushed: its commits were pushed once. Counting them as unpushed flagged 28 of 86 real repos as work at risk after the first `fetch --prune`, all of them old `develop` branches. Stale branches are a flag (listed by `prune` in phase 4); a stale branch with commits added after its last push can't be told apart once pruned.
+A branch whose upstream is gone - deleted on the VCS host after a merge, then pruned by a fetch - is **stale**, not unpushed: its commits were pushed once. Counting them as unpushed flagged 28 of 86 real repos as work at risk after the first `fetch --prune`, all of them old `develop` branches. Stale branches are a flag (listed by `prune` in phase 4); a stale branch with commits added after its last push can't be told apart once pruned.
 
 ## Sync
 Per repo, in the worker pool:
@@ -162,7 +162,7 @@ One query language in the CLI (`--filter`), the TUI (`/`) and the web UI (search
 | ------------------------------------------- | ------------------------------------------------------------------------- |
 | `is:<state or flag>`                        | `is:dirty`, `is:behind`, `is:unpushed`, `is:stash`, `is:not-default`, ... |
 | `ws:<name>` · `group:<name>` · `tag:<name>` | workspace, group, tag                                                     |
-| `branch:<glob>` · `host:<name>`             | current branch, git host                                                  |
+| `branch:<glob>` · `host:<name>`             | current branch, VCS host                                                  |
 | `age:>30d` · `age:<1d`                      | last commit age                                                           |
 | `-<term>`                                   | negation, e.g. `-tag:archived`                                            |
 
@@ -172,7 +172,7 @@ Global flags: `-w/--workspace`, `-t/--tag`, `-f/--filter "<query>"`, `--json`, `
 | Command                                  | Does                                                                                                                                                                                                                      |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mrm`                                    | the TUI on a terminal, otherwise `mrm status`                                                                                                                                                                             |
-| `mrm status`                             | one line per repo (glyph, name, branch, ahead/behind, flags, age, open PRs and CI problems when [API tokens](#git-host-apis) are set); `--json` for scripts; `--fetch` to fetch first; `--no-prs` skips the git host APIs |
+| `mrm status`                             | one line per repo (glyph, name, branch, ahead/behind, flags, age, open PRs and CI problems when [API tokens](#vcs-host-apis) are set); `--json` for scripts; `--fetch` to fetch first; `--no-prs` skips the VCS host APIs |
 | `mrm sync`                               | headless fetch + fast-forward with a live progress line per repo, then the summary; `--dry-run` says what it would do                                                                                                     |
 | `mrm fetch`                              | step 1 of sync only                                                                                                                                                                                                       |
 | `mrm web`                                | serve the web UI; `--open` opens the browser, `--port` (default 7420)                                                                                                                                                     |
@@ -235,7 +235,7 @@ Colours are the terminal's own ANSI palette on its default background, so light 
 | Page                | Shows                                                                                                                                                                                     | Actions                                              |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | **Overview** (home) | state counts per workspace; **needs attention** list; **work at risk** (unpushed commits, stashes, dirty trees older than a day); filterable table of every repo; last sync per workspace | sync / fetch all, a workspace or the filtered set    |
-| **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, links to the repo, PRs and CI with the open PR count and CI state                                        | sync, fetch, open on GitHub (or the repo's git host) |
+| **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, links to the repo, PRs and CI with the open PR count and CI state                                        | sync, fetch, open on GitHub (or the repo's VCS host) |
 | **Activity**        | sync runs from `runs.jsonl`: when, what, duration, outcome per repo                                                                                                                       | -                                                    |
 | **Settings**        | Appearance (this browser): text size and theme. Config as loaded, its path and validation errors                                                                                          | - (edit with `mrm config edit`)                      |
 
@@ -248,7 +248,7 @@ The web UI offers only what the engine offers - no `exec`, no hooks, no `prune`.
 ## Open in Browser
 The web URL is derived from the remote (`git@host:owner/repo.git` or `https://...`); self-hosted hosts mapped under `hosts:` in config are covered too.
 
-| Git host         | PRs                 | CI             |
+| VCS host         | PRs                 | CI             |
 | ---------------- | ------------------- | -------------- |
 | GitHub           | `/pulls`            | `/actions`     |
 | GitLab           | `/-/merge_requests` | `/-/pipelines` |
@@ -257,12 +257,12 @@ The web URL is derived from the remote (`git@host:owner/repo.git` or `https://..
 
 The browser is opened with `browser_cmd` if set, else `wslview` on WSL, else `xdg-open` / `open`.
 
-## Git Host APIs
-A **git host** is the site a remote points at: GitHub, GitLab, Bitbucket, Gitea/Codeberg. Until 0.3.0 the user-facing word was *forge* (`forges:`, `forge_tokens:`, `forge_cache:`, the `forge:` filter); those names are still read, and `doctor` asks for the new ones (`hosts:`, `host_tokens:`, `host_cache:`, `host:`). The code keeps `forge` in package names (`internal/forge`, `internal/forgeapi`) and the `--json` field.
+## VCS Host APIs
+A **VCS host** is the site a remote points at: GitHub, GitLab, Bitbucket, Gitea/Codeberg. Until 0.3.0 the user-facing word was *forge* (`forges:`, `forge_tokens:`, `forge_cache:`, the `forge:` filter); those names are still read, and `doctor` asks for the new ones (`hosts:`, `host_tokens:`, `host_cache:`, `host:`). The code keeps `forge` in package names (`internal/forge`, `internal/forgeapi`) and the `--json` field.
 
 With a token for a host under `host_tokens`, mrm asks that host's API, read-only, for each repo's open PR count and the state of the latest CI run on the default branch. No token, no request: hosts without one are never contacted. One token per host (decided 2026-10-19, closing Q1: the clients live in mrm rather than in a module shared with other tools, since mrm needs only counts and org listings).
 
-| Git host         | Open PRs                                  | CI                                           | Auth                                         |
+| VCS host         | Open PRs                                  | CI                                           | Auth                                         |
 | ---------------- | ----------------------------------------- | -------------------------------------------- | -------------------------------------------- |
 | GitHub           | `pulls?state=open` (100+ shown as `100+`) | latest Actions run on the default branch     | `Bearer` token                               |
 | GitLab           | `merge_requests?state=opened` (`X-Total`) | latest pipeline on the default branch        | `PRIVATE-TOKEN`                              |
@@ -395,11 +395,11 @@ After a headless `mrm sync` (also from the timer), per `notify.on`: `attention` 
 | 1 - core + headless | config (XDG), discovery, status, sync, fetch, open, filters, `--json`, cache, history, Gotify/ntfy, `doctor` |
 | 2 - TUI             | the fleet view, palette, filters, marks, bulk actions, hand-off, needs-attention view                        |
 | 3 - web UI          | Overview, Repo, Activity, Settings, live over SSE                                                            |
-| 4 - extras          | `exec`, hooks, `prune`, `drift`, `schedule`, PR/CI counts from git hosts                                     |
+| 4 - extras          | `exec`, hooks, `prune`, `drift`, `schedule`, PR/CI counts from VCS hosts                                     |
 
 ## Out of Scope
 - single-repo git operations (lazygit does it)
-- cloning, archiving or creating repos on a git host
+- cloning, archiving or creating repos on a VCS host
 - a hosted or shared web UI
 - issue trackers (branch-name ticket keys may come later)
 - native Windows
@@ -407,6 +407,6 @@ After a headless `mrm sync` (also from the timer), per `notify.on`: `attention` 
 ## Open Questions
 | #      | Question                                                          | Leaning                                                                                                                                                   |
 | ------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~Q1~~ | ~~share the git host API clients with another tool as a module?~~ | closed 2026-10-19: no - mrm needs only PR counts, CI state and org listings, so its clients live in `internal/forgeapi` ([Git Host APIs](#git-host-apis)) |
+| ~~Q1~~ | ~~share the VCS host API clients with another tool as a module?~~ | closed 2026-10-19: no - mrm needs only PR counts, CI state and org listings, so its clients live in `internal/forgeapi` ([VCS Host APIs](#vcs-host-apis)) |
 | ~~Q2~~ | ~~TUI library~~                                                   | closed 2026-10-15: tview, with the list drawn as a custom primitive (tview's table can't span group headers across columns)                               |
 | Q3     | should `switch_merged` default to true?                           | decide after a few weeks of phase 1 use                                                                                                                   |
