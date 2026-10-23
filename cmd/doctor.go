@@ -155,10 +155,16 @@ func runDoctor(ctx context.Context) error {
 
 	if err := schedule.Available(); err != nil {
 		c.warn("schedules: " + err.Error())
-	} else if timers, _ := schedule.List(); len(timers) > 0 {
-		c.ok(fmt.Sprintf("schedules: %d timer(s) installed (mrm schedule list)", len(timers)))
 	} else {
-		c.ok("schedules: systemd user instance available")
+		timers, _ := schedule.List()
+		if len(timers) > 0 {
+			c.ok(fmt.Sprintf("schedules: %d timer(s) installed (mrm schedule list)", len(timers)))
+		} else {
+			c.ok("schedules: systemd user instance available")
+		}
+		if on, ok := schedule.Lingering(); ok && !on {
+			c.warn("schedules: " + schedule.LingerHint)
+		}
 	}
 
 	if argv, err := browser.Command(cfg.BrowserCmd, "https://example.com"); err != nil {

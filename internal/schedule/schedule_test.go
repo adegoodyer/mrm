@@ -95,3 +95,29 @@ func TestNameForAll(t *testing.T) {
 		t.Fatal(n)
 	}
 }
+
+// Linger decides whether timers run with no terminal open.
+func TestLingering(t *testing.T) {
+	t.Setenv("USER", "ade")
+	old := Run
+	t.Cleanup(func() { Run = old })
+	for _, c := range []struct {
+		out       string
+		err       error
+		on, known bool
+	}{
+		{"yes\n", nil, true, true},
+		{"no\n", nil, false, true},
+		{"", errors.New("no loginctl"), false, false},
+	} {
+		var call string
+		Run = func(name string, args ...string) ([]byte, error) {
+			call = name + " " + strings.Join(args, " ")
+			return []byte(c.out), c.err
+		}
+		on, known := Lingering()
+		if on != c.on || known != c.known || call != "loginctl show-user ade -p Linger --value" {
+			t.Errorf("%q: on %v known %v (call %q)", c.out, on, known, call)
+		}
+	}
+}

@@ -126,6 +126,24 @@ func Available() error {
 	return nil
 }
 
+// LingerHint says why linger matters and how to turn it on.
+const LingerHint = "linger is off, so timers stop when your last terminal closes; to keep them running: sudo loginctl enable-linger $USER"
+
+// Lingering reports whether systemd keeps this user's instance - and so
+// its timers - running with no login session open. ok is false when it
+// can't be told (no loginctl, say).
+func Lingering() (on, ok bool) {
+	name := os.Getenv("USER")
+	if name == "" {
+		return false, false
+	}
+	out, err := Run("loginctl", "show-user", name, "-p", "Linger", "--value")
+	if err != nil {
+		return false, false
+	}
+	return strings.TrimSpace(string(out)) == "yes", true
+}
+
 // Install writes the units and enables the timer.
 func Install(s Spec) error {
 	service, timer, err := s.Units()

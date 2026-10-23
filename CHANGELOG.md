@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Syncs and fetches start with the repos that were slowest last time, so a slow VCS host overlaps the quick ones instead of finishing alone at the end. `mrm status --json` gains `fetch_error` and `fetch_ms`.
 - A fetch that is going nowhere gives up sooner. The default `timeout` per git command is 30 s, down from 2 minutes, and a fetch over ssh now fails after 10 s when the host doesn't answer, or 15 s after a connection stops answering. A fetch over https that stalls (under 1 KB/s for 15 s) fails too. A config written by an older `mrm config init` still says `timeout: 2m` until you change it.
 - Repos in no group are listed after the groups, under *(no group)* in the interactive view, instead of under a heading that repeated the workspace's name. A workspace with no groups is still one section named after it.
+- `mrm doctor` and `mrm schedule install` warn when systemd *linger* is off for you: without it, timers stop when your last terminal closes. The fix is in the warning (`sudo loginctl enable-linger $USER`).
 
 ### Fixed
 - A repo deleted while the interactive view or the web UI is open no longer stays listed as `missing` until restart. `r` in the interactive view, and each load of the web Overview, look for repos again: deleted ones drop off and repos cloned since appear.

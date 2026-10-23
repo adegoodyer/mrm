@@ -71,6 +71,9 @@ var scheduleInstallCmd = &cobra.Command{
 			return err
 		}
 		fmt.Println("installed - mrm schedule list shows it; journalctl --user -u " + spec.Name() + " shows its runs")
+		if on, ok := schedule.Lingering(); ok && !on {
+			fmt.Fprintln(os.Stderr, "warning: "+schedule.LingerHint)
+		}
 		return nil
 	},
 }
