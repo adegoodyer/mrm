@@ -404,6 +404,7 @@ func (s *Server) overview(w http.ResponseWriter, r *http.Request) {
 		f = filter.Filter{}
 	}
 	s.mu.Lock()
+	s.rediscoverLocked()
 	d := s.base("overview", "Overview")
 	d.Query, d.Chips = q, chips
 	d.WS = s.wsLocked()
@@ -576,6 +577,9 @@ func (s *Server) action(w http.ResponseWriter, r *http.Request) {
 	}
 	var targets []model.Repo
 	s.mu.Lock()
+	if act == "refresh" {
+		s.rediscoverLocked()
+	}
 	switch {
 	case act == "refresh" || r.Form.Get("scope") == "all":
 		targets = append(targets, s.repos...)
@@ -767,10 +771,11 @@ func (s *Server) watch() {
 		}
 		s.mu.Lock()
 		ours := s.busy != ""
+		wss := runner.Workspaces(s.repos)
 		s.mu.Unlock()
 		ext := ""
 		if !ours {
-			for _, ws := range runner.Workspaces(s.repos) {
+			for _, ws := range wss {
 				if pid, held := engine.LockHolder(s.opts.LockDir, ws); held {
 					ext = "sync running in another mrm (pid " + pid + ")"
 					break

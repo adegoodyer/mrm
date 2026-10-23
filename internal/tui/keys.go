@@ -81,7 +81,7 @@ func bindings() []binding {
 		{secAct, "f", "fetch the marked repos, else the group or repo", []key{ch('f')}, func(u *ui) { u.act(engine.OpFetch, u.targets()) }, true},
 		{secAct, "F", "fetch everything shown", []key{ch('F')}, func(u *ui) { u.act(engine.OpFetch, u.visible()) }, true},
 		{secAct, "d", "move the marked repos, else the group or repo, to the trash (asks first)", []key{ch('d')}, func(u *ui) { u.trashTargets() }, true},
-		{secAct, "r", "read status again", []key{ch('r')}, func(u *ui) { u.startOp(engine.OpStatus, u.repos, false, "reading") }, true},
+		{secAct, "r", "look for repos again and read their status", []key{ch('r')}, func(u *ui) { u.reread() }, true},
 
 		{secOpen, "o", "open the repo in the browser (GitHub, GitLab, Bitbucket, Gitea)", []key{ch('o')}, func(u *ui) { u.open(openWeb) }, true},
 		{secOpen, "p", "open its pull requests", []key{ch('p')}, func(u *ui) { u.open(openPRs) }, true},

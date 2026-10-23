@@ -208,6 +208,33 @@ func TestOverview(t *testing.T) {
 	}
 }
 
+// N.12: a page load looks for repos again, so a repo deleted while the
+// web UI is open drops off and one cloned since appears.
+func TestRediscover(t *testing.T) {
+	h := start(t, "")
+	billing := filepath.Join(h.f.Root, "repos", "platform", "billing-api")
+	goneID := repoID(billing)
+	if err := os.RemoveAll(billing); err != nil {
+		t.Fatal(err)
+	}
+	h.f.Clone("fresh")
+
+	code, body := h.get("/")
+	if code != 200 || strings.Contains(body, "billing-api") || !strings.Contains(body, "fresh") || !strings.Contains(body, "2 of 2 repos") {
+		t.Fatalf("overview %d after delete and clone:\n%s", code, body)
+	}
+	if code, _ := h.get("/repo/" + goneID); code != http.StatusNotFound {
+		t.Fatalf("deleted repo's page %d, want 404", code)
+	}
+
+	// The refresh action looks again too.
+	h.f.Clone("later")
+	if code, body := h.post("/api/refresh", url.Values{}, true); code != http.StatusAccepted || !strings.Contains(body, "3 repos") {
+		t.Fatalf("refresh %d: %s", code, body)
+	}
+	h.waitIdle()
+}
+
 // 3.4: the repo page shows branches, commits and forge links.
 func TestRepoPage(t *testing.T) {
 	h := start(t, "")

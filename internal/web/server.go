@@ -106,11 +106,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 	s.repos = opts.Repos
 	if s.repos == nil {
-		wss := opts.Workspaces
-		if len(wss) == 0 {
-			wss, _ = s.cfg.Select(nil)
-		}
-		s.repos, _ = discover.All(s.cfg, wss)
+		s.repos = s.discover()
 	}
 	s.loadCache()
 	for _, r := range s.repos {
@@ -125,6 +121,48 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		s.lastSync = run.Started.Add(time.Duration(run.DurationMS) * time.Millisecond)
 	}
 	return s, nil
+}
+
+// discover finds the repos under the shown workspaces' roots.
+func (s *Server) discover() []model.Repo {
+	wss := s.opts.Workspaces
+	if len(wss) == 0 {
+		wss, _ = s.cfg.Select(nil)
+	}
+	repos, _ := discover.All(s.cfg, wss)
+	return repos
+}
+
+// rediscoverLocked looks for repos again, so ones deleted since the last
+// look drop off and new clones appear. It leaves the list alone while an
+// operation runs, and in tests that pass their own repos.
+func (s *Server) rediscoverLocked() {
+	if s.opts.Repos != nil || s.busy != "" {
+		return
+	}
+	found := s.discover()
+	have := map[string]bool{}
+	added := false
+	for _, r := range found {
+		have[r.Path] = true
+		if _, ok := s.results[r.Path]; !ok {
+			added = true
+		}
+	}
+	for _, r := range s.repos {
+		if !have[r.Path] {
+			delete(s.results, r.Path)
+			delete(s.forge, r.Path)
+			delete(s.byID, repoID(r.Path))
+		}
+	}
+	s.repos = found
+	for _, r := range found {
+		s.byID[repoID(r.Path)] = r.Path
+	}
+	if added {
+		s.loadCache()
+	}
 }
 
 // Token is this session's access token.

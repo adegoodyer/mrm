@@ -10,6 +10,7 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/adegoodyer/mrm/internal/browser"
+	"github.com/adegoodyer/mrm/internal/discover"
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/forge"
 	"github.com/adegoodyer/mrm/internal/forgeapi"
@@ -275,4 +276,40 @@ func (u *ui) handoff(kind handoffKind) {
 	if u.busy == "" {
 		u.startOp(engine.OpStatus, []model.Repo{r}, false, "reading")
 	}
+}
+
+// reread looks for repos again, so ones deleted since mrm started drop off
+// and new clones appear, then reads every repo's status.
+func (u *ui) reread() {
+	if u.busy != "" {
+		u.warn(u.busy + " is still running")
+		return
+	}
+	if u.opts.Repos == nil {
+		wss, _ := u.cfg.Select(nil)
+		found, _ := discover.All(u.cfg, wss)
+		u.setRepos(found)
+	}
+	u.startOp(engine.OpStatus, u.repos, false, "reading")
+}
+
+// setRepos replaces the repo list, forgetting what was known about repos
+// that are gone. New repos start empty until their status is read.
+func (u *ui) setRepos(found []model.Repo) {
+	have := map[string]bool{}
+	for _, r := range found {
+		have[r.Path] = true
+		res := u.results[r.Path]
+		res.Repo = r
+		u.results[r.Path] = res
+	}
+	for _, r := range u.repos {
+		if !have[r.Path] {
+			delete(u.results, r.Path)
+			delete(u.forge, r.Path)
+			delete(u.marks, r.Path)
+		}
+	}
+	u.repos = found
+	u.refresh()
 }

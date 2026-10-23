@@ -386,7 +386,7 @@ mrm status -f "is:not-default group:services"
 | `s` · `S`                   | sync the targets · sync everything shown                                                               |
 | `f` · `F`                   | fetch the targets · fetch everything shown                                                             |
 | `d`                         | move the targets' folders to the trash, after one confirmation ([below](#the-interactive-view))        |
-| `r`                         | read status again                                                                                      |
+| `r`                         | look for repos again and read their status: deleted ones drop off, new clones appear                   |
 | `o` · `p` · `P` · `b`       | open in the browser: the repo · its pull requests · its pipelines or actions (CI) · the current branch |
 | `enter`                     | hand off to `tui.open_cmd` (lazygit) in the repo; back to mrm when it exits                            |
 | `e` · `t`                   | `$VISUAL`/`$EDITOR` · `$SHELL` in the repo                                                             |

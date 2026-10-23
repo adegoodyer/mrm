@@ -523,3 +523,24 @@ func TestTrash(t *testing.T) {
 		t.Fatal("the other repo went too")
 	}
 }
+
+// TestRereadFindsRepos: r looks for repos again, so a repo deleted while
+// the view is open drops off and one cloned since appears.
+func TestRereadFindsRepos(t *testing.T) {
+	f := gittest.New(t)
+	f.Clone("keep")
+	gone := f.Clone("gone")
+	cfg, err := config.Parse([]byte("workspaces:\n  work:\n    roots: [" + filepath.Join(f.Root, "repos") + "]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := start(t, Options{Config: cfg, NoRefresh: true}, 100, 24)
+	h.waitFor("keep", "gone")
+
+	if err := os.RemoveAll(gone); err != nil {
+		t.Fatal(err)
+	}
+	f.Clone("fresh")
+	h.keys("r")
+	h.waitFor("keep", "fresh", "!gone", "read 2 repos")
+}
