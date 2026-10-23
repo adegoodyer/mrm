@@ -37,7 +37,7 @@ The [spec](01-specification.md) says *what*, this says *in what order*. Each pha
 | ✅ 2026-10-14 | 1.9  | forge detection and `open` (`--pr`, `--ci`, `--branch`, `--print`; `wslview` on WSL)                                                                                                |
 | ✅ 2026-10-14 | 1.10 | notifications: Gotify, ntfy; `token_cmd` / `token_env`                                                                                                                              |
 | ✅ 2026-10-14 | 1.11 | `doctor`                                                                                                                                                                            |
-| ⬜            | 1.12 | dogfood: own config with a work and a personal workspace; a week of daily use instead of a hand-rolled update script                                                                |
+| ✅ 2026-10-23 | 1.12 | dogfood: own config with a work and a personal workspace; a week of daily use instead of a hand-rolled update script                                                                |
 | ⬜            | 1.13 | UAT walkthrough of phase 1                                                                                                                                                          |
 
 First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos across Bitbucket and GitLab in 31.9 s - 19 would fast-forward, 64 current, 1 skipped (dirty), 2 failed (no access, or the repo is gone). `status`: 0.46 s warm.
@@ -53,7 +53,7 @@ First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos acro
 | ✅ 2026-10-15 | 2.5 | hand-off to lazygit, `$EDITOR`, shell (suspend the screen, run, resume, refresh the row)                                                                                                |
 | ✅ 2026-10-15 | 2.6 | themes (terminal palette), `NO_COLOR` / `--no-color`, 80 x 24; tests on a simulated screen, race-clean                                                                                  |
 | ✅ 2026-10-15 | 2.7 | unpushed counts only work that exists only here; stale branches (upstream gone) get their own flag - found on the first real TUI run                                                    |
-| ⬜            | 2.8 | UAT walkthrough of phase 2 in a real terminal (light and dark themes, lazygit hand-off)                                                                                                 |
+| ✅ 2026-10-23 | 2.8 | UAT walkthrough of phase 2 in a real terminal (light and dark themes, lazygit hand-off)                                                                                                 |
 
 ## Phase 3 - Web UI
 
