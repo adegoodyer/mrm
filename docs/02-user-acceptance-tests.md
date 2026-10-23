@@ -96,7 +96,7 @@
 | ✅ 2026-10-23 | 5.10 | `mrm sync --dry-run` says `would fast-forward main by 3 commits`, and a real sync `fast-forwarded main by 3 commits` `[A] engine.TestSyncDryRun` |
 | ✅ 2026-10-23 | 5.11 | With repos marked, `o` `p` `P` `b` open a page for each; more than 5 asks first in mrm's own dialog (`y` / `n`) `[A] tui.TestOpenMarked` |
 | ✅ 2026-10-23 | 5.12 | `d` asks once, listing the repos and flagging work that exists only here; `y` moves them to the trash (restorable), `n` leaves them; a workspace root is never moved `[A] tui.TestTrash, trash.TestMove` (checked 2026-10-23: the folder landed in the desktop trash with its original path) |
-| ⬜   | 5.13 | No screen, message or help text says "forge"; the web Repo page says "Open on GitHub" (or Bitbucket...); a config with the old `forge_tokens:` still works and `mrm doctor` suggests `host_tokens:` `[A] config.TestOldHostNames`               |
+| ✅ 2026-10-23 | 5.13 | No screen, message or help text says "forge"; the web Repo page says "Open on GitHub" (or Bitbucket...); a config with the old `forge_tokens:` still works and `mrm doctor` suggests `host_tokens:` `[A] config.TestOldHostNames` (checked 2026-10-23: no user-facing string says forge; the Repo page says "Open on GitHub"; a config with `forge_tokens:` loads and `doctor` says to rename it) |
 
 ## Cross-Cutting
 
