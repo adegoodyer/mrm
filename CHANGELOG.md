@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-23
+
+Polish from using 0.2.0 (phase 5): a README for newcomers and a full user guide, more keys and the mouse in the interactive view, groups by name pattern, the trash, remembered fetch failures and slowest-first syncs, shorter timeouts, keys in the web UI, and "VCS host" for what was a forge.
+
 ### Added
 - `d` in the interactive view moves the marked repos (or the group or repo under the cursor) to the trash after one confirmation, which flags any with work that exists only on this machine. They can be restored from the trash. Workspace roots and folders that aren't git repos are never touched.
 - The user guide spells out sync step by step - the exact git commands, in order - and compares it with `git pull` when you have local changes.

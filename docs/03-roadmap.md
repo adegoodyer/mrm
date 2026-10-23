@@ -99,7 +99,7 @@ Ideas from using 0.2.0, for 0.3.0.
 | ✅ 2026-10-23 | 5.15 | `group:` from the config by name pattern; *(no group)* last; a terms table in the guide; "git host" is "VCS host" throughout          |
 | ⬜            | 5.16 | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
 | ✅ 2026-10-23 | 5.17 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
-| ⬜            | 5.18 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
+| ✅ 2026-10-23 | 5.18 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
 
 ## Releases
 
@@ -107,6 +107,7 @@ Ideas from using 0.2.0, for 0.3.0.
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
 | 0.1.0   | 2026-10-15 | phases 1-2: CLI and interactive view; release archives for linux/darwin amd64/arm64 (GoReleaser, `task release`) |
 | 0.2.0   | 2026-10-19 | phases 3-4: web UI; `exec`, hooks, `prune`, `drift`, `schedule`, forge PR/CI counts                              |
+| 0.3.0   | 2026-10-23 | phase 5: README and user guide, TUI keys and mouse, groups by pattern, trash, remembered fetch errors, slowest-first sync, web keys, "VCS host" |
 
 ## Follow-Ups
 
