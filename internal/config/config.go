@@ -76,6 +76,9 @@ type Override struct {
 	Branch string   `yaml:"branch"`
 	Tags   []string `yaml:"tags"`
 	Sync   *bool    `yaml:"sync"`
+	// Group puts the repo in a group of that name instead of the one its
+	// folder gives it.
+	Group string `yaml:"group"`
 }
 
 // ForgeToken authenticates to one forge host. The secret only comes from a
@@ -383,12 +386,13 @@ type Resolved struct {
 	Branch string
 	Tags   []string
 	NoSync bool
+	Group  string // "" keeps the folder's group
 }
 
 // Resolve merges every override that matches a repo. Keys with a `/` or a
 // leading `~` are path globs matched against the repo path; other keys are
 // name globs. Path globs apply first, then name globs, then exact names, so
-// the most specific key wins; tags are unioned.
+// the most specific key wins (for branch, sync and group); tags are unioned.
 func (c *Config) Resolve(name, path string) Resolved {
 	type hit struct {
 		rank int
@@ -424,6 +428,9 @@ func (c *Config) Resolve(name, path string) Resolved {
 		}
 		if o.Sync != nil {
 			r.NoSync = !*o.Sync
+		}
+		if g := strings.Trim(o.Group, "/"); g != "" {
+			r.Group = g
 		}
 		for _, t := range o.Tags {
 			if !seen[t] {

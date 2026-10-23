@@ -123,6 +123,21 @@ func TestResolvePrecedence(t *testing.T) {
 	}
 }
 
+// group: like branch, the most specific key wins.
+func TestResolveGroup(t *testing.T) {
+	cfg := &Config{Repos: map[string]Override{
+		"~/work/*": {Group: "work-folder"},
+		"inf-*":    {Group: "infra"},
+		"inf-odd":  {Group: "odd"},
+		"inf-tags": {Tags: []string{"x"}}, // no group: the glob's stays
+	}}
+	for name, want := range map[string]string{"inf-base": "infra", "inf-odd": "odd", "inf-tags": "infra", "other": ""} {
+		if got := cfg.Resolve(name, "/elsewhere/"+name).Group; got != want {
+			t.Errorf("%s: group %q, want %q", name, got, want)
+		}
+	}
+}
+
 func TestSelect(t *testing.T) {
 	cfg, err := Parse([]byte("workspaces:\n  b:\n    roots: [/tmp]\n  a:\n    roots: [/tmp]\n"))
 	if err != nil {

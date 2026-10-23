@@ -37,6 +37,9 @@ func Workspace(cfg *config.Config, ws *config.Workspace) ([]model.Repo, []error)
 			r.Tags = res.Tags
 			r.Branch = res.Branch
 			r.NoSync = res.NoSync
+			if res.Group != "" {
+				r.Group = res.Group
+			}
 			r.Remote = ws.Sync.Remote
 			r.FFCurrent = ws.Sync.FFCurrent
 			r.FFDirty = ws.Sync.FFDirty
@@ -44,9 +47,13 @@ func Workspace(cfg *config.Config, ws *config.Workspace) ([]model.Repo, []error)
 			repos = append(repos, r)
 		}
 	}
+	// Groups in name order, repos with no group after them.
 	sort.Slice(repos, func(i, j int) bool {
-		if repos[i].Group != repos[j].Group {
-			return repos[i].Group < repos[j].Group
+		if gi, gj := repos[i].Group, repos[j].Group; gi != gj {
+			if gi == "" || gj == "" {
+				return gj == ""
+			}
+			return gi < gj
 		}
 		return repos[i].Name < repos[j].Name
 	})

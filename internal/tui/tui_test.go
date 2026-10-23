@@ -174,7 +174,7 @@ func fixtures() ([]model.Repo, []model.Result) {
 func TestRender(t *testing.T) {
 	repos, results := fixtures()
 	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 80, 24)
-	txt := h.waitFor("all · 5 repos", "▾ work · 3", "▾ work · platform · 1", "▾ personal · 1", "fix: rounding")
+	txt := h.waitFor("all · 5 repos", "▾ work · (no group) · 3", "▾ work · platform · 1", "▾ personal · 1", "fix: rounding")
 	if !strings.Contains(txt, "…") {
 		t.Fatalf("long name not truncated with an ellipsis:\n%s", txt)
 	}
@@ -236,9 +236,9 @@ func TestCollapse(t *testing.T) {
 	h := start(t, Options{Repos: repos, Results: results, NoRefresh: true}, 100, 24)
 	h.keys("g")
 	h.key(tcell.KeyTab)
-	h.waitFor("▸ work · 3", "!fix: rounding")
+	h.waitFor("▸ work · (no group) · 3", "!fix: rounding")
 	h.key(tcell.KeyTab)
-	h.waitFor("▾ work · 3", "fix: rounding")
+	h.waitFor("▾ work · (no group) · 3", "fix: rounding")
 }
 
 // 2.4: ctrl+k finds actions by fuzzy search; w switches workspace.
@@ -359,9 +359,9 @@ func TestWorkspaceCycleAndGroups(t *testing.T) {
 	h.key(tcell.KeyRight)
 
 	h.key(tcell.KeyBacktab)
-	h.waitFor("▸ work · 3", "▸ personal · 1", "!dotfiles")
+	h.waitFor("▸ work · (no group) · 3", "▸ personal · 1", "!dotfiles")
 	h.key(tcell.KeyBacktab)
-	h.waitFor("▾ work · 3", "▾ personal · 1", "dotfiles")
+	h.waitFor("▾ work · (no group) · 3", "▾ personal · 1", "dotfiles")
 
 	h.keys("J")
 	h.waitCursor(func(it item) bool { return it.path == "/src/dotfiles" }, "J to the last row")

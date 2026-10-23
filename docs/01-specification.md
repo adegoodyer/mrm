@@ -104,7 +104,7 @@ Recorded so they are not argued again. Revisit only if the reason stops holding.
 | workspace | a named set of roots with its own sync policy, e.g. `work` (`~/work`) and `personal` (`~/src`)                                              |
 | root      | a folder scanned for repos, down to `depth` (default 3)                                                                                     |
 | repo      | a folder containing `.git`. Discovery **does not descend into a repo**, so submodules and `.worktrees/` inside it are not listed separately |
-| group     | the folders between the root and the repo (`platform` for `~/work/platform/billing-api`); empty for top-level repos                         |
+| group     | the folders between the root and the repo (`platform` for `~/work/platform/billing-api`), or `group:` from the config; empty for neither    |
 | tag       | free labels from config (`backend`, `terraform`), matched by repo name or path glob                                                         |
 | VCS host  | detected from the remote URL: GitHub, GitLab, Bitbucket, Gitea/Codeberg, or unknown                                                         |
 
@@ -203,7 +203,7 @@ Every command that deletes or runs something beyond sync (`prune`, `schedule ins
 ```
 
 - **Rows**: mark (`▌`), state glyph (a spinner while an operation runs), name, branch, ahead/behind, changes, last commit age, then the outcome of the last run if it needs attention, else notes (open PRs and CI problems among them, asked in the background after each operation), else the last commit subject.
-- **Groups**: workspace, then group folder (`work · platform` when more than one workspace is shown); `▸` collapsed, `▾` open, with a count. The cursor can sit on a header: actions there apply to the whole group.
+- **Groups**: workspace, then group (`work · platform` when more than one workspace is shown), with repos in no group last under *(no group)* - or under the workspace's name when it has no groups at all; `▸` collapsed, `▾` open, with a count. The cursor can sit on a header: actions there apply to the whole group.
 - **Targets**: an action applies to the marked repos, else the group under the cursor, else the repo under it. Marks clear once an action starts.
 - **Operations** run one at a time through the engine, streaming a live row per repo; a sync takes the same workspace lock as `mrm sync` and writes the same cache and run history. A sync that leaves anything skipped or failed ends on the needs-attention view.
 - **Quit** while an operation runs needs `q` twice; git finishes what it started.
@@ -324,6 +324,7 @@ repos:                            # exceptions only; keys are names or path glob
     tags: [backend]
   "~/work/terraform-*":
     tags: [terraform]
+    group: infra                  # instead of the folder's group
   "~/work/legacy-portal":
     sync: false                   # status only
 

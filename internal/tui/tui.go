@@ -286,14 +286,29 @@ func (u *ui) groupOf(r model.Repo) (string, string) {
 		return "reason:" + reason, reason
 	}
 	key := r.Workspace + "/" + r.Group
-	switch {
-	case r.Group == "":
-		return key, r.Workspace
-	case u.ws == "" && u.workspaceCount() > 1:
-		return key, r.Workspace + " · " + r.Group
-	default:
-		return key, r.Group
+	group := r.Group
+	if group == "" {
+		// A workspace without groups is one section named after it; in one
+		// with groups, the rest are "(no group)", not the workspace's name.
+		if !u.hasGroups(r.Workspace) {
+			return key, r.Workspace
+		}
+		group = "(no group)"
 	}
+	if u.ws == "" && u.workspaceCount() > 1 {
+		return key, r.Workspace + " · " + group
+	}
+	return key, group
+}
+
+// hasGroups reports whether any repo in workspace ws is in a group.
+func (u *ui) hasGroups(ws string) bool {
+	for _, r := range u.repos {
+		if r.Workspace == ws && r.Group != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func (u *ui) workspaceCount() int { return len(u.cfg.Workspaces) }

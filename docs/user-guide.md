@@ -40,6 +40,15 @@ Everything about using mrm, from the ideas it is built on to every setting. New 
   - [Uninstall](#uninstall)
 
 ## Concepts
+Five words do most of the work in mrm. Each has one job:
+
+| Term          | What it is                                                         | Example                         | Used for                                                         |
+| ------------- | ------------------------------------------------------------------ | ------------------------------- | ---------------------------------------------------------------- |
+| **Workspace** | a named set of root folders, with its own sync settings            | `work`, `personal`              | `-w`, `←` `→` in the interactive view, schedules, `drift` orgs   |
+| **Group**     | a section of the list inside a workspace; one per repo             | `platform`, `infra`             | the headings in the interactive view, `group:`                   |
+| **Tag**       | a label; a repo can have any number                                | `terraform`, `team-pay`         | picking repos with `-t` and `tag:`                               |
+| **VCS host**  | the site a repo's remote points at                                 | GitHub, GitLab, Bitbucket       | opening pages, PR and CI counts, `host:`                         |
+| **Root**      | a folder mrm looks for clones in                                   | `~/work`                        | where discovery starts                                           |
 
 ### Workspaces and Roots
 A **workspace** is a named set of folders - its **roots** - that hold clones. Most people have two, `work` and `personal`, but any number works. Each workspace can have its own [sync policy](#sync-policies), and `-w <name>` limits any command to it:
@@ -66,7 +75,19 @@ A new clone shows up the next time mrm runs. A repo that disappears is simply go
 ### Groups and Tags
 The folders between a root and a repo become its **group**: `~/work/platform/billing-api` is `billing-api` in group `platform`, shown as `platform/billing-api`. The interactive view and the web UI list repos by workspace and group, and `group:platform` filters to them.
 
-**Tags** are labels you give repos in the config, by name or by path glob. Use them for sets that don't follow your folders - all Terraform repos, everything a team owns:
+When your folders are flat but the names follow a pattern, the config can group them instead - the folder is left as it is:
+
+```yaml
+repos:
+  "inf-*":
+    group: infra
+  "docker-*":
+    group: docker
+```
+
+A repo is in one group. Repos in no group are listed last, under *(no group)*; a workspace with no groups at all is one section named after the workspace.
+
+**Tags** are labels you give repos in the config, by name or by path glob. Unlike groups, a repo can have many. Use them for sets that cut across groups - all Terraform repos, everything a team owns:
 
 ```yaml
 repos:
@@ -176,6 +197,7 @@ repos:                            # exceptions only; see below
     tags: [backend]
   "~/work/terraform-*":
     tags: [terraform]
+    group: infra                  # instead of the folder's group
   legacy-portal:
     sync: false                   # status only, never synced
 
@@ -227,6 +249,7 @@ web:
 | `workspaces.<name>.sync.ff_dirty`      | `false`     | fast-forward a dirty repo when the update touches none of its changed files ([policies](#sync-policies))       |
 | `repos.<key>.branch`                   | -           | the default branch for that repo, instead of `origin/HEAD`                                                     |
 | `repos.<key>.tags`                     | -           | labels for `-t` and `tag:`                                                                                     |
+| `repos.<key>.group`                    | (folder)    | the repo's group, instead of the folders between the root and the repo                                         |
 | `repos.<key>.sync`                     | `true`      | `false`: show the repo, never sync it                                                                          |
 | `hooks.post_sync[]`                    | -           | `name`, `if_file`, `run` ([Hooks](#hooks))                                                                     |
 | `notify.on`                            | `attention` | when to notify after a headless sync: `attention`, `always`, `never`                                           |
@@ -250,7 +273,7 @@ Keys under `repos:` say which repos an exception applies to:
 | `legacy-*`             | repos whose name matches the glob         |
 | `"~/work/terraform-*"` | repos whose path matches (a `/` or a `~`) |
 
-When several keys match one repo, path globs apply first, then name globs, then the exact name, so the most specific one wins; tags from all of them are combined. Quote keys that start with `~` or contain `*`.
+When several keys match one repo, path globs apply first, then name globs, then the exact name, so the most specific one wins (for `branch`, `sync` and `group`); tags from all of them are combined. Quote keys that start with `~` or contain `*`.
 
 ### Secrets
 Tokens never go in the config. Every secret is read from a command (`token_cmd`) or an environment variable (`token_env`):

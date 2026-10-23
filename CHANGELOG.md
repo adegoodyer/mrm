@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ctrl+d` / `ctrl+u` scroll the detail pane and the graph half a page; with the pane closed they move the list.
 - **User guide** (`docs/user-guide.md`): concepts (workspaces, discovery, groups, tags, the default branch, every state, flag and outcome), every config key with its default, status, sync rules and policies, filters, the interactive view's keys, the web UI and its security, `open`, `exec`, `prune`, `drift`, forge tokens per forge, hooks, schedules, notifications, scripting, completion, troubleshooting and uninstalling.
 - Pictures in the README and the guide - `mrm status`, `mrm sync`, the interactive view and its detail pane, the web UI in light and dark, how mrm fits together, and what sync does to each repo. The terminal pictures are mrm's real output on a demo fleet, rebuilt with `task docs:images`.
+- `group:` in a repo's settings puts it in a group by name pattern, without moving folders: `"inf-*": { group: infra }`. Like `branch:`, the most specific key wins. A repo has one group and any number of tags.
+- The user guide starts its concepts with one table of the terms - workspace, group, tag, VCS host, root - and what each is for.
 
 ### Changed
 - "Forge" is gone from what you see: it's a **VCS host** (GitHub, GitLab, Bitbucket, Gitea), and screens name the actual site - the web Repo page says "Open on GitHub". The config follows: `hosts:`, `host_tokens:`, `host_cache:` and the `host:` filter replace `forges:`, `forge_tokens:`, `forge_cache:` and `forge:`. The old names still work, and `mrm doctor` suggests the new ones. `host:` also takes a hostname (`host:git.example.com`). `mrm status --no-prs` replaces `--no-forge` (still accepted), and the PR/CI cache is now `~/.cache/mrm/hosts.json`. The `forge` field in `--json` output is unchanged.
@@ -33,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The README is rewritten for someone new to mrm: what it is and why, install, a five-minute first run, how to read the status, then each way in, with links into the guide.
 - Syncs and fetches start with the repos that were slowest last time, so a slow VCS host overlaps the quick ones instead of finishing alone at the end. `mrm status --json` gains `fetch_error` and `fetch_ms`.
 - A fetch that is going nowhere gives up sooner. The default `timeout` per git command is 30 s, down from 2 minutes, and a fetch over ssh now fails after 10 s when the host doesn't answer, or 15 s after a connection stops answering. A fetch over https that stalls (under 1 KB/s for 15 s) fails too. A config written by an older `mrm config init` still says `timeout: 2m` until you change it.
+- Repos in no group are listed after the groups, under *(no group)* in the interactive view, instead of under a heading that repeated the workspace's name. A workspace with no groups is still one section named after it.
 
 ### Fixed
 - A repo deleted while the interactive view or the web UI is open no longer stays listed as `missing` until restart. `r` in the interactive view, and each load of the web Overview, look for repos again: deleted ones drop off and repos cloned since appear.

@@ -55,7 +55,7 @@ func TestWorkspace(t *testing.T) {
 			t.Fatalf("%s: workspace %q remote %q", r.Name, r.Workspace, r.Remote)
 		}
 	}
-	want := "app,wt,a/b/deep-enough,platform/billing-api,services/api"
+	want := "a/b/deep-enough,platform/billing-api,services/api,app,wt" // groups first, then no group
 	if strings.Join(got, ",") != want {
 		t.Fatalf("got %s\nwant %s", strings.Join(got, ","), want)
 	}
@@ -79,5 +79,33 @@ func TestRootIsARepo(t *testing.T) {
 	repos, _ := Workspace(&config.Config{}, &config.Workspace{Name: "x", Roots: []string{root}, Depth: 3})
 	if len(repos) != 1 || repos[0].Name != "solo" || repos[0].Group != "" {
 		t.Fatalf("%+v", repos)
+	}
+}
+
+// group: in the config replaces the folder's group; groups sort by name and
+// repos with no group come last.
+func TestGroupFromConfig(t *testing.T) {
+	root := t.TempDir()
+	for _, n := range []string{"inf-base", "web-infrastructure", "docker-php", "notes", "team/svc"} {
+		mkRepo(t, filepath.Join(root, n))
+	}
+	cfg := &config.Config{Repos: map[string]config.Override{
+		"inf-*":             {Group: "infra"},
+		"*-infrastructure*": {Group: "infra/"}, // slashes trimmed
+		"docker-*":          {Group: "docker"},
+		"svc":               {Group: "services"}, // beats the folder's group
+	}}
+	ws := &config.Workspace{Name: "work", Roots: []string{root}, Depth: 3, Sync: config.SyncPolicy{Remote: "origin"}}
+	repos, errs := Workspace(cfg, ws)
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+	var got []string
+	for _, r := range repos {
+		got = append(got, r.Display())
+	}
+	want := "docker/docker-php,infra/inf-base,infra/web-infrastructure,services/svc,notes"
+	if strings.Join(got, ",") != want {
+		t.Fatalf("got %s\nwant %s", strings.Join(got, ","), want)
 	}
 }

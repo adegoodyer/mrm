@@ -109,14 +109,18 @@ func TestStatusJSONAndFilter(t *testing.T) {
 	if len(rows) != 2 {
 		t.Fatalf("%d rows", len(rows))
 	}
-	st := rows[1]["status"].(map[string]any)
+	row := rows[0] // grouped repos come first
+	if row["name"] != "beta" {
+		t.Fatalf("first row %v, want beta (in a group)", row["name"])
+	}
+	st := row["status"].(map[string]any)
 	for _, k := range []string{"branch", "default_branch", "ahead", "behind", "staged", "modified", "untracked", "stashes", "unpushed", "has_remote"} {
 		if _, ok := st[k]; !ok {
 			t.Errorf("status missing %q", k)
 		}
 	}
-	if rows[1]["group"] != "group" || rows[1]["state"] != "clean" {
-		t.Fatalf("row %v", rows[1])
+	if row["group"] != "group" || row["state"] != "clean" {
+		t.Fatalf("row %v", row)
 	}
 
 	out, _ = run(t, "status", "-c", cfg, "--json", "-f", "is:untracked")

@@ -96,9 +96,10 @@ Ideas from using 0.2.0, for 0.3.0.
 | ✅ 2026-10-22 | 5.12 | `d` moves repos to the trash after one confirmation                                                                                |
 | ✅ 2026-10-22 | 5.13 | "forge" becomes "git host": UI, docs and config (`hosts:`, `host_tokens:`, `host_cache:`, `host:`; old names still read)           |
 | ✅ 2026-10-23 | 5.14 | `r` and the web Overview look for repos again: deleted ones drop off, new clones appear (found by UAT N.12)                           |
-| ⬜            | 5.15 | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
-| ⬜            | 5.16 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
-| ⬜            | 5.17 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
+| ✅ 2026-10-23 | 5.15 | `group:` from the config by name pattern; *(no group)* last; a terms table in the guide; "git host" is "VCS host" throughout          |
+| ⬜            | 5.16 | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
+| ⬜            | 5.17 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
+| ⬜            | 5.18 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
 
 ## Releases
 
