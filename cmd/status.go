@@ -61,7 +61,8 @@ func runStatus(ctx context.Context, fetch bool) error {
 	prog := term.NewProgress(os.Stdout, os.Stderr, !flagJSON)
 	results := make([]model.Result, len(repos))
 	done := 0
-	for ev := range a.eng.Run(ctx, repos, engine.Options{Op: engine.OpStatus, Fetch: fetch}) {
+	last := store.LoadCache(paths.StatusCache()).Repos
+	for ev := range a.eng.Run(ctx, repos, engine.Options{Op: engine.OpStatus, Fetch: fetch, Last: last}) {
 		if ev.Kind == engine.EventDone {
 			results[ev.Index] = ev.Result
 			done++

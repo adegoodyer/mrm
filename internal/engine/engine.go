@@ -5,7 +5,9 @@ package engine
 
 import (
 	"context"
+	"math"
 	"runtime"
+	"sort"
 	"sync"
 	"time"
 
@@ -27,6 +29,10 @@ type Options struct {
 	Op     Op
 	DryRun bool // sync: say what would happen, change nothing
 	Fetch  bool // status: fetch first
+	// Last is each repo's previous status, by path (from the status
+	// cache). A status read keeps its fetch error, and fetches start
+	// with the repos that were slowest last time.
+	Last map[string]model.Status
 }
 
 // EventKind says what happened.
@@ -88,12 +94,20 @@ func (e *Engine) Run(ctx context.Context, repos []model.Repo, opts Options) <-ch
 					start := time.Now()
 					res := e.one(ctx, r, opts)
 					res.Duration = time.Since(start)
+					stampFetch(&res, opts.Last)
 					events <- Event{Kind: EventDone, Index: i, Total: len(repos), Repo: r, Result: res}
 				}
 			}()
 		}
+		order := make([]int, len(repos))
+		for i := range order {
+			order[i] = i
+		}
+		if opts.Op != OpStatus || opts.Fetch {
+			slowestFirst(order, repos, opts.Last)
+		}
 	feed:
-		for i := range repos {
+		for _, i := range order {
 			select {
 			case jobs <- i:
 			case <-ctx.Done():
@@ -104,6 +118,32 @@ func (e *Engine) Run(ctx context.Context, repos []model.Repo, opts Options) <-ch
 		wg.Wait()
 	}()
 	return events
+}
+
+// slowestFirst orders fetches by how long each repo's last fetch took,
+// longest first, so a slow host overlaps the quick ones instead of
+// finishing alone at the end. Repos never fetched go first: they may be
+// slow too.
+func slowestFirst(order []int, repos []model.Repo, last map[string]model.Status) {
+	took := func(i int) int64 {
+		if st, ok := last[repos[i].Path]; ok && st.FetchMS > 0 {
+			return st.FetchMS
+		}
+		return math.MaxInt64
+	}
+	sort.SliceStable(order, func(a, b int) bool { return took(order[a]) > took(order[b]) })
+}
+
+// stampFetch records how the fetch went in the status, or carries the last
+// fetch's error and time over when this operation didn't fetch.
+func stampFetch(res *model.Result, last map[string]model.Status) {
+	if f := res.Fetch; f != nil {
+		res.Status.FetchError, res.Status.FetchMS = f.Err, f.Took.Milliseconds()
+		return
+	}
+	if prev, ok := last[res.Repo.Path]; ok {
+		res.Status.FetchError, res.Status.FetchMS = prev.FetchError, prev.FetchMS
+	}
 }
 
 // Collect runs and returns the results in input order.
@@ -155,7 +195,11 @@ func (e *Engine) fetch(ctx context.Context, r model.Repo) model.Result {
 		res.Outcome, res.Reason = model.OutcomeExcluded, "no remote"
 		return res
 	}
-	if err := e.Git.Fetch(ctx, r.Path, remote(r)); err != nil {
+	start := time.Now()
+	err := e.Git.Fetch(ctx, r.Path, remote(r))
+	res.Fetch = &model.FetchAttempt{Took: time.Since(start)}
+	if err != nil {
+		res.Fetch.Err = err.Error()
 		res.Outcome, res.Reason = model.OutcomeFailed, "fetch: "+err.Error()
 		res.Status = e.status(ctx, r)
 		return res

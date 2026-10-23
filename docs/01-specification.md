@@ -119,14 +119,14 @@ Read with `git status --porcelain=v2 --branch --show-stash` plus `for-each-ref` 
 | branch       | current branch (or detached), default branch, upstream, ahead/behind upstream, default branch ahead/behind `origin/<default>` |
 | working tree | staged, modified, untracked, conflicted counts; merge/rebase/cherry-pick in progress                                          |
 | work at risk | stash count; unpushed commits (on branches never pushed, or ahead of a live upstream); stale branches (upstream gone)         |
-| history      | last commit time, author, subject; last fetch time                                                                            |
+| history      | last commit time, author, subject; last fetch time, how long it took, and why it failed (kept until a fetch works)            |
 | result       | last sync outcome and reason                                                                                                  |
 
 **Primary state**, first match wins. Glyphs are single-width in common terminal fonts so columns stay aligned (an emoji like `⚡` renders double-width):
 
 | Glyph | State    | When                                                                                            |
 | ----- | -------- | ----------------------------------------------------------------------------------------------- |
-| `✗`   | error    | fetch failed, not a repo any more, timeout                                                      |
+| `✗`   | error    | last fetch failed (until one works), not a repo any more, timeout                               |
 | `≠`   | conflict | merge, rebase, cherry-pick or revert in progress                                                |
 | `⇅`   | diverged | ahead and behind its upstream                                                                   |
 | `●`   | dirty    | staged, modified or conflicted files (untracked alone is a flag, not dirty)                     |

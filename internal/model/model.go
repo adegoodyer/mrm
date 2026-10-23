@@ -120,7 +120,14 @@ type Status struct {
 	LastSubject string    `json:"last_subject,omitempty"`
 	LastFetch   time.Time `json:"last_fetch,omitzero"`
 	Error       string    `json:"error,omitempty"`
-	ReadAt      time.Time `json:"read_at"`
+	// FetchError is why the last fetch failed, cleared by the next fetch
+	// that works. It outlives status reads, so a repo that can't be
+	// fetched stays in the error state until it can.
+	FetchError string `json:"fetch_error,omitempty"`
+	// FetchMS is how long the last fetch took; the next run starts the
+	// slowest repos first.
+	FetchMS int64     `json:"fetch_ms,omitempty"`
+	ReadAt  time.Time `json:"read_at"`
 }
 
 // Dirty is true when tracked files differ from HEAD. Untracked files alone
@@ -130,7 +137,7 @@ func (s Status) Dirty() bool { return s.Staged+s.Modified+s.Conflicted > 0 }
 // State works out the primary state.
 func (s Status) State() State {
 	switch {
-	case s.Error != "":
+	case s.Error != "" || s.FetchError != "":
 		return StateError
 	case s.Operation != "":
 		return StateConflict
@@ -213,6 +220,15 @@ type Result struct {
 	// Warnings don't change the outcome: a post-sync hook that failed.
 	Warnings []string      `json:"warnings,omitempty"`
 	Duration time.Duration `json:"duration_ns"`
+	// Fetch is set when the operation tried a fetch; the engine copies it
+	// into Status.
+	Fetch *FetchAttempt `json:"-"`
+}
+
+// FetchAttempt is how a fetch went.
+type FetchAttempt struct {
+	Err  string // "" when it worked
+	Took time.Duration
 }
 
 // Summary line for an outcome, e.g. "skipped: dirty".

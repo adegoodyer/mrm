@@ -96,7 +96,7 @@ Each repo has one **state** - the first of these that applies - shown as a glyph
 
 | Glyph | State      | Meaning                                                                                         |
 | ----- | ---------- | ----------------------------------------------------------------------------------------------- |
-| `✗`   | `error`    | the repo can't be read, or the last fetch failed                                                |
+| `✗`   | `error`    | the repo can't be read, or its last fetch failed (until a fetch works again)                    |
 | `≠`   | `conflict` | a merge, rebase, cherry-pick or revert is in progress                                           |
 | `⇅`   | `diverged` | ahead of and behind its upstream at once: needs a rebase or merge                               |
 | `●`   | `dirty`    | staged, modified or conflicted files                                                            |
@@ -277,7 +277,7 @@ Columns: state glyph, name (`group/name`), current branch, ahead `↑` and behin
 Reading status took about half a second for 86 repos on a laptop. The result is cached, so the interactive view and the web UI open at once.
 
 ## Syncing
-`mrm sync` fetches every repo and fast-forwards what is safe to, 8 at a time, with a live line for each repo as it finishes and a summary at the end:
+`mrm sync` fetches every repo and fast-forwards what is safe to, 8 at a time (the ones that were slowest last time first, so a slow git host doesn't hold up the end), with a live line for each repo as it finishes and a summary at the end:
 
 ![mrm sync](images/sync.svg)
 
@@ -290,6 +290,7 @@ For each repo, the first rule that matches decides what happens:
 - **Untracked files don't count as dirty.** A fast-forward that would overwrite one is refused by git, and mrm reports git's message.
 - `mrm sync --dry-run` (`-n`) fetches and says what would happen, changing no branch.
 - `mrm fetch` is the first step alone: fetch, never fast-forward.
+- **A failed fetch is remembered.** The repo stays `error` (`✗`, `is:error`), noting `last fetch failed: …`, until a fetch works again - through restarts and status reads, not only in the run that failed.
 
 Every run is appended to the history (`~/.local/state/mrm/runs.jsonl`), which the web UI's Activity page shows. Exit codes: `0` every repo synced or current, `2` some need attention, `1` mrm itself failed (a bad config, say).
 

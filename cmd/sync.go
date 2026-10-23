@@ -92,7 +92,8 @@ func runSync(ctx context.Context, op engine.Op, dryRun bool) error {
 	results := make([]model.Result, len(repos))
 	running := map[string]bool{}
 	done := 0
-	for ev := range a.eng.Run(ctx, repos, engine.Options{Op: op, DryRun: dryRun}) {
+	last := store.LoadCache(paths.StatusCache()).Repos
+	for ev := range a.eng.Run(ctx, repos, engine.Options{Op: op, DryRun: dryRun, Last: last}) {
 		switch ev.Kind {
 		case engine.EventStarted:
 			running[ev.Repo.Display()] = true

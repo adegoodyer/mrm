@@ -585,3 +585,58 @@ func TestSyncFFDirty(t *testing.T) {
 		t.Fatal("local edit lost")
 	}
 }
+
+// A failed fetch stays on the status - through status reads that don't
+// fetch - until a fetch works again.
+func TestFetchErrorSticks(t *testing.T) {
+	f := gittest.New(t)
+	dir := f.Clone("app")
+	good := gittest.Git(t, dir, "remote", "get-url", "origin")
+	gittest.Git(t, dir, "remote", "set-url", "origin", filepath.Join(f.Root, "gone.git"))
+	e := newEngine()
+	ctx := context.Background()
+	r := []model.Repo{repo(dir)}
+
+	res := e.Collect(ctx, r, Options{Op: OpFetch})[0]
+	want(t, res, model.OutcomeFailed, "fetch:")
+	if res.Status.FetchError == "" || res.Status.State() != model.StateError {
+		t.Fatalf("after a failed fetch: fetch_error %q, state %s", res.Status.FetchError, res.Status.State())
+	}
+
+	last := map[string]model.Status{dir: res.Status}
+	read := e.Collect(ctx, r, Options{Op: OpStatus, Last: last})[0]
+	if read.Status.FetchError != res.Status.FetchError || read.Status.State() != model.StateError {
+		t.Fatalf("a status read lost it: fetch_error %q, state %s", read.Status.FetchError, read.Status.State())
+	}
+
+	gittest.Git(t, dir, "remote", "set-url", "origin", good)
+	ok := e.Collect(ctx, r, Options{Op: OpFetch, Last: last})[0]
+	want(t, ok, model.OutcomeFetched, "")
+	if ok.Status.FetchError != "" || ok.Status.State() != model.StateClean || ok.Status.FetchMS == 0 {
+		t.Fatalf("after a good fetch: fetch_error %q, state %s, fetch_ms %d", ok.Status.FetchError, ok.Status.State(), ok.Status.FetchMS)
+	}
+}
+
+// Fetches start with the repos that were slowest last time; repos never
+// fetched go first.
+func TestSlowestFirst(t *testing.T) {
+	f := gittest.New(t)
+	var repos []model.Repo
+	for _, n := range []string{"quick", "slow", "new", "middling"} {
+		repos = append(repos, repo(f.Clone(n)))
+	}
+	last := map[string]model.Status{
+		repos[0].Path: {FetchMS: 100},
+		repos[1].Path: {FetchMS: 9000},
+		repos[3].Path: {FetchMS: 2000},
+	}
+	var names []string
+	for ev := range New(30*time.Second, 1).Run(context.Background(), repos, Options{Op: OpFetch, Last: last}) {
+		if ev.Kind == EventStarted {
+			names = append(names, ev.Repo.Name)
+		}
+	}
+	if got := strings.Join(names, ","); got != "new,slow,middling,quick" {
+		t.Fatalf("fetch order %s", got)
+	}
+}

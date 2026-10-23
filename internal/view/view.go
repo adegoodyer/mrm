@@ -74,6 +74,8 @@ func Build(r model.Result) Row {
 	}
 	if r.Outcome.NeedsAttention() {
 		row.Notes = append(row.Notes, r.Summary())
+	} else if st.FetchError != "" {
+		row.Notes = append(row.Notes, "last fetch failed: "+st.FetchError)
 	}
 	row.Notes = append(row.Notes, r.Warnings...)
 	if st.StaleBranches > 0 {
@@ -92,6 +94,9 @@ func Reason(r model.Result) string {
 			reason = reason[:i]
 		}
 		return string(r.Outcome) + ": " + reason
+	}
+	if r.Status.Error == "" && r.Status.FetchError != "" {
+		return "last fetch failed: " + r.Status.FetchError
 	}
 	if s := r.Status.State(); s != model.StateClean {
 		return string(s)

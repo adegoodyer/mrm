@@ -40,7 +40,8 @@ func (r *Runner) Start(ctx context.Context, op engine.Op, repos []model.Repo, fe
 	go func() {
 		defer lock.Release()
 		results := make([]model.Result, len(repos))
-		for ev := range r.Eng.Run(ctx, repos, engine.Options{Op: op, Fetch: fetch}) {
+		last := store.LoadCache(r.CachePath).Repos
+		for ev := range r.Eng.Run(ctx, repos, engine.Options{Op: op, Fetch: fetch, Last: last}) {
 			if ev.Kind == engine.EventDone {
 				results[ev.Index] = ev.Result
 				if onDone != nil {

@@ -31,10 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The interactive view's footer shows as many keys as fit the terminal, most useful first, always ending with `? help`. It follows what you're doing: on a group header it shows the group keys, with repos marked the keys for them, and with a filter on, the filter and how to clear it.
 - The interactive view's keys come from one table, so `?` help, the command palette and the docs always list the same keys. Help scrolls when the terminal is short and closes with `esc`, `q` or `?`. `Home` and `End` (top and bottom) were already there; they are now documented.
 - The README is rewritten for someone new to mrm: what it is and why, install, a five-minute first run, how to read the status, then each way in, with links into the guide.
+- Syncs and fetches start with the repos that were slowest last time, so a slow git host overlaps the quick ones instead of finishing alone at the end. `mrm status --json` gains `fetch_error` and `fetch_ms`.
 - A fetch that is going nowhere gives up sooner. The default `timeout` per git command is 30 s, down from 2 minutes, and a fetch over ssh now fails after 10 s when the host doesn't answer, or 15 s after a connection stops answering. A fetch over https that stalls (under 1 KB/s for 15 s) fails too. A config written by an older `mrm config init` still says `timeout: 2m` until you change it.
 
 ### Fixed
 - A repo deleted while the interactive view or the web UI is open no longer stays listed as `missing` until restart. `r` in the interactive view, and each load of the web Overview, look for repos again: deleted ones drop off and repos cloned since appear.
+- A failed fetch is remembered with the repo's status, so it stays `error` (`✗`, `is:error`, the web UI) with `last fetch failed: …` until a fetch works again. Before, the next status read - starting the interactive view, say - made it look fine. The spec and the guide already described it this way.
 
 ## [0.2.0] - 2026-10-19
 

@@ -14,6 +14,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/logger"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/store"
 	"github.com/adegoodyer/mrm/internal/term"
 	"go.uber.org/zap"
 )
@@ -95,7 +96,8 @@ func (a *app) repos(ctx context.Context) ([]model.Repo, map[string]model.Status,
 	var statuses map[string]model.Status
 	if f.NeedsStatus() {
 		statuses = map[string]model.Status{}
-		for _, r := range a.eng.Collect(ctx, repos, engine.Options{Op: engine.OpStatus}) {
+		last := store.LoadCache(paths.StatusCache()).Repos
+		for _, r := range a.eng.Collect(ctx, repos, engine.Options{Op: engine.OpStatus, Last: last}) {
 			statuses[r.Repo.Path] = r.Status
 		}
 	}
