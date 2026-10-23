@@ -18,7 +18,7 @@ var initTemplate = template.Must(template.New("config").Parse(`# mrm config - ht
 # Edit with: mrm config edit    Check with: mrm doctor
 
 concurrency: 8            # repos worked on at once
-timeout: 2m               # per repo, per git command
+timeout: 30s              # per repo, per git command
 browser_cmd: ""           # default: wslview on WSL, else xdg-open / open
 
 # Self-hosted git hosts (GitHub Enterprise, GitLab, Gitea...), by hostname,

@@ -11,7 +11,7 @@ import (
 // The example from the spec's Configuration section must load.
 const specExample = `
 concurrency: 8
-timeout: 2m
+timeout: 30s
 browser_cmd: ""
 
 workspaces:
@@ -70,7 +70,7 @@ func TestParseSpecExample(t *testing.T) {
 	if cfg.Workspaces["work"].Sync.Remote != "origin" || cfg.Workspaces["personal"].Depth != 3 {
 		t.Fatal("defaults not applied")
 	}
-	if cfg.Timeout.Duration != 2*time.Minute {
+	if cfg.Timeout.Duration != 30*time.Second {
 		t.Fatalf("timeout %v", cfg.Timeout)
 	}
 	if got := cfg.WorkspaceNames(); strings.Join(got, ",") != "personal,work" {

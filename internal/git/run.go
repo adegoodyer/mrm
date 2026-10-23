@@ -90,8 +90,14 @@ func (r *Runner) env() []string {
 		"GCM_INTERACTIVE=never",
 		"LC_ALL=C",
 	)
+	// Give up on a host that doesn't answer within 10 s, and on a connection
+	// that stops answering for 15 s, instead of waiting for the timeout.
 	if os.Getenv("GIT_SSH_COMMAND") == "" {
-		env = append(env, "GIT_SSH_COMMAND=ssh -o BatchMode=yes -o ConnectTimeout=15")
+		env = append(env, "GIT_SSH_COMMAND=ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3")
+	}
+	// The same for https: under 1 KB/s for 15 s counts as stalled.
+	if os.Getenv("GIT_HTTP_LOW_SPEED_LIMIT") == "" {
+		env = append(env, "GIT_HTTP_LOW_SPEED_LIMIT=1000", "GIT_HTTP_LOW_SPEED_TIME=15")
 	}
 	return append(env, r.Env...)
 }

@@ -302,7 +302,7 @@ Precedence: flags > config > defaults. The environment picks the file (`MRM_CONF
 
 ```yaml
 concurrency: 8
-timeout: 2m                       # per repo, per git command
+timeout: 30s                      # per repo, per git command
 browser_cmd: ""                   # default: wslview / xdg-open / open
 
 workspaces:

@@ -150,7 +150,7 @@ Every key, with its default where it has one. Only `workspaces` is needed.
 
 ```yaml
 concurrency: 8                    # repos worked on at once
-timeout: 2m                       # per git command, per repo
+timeout: 30s                      # per git command, per repo
 browser_cmd: ""                   # how to open URLs; default wslview on WSL, else xdg-open / open
 
 hosts:                            # self-hosted git hosts, by hostname, so URLs and filters work
@@ -214,7 +214,7 @@ web:
 | Key                                    | Default     | Meaning                                                                                                        |
 | -------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
 | `concurrency`                          | `8`         | repos worked on at once                                                                                        |
-| `timeout`                              | `2m`        | limit for each git command; a fetch that takes longer fails with `timed out`                                   |
+| `timeout`                              | `30s`       | limit for each git command; a fetch that takes longer fails with `timed out`                                   |
 | `browser_cmd`                          | -           | command to open URLs; default `wslview` on WSL, else `xdg-open` or `open`                                      |
 | `hosts.<hostname>`                     | -           | the kind of a self-hosted git host: `github`, `gitlab`, `bitbucket` or `gitea`                                 |
 | `workspaces.<name>.roots`              | (required)  | folders to look in; `~` is expanded                                                                            |

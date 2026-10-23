@@ -21,7 +21,7 @@ import (
 
 const (
 	DefaultConcurrency = 8
-	DefaultTimeout     = 2 * time.Minute
+	DefaultTimeout     = 30 * time.Second
 	DefaultDepth       = 3
 	DefaultRemote      = "origin"
 	DefaultWebPort     = 7420
