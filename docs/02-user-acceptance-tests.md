@@ -34,7 +34,7 @@
 | ✅ 2026-10-23 | 1.11 | `-w`, `-t` and `--filter` narrow status and sync to the same set; `--filter "is:dirty -tag:archived"` works as written `[A] filter.TestMatch, cmd.TestStatusJSONAndFilter` (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | 1.12 | `mrm status --json` is valid JSON with every field in [Status](01-specification.md#status) `[A] cmd.TestStatusJSONAndFilter` (automated tests pass, 2026-10-23) |
 | ✅ 2026-10-23 | 1.13 | `mrm open <repo>`, `--pr` and `--ci` open the right page for a GitHub, a GitLab and a Bitbucket repo (on WSL in the Windows browser) `[A] forge.TestURLs, cmd.TestOpenPrint` for the URLs (checked 2026-10-23 in the Windows browser for GitHub and GitLab; Bitbucket by the URL test) |
-| ⬜   | 1.14 | With `notify.on: attention`, a run with a skipped repo sends one Gotify message naming it; a clean run sends nothing; `always` sends both `[A] notify.TestSend` for delivery                                                                                                                    |
+| ✅ 2026-10-23 | 1.14 | With `notify.on: attention`, a run with a skipped repo sends one Gotify message naming it; a clean run sends nothing; `always` sends both `[A] notify.TestSend` for delivery (checked 2026-10-23 with Gotify: a run with 2 skipped repos sent one message naming both; a clean run sent nothing; `on: always` sent one) |
 | ✅ 2026-10-23 | 1.15 | Each run is appended to `runs.jsonl` in the state dir with start, duration and outcome per repo |
 | ✅ 2026-10-23 | 1.16 | `mrm doctor` reports git version, config validity, missing roots, repos with no `origin/HEAD`, ssh agent with no keys and a world-writable config |
 | ✅ 2026-10-23 | 1.17 | `mrm sync` replaces a hand-rolled update script in daily use for at least a week, on more than one workspace (signed off by the owner 2026-10-23) |
@@ -97,7 +97,7 @@
 | ✅ 2026-10-23 | 5.11 | With repos marked, `o` `p` `P` `b` open a page for each; more than 5 asks first in mrm's own dialog (`y` / `n`) `[A] tui.TestOpenMarked` |
 | ✅ 2026-10-23 | 5.12 | `d` asks once, listing the repos and flagging work that exists only here; `y` moves them to the trash (restorable), `n` leaves them; a workspace root is never moved `[A] tui.TestTrash, trash.TestMove` (checked 2026-10-23: the folder landed in the desktop trash with its original path) |
 | ✅ 2026-10-23 | 5.13 | No screen, message or help text says "forge"; the web Repo page says "Open on GitHub" (or Bitbucket...); a config with the old `forge_tokens:` still works and `mrm doctor` suggests `host_tokens:` `[A] config.TestOldHostNames` (checked 2026-10-23: no user-facing string says forge; the Repo page says "Open on GitHub"; a config with `forge_tokens:` loads and `doctor` says to rename it) |
-| ⬜   | 5.14 | In the web UI, `/` focuses the filter (from another page it goes to the Overview first), `esc` clears it and then leaves it, and `?` opens and closes a list of keys; none of them fire while typing in the filter |
+| ✅ 2026-10-23 | 5.14 | In the web UI, `/` focuses the filter (from another page it goes to the Overview first), `esc` clears it and then leaves it, and `?` opens and closes a list of keys; none of them fire while typing in the filter (checked 2026-10-23 in Chrome) |
 
 ## Cross-Cutting
 
@@ -135,10 +135,10 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 
 | Area                | Criteria   | Ticked  | Walked through |
 | ------------------- | ---------- | ------- | -------------- |
-| 1 - core + headless | 1.1 - 1.20 | 19 / 20 | ⬜              |
+| 1 - core + headless | 1.1 - 1.20 | 20 / 20 | ✅              |
 | 2 - TUI             | 2.1 - 2.10 | 10 / 10 | ✅              |
 | 3 - web UI          | 3.1 - 3.7  | 6 / 7   | ⬜              |
 | 4 - extras          | 4.1 - 4.6  | 4 / 6   | ⬜              |
-| 5 - polish          | 5.1 - 5.14 | 13 / 14 | ⬜              |
+| 5 - polish          | 5.1 - 5.14 | 14 / 14 | ✅              |
 | cross-cutting       | X.1 - X.5  | 4 / 5   | ⬜              |
 | nasty cases         | N.1 - N.16 | 16 / 16 | ✅              |

@@ -38,7 +38,7 @@ The [spec](01-specification.md) says *what*, this says *in what order*. Each pha
 | ✅ 2026-10-14 | 1.10 | notifications: Gotify, ntfy; `token_cmd` / `token_env`                                                                                                                              |
 | ✅ 2026-10-14 | 1.11 | `doctor`                                                                                                                                                                            |
 | ✅ 2026-10-23 | 1.12 | dogfood: own config with a work and a personal workspace; a week of daily use instead of a hand-rolled update script                                                                |
-| ⬜            | 1.13 | UAT walkthrough of phase 1                                                                                                                                                          |
+| ✅ 2026-10-23 | 1.13 | UAT walkthrough of phase 1                                                                                                                                                          |
 
 First run on a real tree (2026-10-14, read-only `sync --dry-run`): 86 repos across Bitbucket and GitLab in 31.9 s - 19 would fast-forward, 64 current, 1 skipped (dirty), 2 failed (no access, or the repo is gone). `status`: 0.46 s warm.
 
@@ -98,7 +98,7 @@ Ideas from using 0.2.0, for 0.3.0.
 | ✅ 2026-10-23 | 5.14 | `r` and the web Overview look for repos again: deleted ones drop off, new clones appear (found by UAT N.12)                           |
 | ✅ 2026-10-23 | 5.15 | `group:` from the config by name pattern; *(no group)* last; a terms table in the guide; "git host" is "VCS host" throughout          |
 | ⬜            | 5.16 | Bitbucket Server / Data Center: web URLs (`/projects/X/repos/Y`), PR and CI counts, `drift` - if needed                            |
-| ⬜            | 5.17 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
+| ✅ 2026-10-23 | 5.17 | web UI keys: `/` focuses the filter, `?` lists keys                                                                                |
 | ⬜            | 5.18 | release 0.3.0; UAT walkthrough of phase 5 in a real terminal                                                                       |
 
 ## Releases
