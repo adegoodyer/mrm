@@ -273,7 +273,7 @@ Keys under `repos:` say which repos an exception applies to:
 | `legacy-*`             | repos whose name matches the glob         |
 | `"~/work/terraform-*"` | repos whose path matches (a `/` or a `~`) |
 
-When several keys match one repo, path globs apply first, then name globs, then the exact name, so the most specific one wins (for `branch`, `sync` and `group`); tags from all of them are combined. Quote keys that start with `~` or contain `*`.
+When several keys match one repo, path globs apply first, then name globs, then the exact name, so the most specific one wins (for `branch`, `sync` and `group`); between two of the same kind, the key that sorts last wins. Tags from all of them are combined. Quote keys that start with `~` or contain `*`.
 
 ### Secrets
 Tokens never go in the config. Every secret is read from a command (`token_cmd`) or an environment variable (`token_env`):
