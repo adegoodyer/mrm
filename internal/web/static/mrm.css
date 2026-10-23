@@ -182,3 +182,12 @@ pre.config { margin: 0; padding: 14px; line-height: 1.6; overflow-x: auto; }
   .topbar { padding: 10px 12px; }
   .main { padding: 12px; }
 }
+
+/* The keys list (?) */
+dialog.keys { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--fg); padding: 16px 20px; max-width: min(420px, calc(100vw - 32px)); box-shadow: 0 12px 40px rgb(0 0 0 / .25); }
+dialog.keys::backdrop { background: rgb(0 0 0 / .35); }
+dialog.keys h2 { margin: 0 0 10px; font-size: 1rem; }
+dialog.keys .keylist { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; align-items: baseline; }
+dialog.keys .keylist kbd { justify-self: start; }
+dialog.keys .keylist span { color: var(--muted); }
+kbd { font-family: var(--font-mono); font-size: 0.857rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; background: var(--surface-2); color: var(--fg); }

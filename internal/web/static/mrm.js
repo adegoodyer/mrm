@@ -108,6 +108,59 @@
     }
   });
 
+  // Keys: / filters, esc clears or leaves the filter, ? lists the keys.
+  const keys = [
+    ["/", "filter repos (from any page: back to the overview)"],
+    ["esc", "clear the filter, or leave it; close this list"],
+    ["?", "show or hide these keys"],
+  ];
+  let keysBox = null;
+  function toggleKeys() {
+    if (!keysBox) {
+      keysBox = document.createElement("dialog");
+      keysBox.className = "keys";
+      keysBox.setAttribute("aria-label", "Keys");
+      const h = document.createElement("h2");
+      h.textContent = "Keys";
+      const list = document.createElement("div");
+      list.className = "keylist";
+      for (const [k, what] of keys) {
+        const kbd = document.createElement("kbd");
+        kbd.textContent = k;
+        const desc = document.createElement("span");
+        desc.textContent = what;
+        list.append(kbd, desc);
+      }
+      keysBox.append(h, list);
+      keysBox.addEventListener("click", e => { if (e.target === keysBox) keysBox.close(); });
+      document.body.appendChild(keysBox);
+    }
+    if (keysBox.open) keysBox.close(); else keysBox.showModal();
+  }
+  function typing(el) {
+    return el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+  }
+  document.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target === q && e.key === "Escape") {
+      if (q.value) { q.value = ""; refreshRows(); } else q.blur();
+      e.preventDefault();
+      return;
+    }
+    if (typing(e.target)) return;
+    if (e.key === "/") {
+      e.preventDefault();
+      if (q) { q.focus(); q.select(); } else location.href = "/#filter";
+    } else if (e.key === "?") {
+      e.preventDefault();
+      toggleKeys();
+    }
+  });
+  if (q && location.hash === "#filter") {
+    history.replaceState(null, "", location.pathname + location.search);
+    q.focus();
+  }
+
   // Live updates.
   function replace(id, html) {
     const el = document.getElementById(id);

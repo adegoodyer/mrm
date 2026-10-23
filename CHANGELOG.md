@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pictures in the README and the guide - `mrm status`, `mrm sync`, the interactive view and its detail pane, the web UI in light and dark, how mrm fits together, and what sync does to each repo. The terminal pictures are mrm's real output on a demo fleet, rebuilt with `task docs:images`.
 - `group:` in a repo's settings puts it in a group by name pattern, without moving folders: `"inf-*": { group: infra }`. Like `branch:`, the most specific key wins. A repo has one group and any number of tags.
 - The user guide starts its concepts with one table of the terms - workspace, group, tag, VCS host, root - and what each is for.
+- Web UI keys: `/` jumps to the filter (from any page), `esc` clears it or leaves it, and `?` lists the keys.
 
 ### Changed
 - "Forge" is gone from what you see: it's a **VCS host** (GitHub, GitLab, Bitbucket, Gitea), and screens name the actual site - the web Repo page says "Open on GitHub". The config follows: `hosts:`, `host_tokens:`, `host_cache:` and the `host:` filter replace `forges:`, `forge_tokens:`, `forge_cache:` and `forge:`. The old names still work, and `mrm doctor` suggests the new ones. `host:` also takes a hostname (`host:git.example.com`). `mrm status --no-prs` replaces `--no-forge` (still accepted), and the PR/CI cache is now `~/.cache/mrm/hosts.json`. The `forge` field in `--json` output is unchanged.

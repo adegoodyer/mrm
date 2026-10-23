@@ -442,6 +442,8 @@ Colours come from your terminal's palette, so light and dark themes both work. U
 
 Sync or fetch one repo, a workspace, the filtered set or everything. Rows update live in every open tab as each repo finishes. A sync started elsewhere shows in the top bar while it runs, and the rows reload when it finishes. Long groups show 8 repos and a "+ N more" link to the filtered table.
 
+Keys: `/` jumps to the filter (from any page, back on the Overview), `esc` clears it or leaves it, and `?` lists the keys.
+
 **Security.** The server listens on 127.0.0.1 only. The token in the address is new each run and becomes a cookie after the first page; requests without it are refused, as are requests whose `Host` isn't `127.0.0.1` or `localhost` (DNS rebinding) and actions without the token header (cross-site requests). The page loads nothing from the internet - fonts are built in - and offers only status, fetch and sync: no `exec`, hooks or `prune`.
 
 ## Opening Repos in the Browser
