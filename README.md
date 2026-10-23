@@ -21,6 +21,7 @@ Linux and macOS (amd64, arm64), and Windows through WSL.
   - [What Sync Does](#what-sync-does)
   - [The Interactive View](#the-interactive-view)
   - [The Web UI](#the-web-ui)
+  - [Sync on a Schedule](#sync-on-a-schedule)
   - [Commands](#commands)
   - [How It Works](#how-it-works)
   - [Learn More](#learn-more)
@@ -147,6 +148,25 @@ You get a state bar per workspace, what needs attention, the **work at risk** th
 </picture>
 
 Light and dark themes and four text sizes are on the Settings page.
+
+## Sync on a Schedule
+Let a timer keep everything current, so the repos are already up to date when you sit down:
+
+```bash
+mrm schedule install -w work --on "Mon..Fri 08:30"   # weekday mornings
+mrm schedule install --on daily                      # every workspace, once a day
+mrm schedule list                                    # each timer, its next and last run
+mrm schedule remove work
+```
+
+This sets up a systemd user timer that runs `mrm sync`. It catches up after the machine was off, and its output goes to the journal (`journalctl --user -u mrm-sync-work`). Add a [Gotify or ntfy notification](docs/user-guide.md#notifications) to hear about anything that needs attention.
+
+Two one-off steps, which `mrm doctor` checks for you:
+
+- **systemd** must be running for your user. On WSL, add `[boot]` then `systemd=true` to `/etc/wsl.conf` and restart WSL.
+- **linger** keeps timers running when no terminal is open: `sudo loginctl enable-linger $USER`.
+
+On macOS, run `mrm sync -w work` from launchd or cron instead. More in the [user guide](docs/user-guide.md#scheduled-sync).
 
 ## Commands
 Every command takes `-w <workspace>`, `-t <tag>` and `-f "<filter>"` to choose repos, `--json` for scripts and `--no-color`. `mrm <command> --help` has examples.

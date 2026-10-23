@@ -557,6 +557,15 @@ This writes a systemd user service and timer (`~/.config/systemd/user/mrm-sync-w
 
 It needs a systemd user instance; `mrm doctor` says whether you have one. On WSL, turn systemd on in `/etc/wsl.conf` (`[boot]` then `systemd=true`) and restart WSL. On macOS, run `mrm sync -w work` from launchd or cron instead.
 
+To see a timer work without waiting for the morning, give it a short interval, watch a run or two, then remove it:
+
+```bash
+mrm schedule install -w work --on "*:0/2"     # every 2 minutes
+mrm schedule list                             # "last:" moves on every 2 minutes
+journalctl --user -u mrm-sync-work -f         # each run's output as it happens
+mrm schedule remove work
+```
+
 By default systemd stops your user instance - and its timers - when your last terminal or login closes. To keep timers running without one, turn on *linger* once: `sudo loginctl enable-linger $USER`. `mrm doctor` and `mrm schedule install` warn while it's off. On WSL the timers also need WSL itself running: closing the last window stops it after a while unless something keeps it up.
 
 ## Notifications
