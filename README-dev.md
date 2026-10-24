@@ -7,6 +7,7 @@
   - [Trying a Change](#trying-a-change)
   - [Tests](#tests)
   - [Releasing](#releasing)
+  - [Renovate](#renovate)
   - [Docs Images](#docs-images)
   - [Adding a Command](#adding-a-command)
 
@@ -101,7 +102,7 @@ UAT criteria marked `[A]` in [docs/02-user-acceptance-tests.md](docs/02-user-acc
 Releases are automatic; nothing here needs doing by hand.
 
 - **CI** ([ci.yml](.github/workflows/ci.yml)) on every PR and push to master: `task check`, `go mod tidy -diff`, `task release:check` and `task release:snapshot` (all four archives). Tools come from [mise.toml](mise.toml) - the same Go, Task and GoReleaser locally and in CI.
-- **Renovate** ([renovate.json](renovate.json)) runs daily at 06:30 UK (self-hosted, the `mrm` job in proxmox-three's `platform/renovate`). It opens PRs for go.mod, mise.toml and the workflows' actions - Go minor and patch updates in one PR - waits 3 days after an upstream release, and merges a PR (merge commit) on the run after its CI passes. A PR whose CI fails stays open.
+- **Renovate** keeps dependencies current and merges its own PRs once CI passes - see [Renovate](#renovate).
 - **Release** ([release.yml](.github/workflows/release.yml)) Mondays 08:00 UTC: if master has anything since the last tag - `[Unreleased]` notes, go.mod versions, the Go version in mise.toml - [release.py](.github/scripts/release.py) picks the version, moves the notes into a dated section (dependency and Go changes added under Changed), commits `release X.Y.Z` and tags `vX.Y.Z`; the workflow pushes both, publishes the GitHub release (linux/darwin amd64/arm64 archives, that version's CHANGELOG section as notes) and tells the Go module proxy.
 
 The version: Added, Changed, Deprecated or Removed notes -> minor; anything else (Fixed, Security, only dependency or Go bumps) -> patch. A major (1.0.0) is never picked for you: run the Release workflow from the Actions tab with a version. The same button releases early, or does a dry run; `task release:next` shows locally what Monday would ship.
@@ -109,6 +110,35 @@ The version: Added, Changed, Deprecated or Removed notes -> minor; anything else
 So write CHANGELOG notes as you go (see Rules) and leave `[Unreleased]` for the workflow to move. A failed run emails you and changes nothing it did not push; fix master and run it again. By hand, as a fallback: commit the dated CHANGELOG section, tag, `git push origin master vX.Y.Z`, then `GITHUB_TOKEN=$(gh auth token) task release`.
 
 The binary's version comes from ldflags (`main.version`); `go install` builds read it from the module version instead.
+
+## Renovate
+Self-hosted [Renovate](https://docs.renovatebot.com/), not the hosted Mend app: the [renovate-operator](https://github.com/mogenius/renovate-operator) in proxmox-three runs it as the `mrm` RenovateJob (`platform/renovate/renovatejob-mrm.yaml` there), daily at 06:30 UK, as the GitHub App `proxmox-three-renovate`. What it does here is [renovate.json](renovate.json).
+
+### What It Updates
+| File                 | What                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `go.mod`, `go.sum`   | module versions, then `go mod tidy`; a major also rewrites the import paths. Minor and patch updates come as one PR |
+| `mise.toml`          | Go (what builds the release binaries), Task, GoReleaser                                                             |
+| `.github/workflows/` | the actions, pinned to a commit SHA with the version in a comment - Renovate moves both                             |
+
+Not go.mod's `go` line: it is the minimum Go mrm needs, and Renovate leaves it alone by default. Raise it by hand when the code needs a newer Go.
+
+### How a PR Goes
+1. An upstream release is at least 3 days old (`minimumReleaseAge`) - a bad or hijacked release usually gets pulled sooner.
+2. A run opens the PR, labelled `dependencies`; CI runs on it.
+3. The next run merges it (a merge commit) if CI passed, and rebases any other open PR that is now behind.
+4. The Monday [release](#releasing) ships whatever was merged; the CHANGELOG line for it is written then.
+
+A PR whose CI fails stays open - the one thing that needs you. Either fix mrm on master (Renovate then rebases the PR, CI runs again and the next run merges it), or push the fix to the PR's branch and merge it yourself - Renovate stops touching a branch someone else has pushed to.
+
+### Watching It
+- the **Dependency Dashboard** issue: every update Renovate knows about, open PRs, and a checkbox to retry or force one
+- PRs labelled `dependencies`
+- the operator UI, https://renovate.talos-cluster.dev (LAN only): runs, logs, **run now** for anything sooner than tomorrow 06:30
+- a run's log: `kubectl -n renovate-operator get jobs`, then `kubectl -n renovate-operator logs job/<name>`
+
+### Holding a Version Back
+Add a `packageRules` entry to [renovate.json](renovate.json) with a `description` saying why and since when, as proxmox-three's does - `"allowedVersions": "!/^1\\.2\\.3$/"` skips one release, `"enabled": false` stops updates to a module. Remove it once it no longer applies. Closing a PR without merging also works: Renovate does not offer that update again (for a major, that major).
 
 ## Docs Images
 The pictures in the README and the [user guide](docs/user-guide.md) are mrm's real output on a demo fleet of nine made-up repos (`docs/images/src/demo.sh`: acme remotes, `Dev User <dev@example.com>`, seeded PR and CI answers), so they show what mrm actually draws. Rebuild them after changing anything visible:
