@@ -18,6 +18,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/gittest"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/store"
 	"github.com/adegoodyer/mrm/internal/trash"
 )
 
@@ -521,6 +522,16 @@ func TestTrash(t *testing.T) {
 	}
 	if _, err := os.Stat(keep); err != nil {
 		t.Fatal("the other repo went too")
+	}
+	// The move is in the history, saying where the folder went.
+	runs := store.Runs(h.u.opts.HistPath, 10)
+	if len(runs) != 1 || runs[0].Op != store.OpTrash || len(runs[0].Results) != 1 {
+		t.Fatalf("history: %+v", runs)
+	}
+	got := runs[0].Results[0]
+	if got.Path != gone || got.Outcome != store.OutcomeTrashed || len(got.Actions) != 1 ||
+		!strings.Contains(got.Actions[0], filepath.Join("files", "gone")) || strings.Join(runs[0].Workspaces, ",") != "work" {
+		t.Fatalf("trash record: %+v in %+v", got, runs[0])
 	}
 }
 

@@ -98,6 +98,7 @@
 | ✅ 2026-10-23 | 5.12 | `d` asks once, listing the repos and flagging work that exists only here; `y` moves them to the trash (restorable), `n` leaves them; a workspace root is never moved `[A] tui.TestTrash, trash.TestMove` (checked 2026-10-23: the folder landed in the desktop trash with its original path) |
 | ✅ 2026-10-23 | 5.13 | No screen, message or help text says "forge"; the web Repo page says "Open on GitHub" (or Bitbucket...); a config with the old `forge_tokens:` still works and `mrm doctor` suggests `host_tokens:` `[A] config.TestOldHostNames` (checked 2026-10-23: no user-facing string says forge; the Repo page says "Open on GitHub"; a config with `forge_tokens:` loads and `doctor` says to rename it) |
 | ✅ 2026-10-23 | 5.14 | In the web UI, `/` focuses the filter (from another page it goes to the Overview first), `esc` clears it and then leaves it, and `?` opens and closes a list of keys; none of them fire while typing in the filter (checked 2026-10-23 in Chrome) |
+| ⬜ | 5.15 | The Activity page shows everything mrm changed, not only syncs: `d` in the interactive view lists each repo moved to the trash and where it went; `mrm prune` each branch deleted; `mrm exec` the command and ok or failed per repo; `mrm schedule install` / `remove` the timer `[A] tui.TestTrash, web.TestActivityShowsEveryChange` (automated tests pass, 2026-10-24) |
 
 ## Cross-Cutting
 
@@ -139,6 +140,6 @@ mrm is done for a phase when every box in that phase and the cross-cutting rows 
 | 2 - TUI             | 2.1 - 2.10 | 10 / 10 | ✅              |
 | 3 - web UI          | 3.1 - 3.7  | 7 / 7   | ✅              |
 | 4 - extras          | 4.1 - 4.6  | 5 / 6   | ⬜              |
-| 5 - polish          | 5.1 - 5.14 | 14 / 14 | ✅              |
+| 5 - polish          | 5.1 - 5.15 | 14 / 15 | ⬜              |
 | cross-cutting       | X.1 - X.5  | 5 / 5   | ✅              |
 | nasty cases         | N.1 - N.16 | 16 / 16 | ✅              |

@@ -236,7 +236,7 @@ Colours are the terminal's own ANSI palette on its default background, so light 
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | **Overview** (home) | state counts per workspace; **needs attention** list; **work at risk** (unpushed commits, stashes, dirty trees older than a day); filterable table of every repo; last sync per workspace | sync / fetch all, a workspace or the filtered set    |
 | **Repo**            | status, branches with ahead/behind, stashes, last 20 commits, last sync results, links to the repo, PRs and CI with the open PR count and CI state                                        | sync, fetch, open on GitHub (or the repo's VCS host) |
-| **Activity**        | sync runs from `runs.jsonl`: when, what, duration, outcome per repo                                                                                                                       | -                                                    |
+| **Activity**        | everything in `runs.jsonl`, newest first: syncs and fetches, repos moved to the trash, pruned branches, `exec` runs, schedules and config writes - when, what, duration, outcome per repo   | -                                                    |
 | **Settings**        | Appearance (this browser): text size and theme. Config as loaded, its path and validation errors                                                                                          | - (edit with `mrm config edit`)                      |
 
 The web UI offers only what the engine offers - no `exec`, no hooks, no `prune`. One operation at a time; a sync takes the same workspace lock as `mrm sync` and the TUI, and writes the same cache and history.
@@ -274,6 +274,9 @@ With a token for a host under `host_tokens`, mrm asks that host's API, read-only
 
 ## Exec
 `mrm exec [-w|-t|-f] -- <cmd> [args]` runs the command in each matching repo's top folder, `concurrency` at a time. Output is prefixed by the repo name a whole line at a time, so parallel output never interleaves mid-line. `--serial` runs one repo at a time with the terminal attached, for interactive commands. The command is run directly, not through a shell (`-- sh -c '...'` for pipes). A summary lists the repos where it failed; exit code 2 if any did. Asks first unless `--yes`.
+
+## History
+`$XDG_STATE_HOME/mrm/runs.jsonl` gets one line for everything mrm changes, whichever front end did it: each sync and fetch (dry runs included), repos moved to the trash (where each folder went), branches deleted by `prune`, `exec` runs (the command, ok or failed per repo), timers installed or removed, and the config written by `init` or `edit`. Reads - status, `open`, handing off to lazygit, an editor or a shell - aren't recorded. The web UI's Activity page shows it.
 
 ## Hooks
 `hooks.post_sync` entries run after a sync moved `HEAD` (not on a dry run, not when nothing changed), in repos that contain `if_file` (any repo when it is empty), through `sh -c` in the repo folder, with `MRM_REPO`, `MRM_REPO_NAME`, `MRM_WORKSPACE` and `MRM_BRANCH` set and a 5-minute timeout. A failing hook becomes a warning on that repo's result ("hook failed: pre-commit") - the sync still counts as done.
