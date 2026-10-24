@@ -98,9 +98,15 @@ Forge clients are tested against a fake server speaking all four APIs (`internal
 UAT criteria marked `[A]` in [docs/02-user-acceptance-tests.md](docs/02-user-acceptance-tests.md) name the test that covers them.
 
 ## Releasing
-1. On `master`, move the `[Unreleased]` notes in `CHANGELOG.md` into a new `## [X.Y.Z] - <date>` section; `task check`; commit.
-2. Tag `vX.Y.Z` on that commit and push both (`git push origin master vX.Y.Z`).
-3. `task release:snapshot` to see the archives, then `GITHUB_TOKEN=$(gh auth token) task release` for a **draft** GitHub release with linux/darwin amd64/arm64 archives and that version's changelog section as notes. Publish the draft on GitHub.
+Releases are automatic; nothing here needs doing by hand.
+
+- **CI** ([ci.yml](.github/workflows/ci.yml)) on every PR and push to master: `task check`, `go mod tidy -diff`, `task release:check` and `task release:snapshot` (all four archives). Tools come from [mise.toml](mise.toml) - the same Go, Task and GoReleaser locally and in CI.
+- **Renovate** ([renovate.json](renovate.json)) runs daily at 06:30 UK (self-hosted, the `mrm` job in proxmox-three's `platform/renovate`). It opens PRs for go.mod, mise.toml and the workflows' actions - Go minor and patch updates in one PR - waits 3 days after an upstream release, and merges a PR (merge commit) on the run after its CI passes. A PR whose CI fails stays open.
+- **Release** ([release.yml](.github/workflows/release.yml)) Mondays 08:00 UTC: if master has anything since the last tag - `[Unreleased]` notes, go.mod versions, the Go version in mise.toml - [release.py](.github/scripts/release.py) picks the version, moves the notes into a dated section (dependency and Go changes added under Changed), commits `release X.Y.Z` and tags `vX.Y.Z`; the workflow pushes both, publishes the GitHub release (linux/darwin amd64/arm64 archives, that version's CHANGELOG section as notes) and tells the Go module proxy.
+
+The version: Added, Changed, Deprecated or Removed notes -> minor; anything else (Fixed, Security, only dependency or Go bumps) -> patch. A major (1.0.0) is never picked for you: run the Release workflow from the Actions tab with a version. The same button releases early, or does a dry run; `task release:next` shows locally what Monday would ship.
+
+So write CHANGELOG notes as you go (see Rules) and leave `[Unreleased]` for the workflow to move. A failed run emails you and changes nothing it did not push; fix master and run it again. By hand, as a fallback: commit the dated CHANGELOG section, tag, `git push origin master vX.Y.Z`, then `GITHUB_TOKEN=$(gh auth token) task release`.
 
 The binary's version comes from ldflags (`main.version`); `go install` builds read it from the module version instead.
 

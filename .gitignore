@@ -6,6 +6,9 @@ dist/
 # Coverage
 *.out
 
+# mise lock (mise.toml is the pin; Renovate bumps it, not the lock)
+mise.lock
+
 # Go workspace
 go.work
 go.work.sum
