@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 
 	"github.com/adegoodyer/mrm/internal/config"
 	"github.com/adegoodyer/mrm/internal/engine"
