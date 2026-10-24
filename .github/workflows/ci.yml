@@ -1,0 +1,38 @@
+name: CI
+
+# Every PR and every push to master: task check (gofmt, vet, race tests), go.mod tidy, and the
+# four release archives built, so a Monday release cannot fail on something a PR could have shown.
+# Renovate merges its PRs only once this passes (renovate.json: automerge).
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Go, Task and GoReleaser at the versions in mise.toml
+      - uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
+
+      - name: task check
+        run: task check
+
+      - name: go.mod and go.sum tidy
+        run: go mod tidy -diff
+
+      - name: Release config and archives
+        run: |
+          task release:check
+          task release:snapshot

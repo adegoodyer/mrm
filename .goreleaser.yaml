@@ -1,5 +1,6 @@
 # GoReleaser config for mrm: `task release:check`, `task release:snapshot`,
-# and `task release` on a pushed vX.Y.Z tag (needs GITHUB_TOKEN).
+# and `task release` on a pushed vX.Y.Z tag (needs GITHUB_TOKEN) - the weekly
+# Release workflow (.github/workflows/release.yml) runs that one.
 version: 2
 
 before:
@@ -45,6 +46,7 @@ checksum:
 changelog:
   sort: asc
 
+# Published straight away: the Release workflow has already run task check.
 release:
-  draft: true
+  draft: false
   prerelease: auto

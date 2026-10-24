@@ -1,0 +1,6 @@
+# Tool versions for local work and CI (jdx/mise-action) - Renovate keeps them current.
+# Go here is what builds the release binaries; go.mod's go line stays the minimum.
+[tools]
+go = "1.27.3"
+task = "3.54.0"
+goreleaser = "2.19.0"
