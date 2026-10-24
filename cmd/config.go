@@ -5,11 +5,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/adegoodyer/mrm/internal/config"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/store"
 )
 
 var flagInitForce bool
@@ -28,9 +30,11 @@ current directory if none exists.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := configPath()
+		started := time.Now()
 		if err := config.WriteInit(path, flagInitForce); err != nil {
 			return err
 		}
+		record(store.NewEvent(store.OpConfig, "wrote the default config to "+paths.Tilde(path), started, nil))
 		fmt.Println("wrote " + paths.Tilde(path))
 		return nil
 	},
@@ -43,9 +47,11 @@ var configEditCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := configPath()
 		if _, err := os.Stat(path); os.IsNotExist(err) {
+			started := time.Now()
 			if err := config.WriteInit(path, false); err != nil {
 				return err
 			}
+			record(store.NewEvent(store.OpConfig, "wrote the default config to "+paths.Tilde(path), started, nil))
 		}
 		editor := os.Getenv("VISUAL")
 		if editor == "" {

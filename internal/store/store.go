@@ -1,5 +1,7 @@
 // Package store keeps the status cache ($XDG_CACHE_HOME/mrm/status.json)
-// and the run history ($XDG_STATE_HOME/mrm/runs.jsonl).
+// and the run history ($XDG_STATE_HOME/mrm/runs.jsonl): every sync and
+// fetch, and everything else mrm changes - repos moved to the trash,
+// branches pruned, exec runs, schedules and the config.
 package store
 
 import (
@@ -9,6 +11,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/adegoodyer/mrm/internal/model"
@@ -47,13 +50,30 @@ func UpdateCache(path string, results []model.Result) error {
 
 // Run is one line of the history.
 type Run struct {
-	Started    time.Time   `json:"started"`
-	DurationMS int64       `json:"duration_ms"`
-	Op         string      `json:"op"`
-	DryRun     bool        `json:"dry_run,omitempty"`
+	Started    time.Time `json:"started"`
+	DurationMS int64     `json:"duration_ms"`
+	Op         string    `json:"op"`
+	DryRun     bool      `json:"dry_run,omitempty"`
+	// Detail says what was done when the op alone doesn't: exec's command,
+	// the timer a schedule installed, the config file written.
+	Detail     string      `json:"detail,omitempty"`
 	Workspaces []string    `json:"workspaces"`
 	Results    []RunResult `json:"results"`
 }
+
+// Ops that aren't a sync or fetch, and their per-repo outcomes.
+const (
+	OpTrash    = "trash"    // repos moved to the trash from the interactive view
+	OpPrune    = "prune"    // branches deleted by mrm prune
+	OpExec     = "exec"     // a command run by mrm exec
+	OpSchedule = "schedule" // a timer installed or removed
+	OpConfig   = "config"   // the config written by mrm config init
+
+	OutcomeTrashed = "trashed"
+	OutcomeDeleted = "deleted"
+	OutcomeOK      = "ok"
+	OutcomeFailed  = "failed"
+)
 
 // RunResult is one repo in a run.
 type RunResult struct {
@@ -78,6 +98,26 @@ func NewRun(op string, dryRun bool, started time.Time, workspaces []string, resu
 		})
 	}
 	return run
+}
+
+// NewEvent builds a history record for something other than a sync or
+// fetch. Its workspaces are those of the repos in results.
+func NewEvent(op, detail string, started time.Time, results []RunResult) Run {
+	seen := map[string]bool{}
+	ws := []string{}
+	for _, r := range results {
+		if r.Workspace != "" && !seen[r.Workspace] {
+			seen[r.Workspace] = true
+			ws = append(ws, r.Workspace)
+		}
+	}
+	sort.Strings(ws)
+	return Run{Started: started, DurationMS: time.Since(started).Milliseconds(), Op: op, Detail: detail, Workspaces: ws, Results: results}
+}
+
+// RepoResult is one repo's line in an event.
+func RepoResult(r model.Repo, outcome, reason string, actions ...string) RunResult {
+	return RunResult{Path: r.Path, Name: r.Display(), Workspace: r.Workspace, Outcome: outcome, Reason: reason, Actions: actions}
 }
 
 // AppendRun appends a run to the history file.

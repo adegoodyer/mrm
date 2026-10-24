@@ -21,6 +21,7 @@ import (
 	"github.com/adegoodyer/mrm/internal/gittest"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/store"
 )
 
 func TestMain(m *testing.M) {
@@ -310,6 +311,44 @@ func TestSyncStreamsAndRecords(t *testing.T) {
 	h.srv.mu.Unlock()
 	if code, _ := h.post("/api/fetch", url.Values{"scope": {"all"}}, true); code != http.StatusConflict {
 		t.Fatalf("second op: %d, want 409", code)
+	}
+}
+
+// 3.5: the Activity page shows everything mrm changed, not only syncs:
+// repos moved to the trash, pruned branches, exec runs and schedules.
+func TestActivityShowsEveryChange(t *testing.T) {
+	h := start(t, "")
+	now := time.Now()
+	repo := model.Repo{Name: "old-app", Path: "/src/old-app", Workspace: "work"}
+	for _, ev := range []store.Run{
+		store.NewEvent(store.OpTrash, "", now.Add(-4*time.Minute), []store.RunResult{
+			store.RepoResult(repo, store.OutcomeTrashed, "", "moved /src/old-app to ~/.local/share/Trash/files/old-app"),
+		}),
+		store.NewEvent(store.OpPrune, "", now.Add(-3*time.Minute), []store.RunResult{
+			store.RepoResult(repo, store.OutcomeDeleted, "", "deleted branch feat/x (merged into origin/main)"),
+		}),
+		store.NewEvent(store.OpExec, "git gc", now.Add(-2*time.Minute), []store.RunResult{
+			store.RepoResult(repo, store.OutcomeOK, ""),
+		}),
+		store.NewEvent(store.OpSchedule, "installed mrm-sync-all: mrm sync for every workspace, daily", now.Add(-time.Minute), nil),
+	} {
+		if err := store.AppendRun(h.srv.opts.HistPath, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_, body := h.get("/activity")
+	for _, want := range []string{
+		"<b>trash</b>", "1 trashed", "old-app", "Trash/files/old-app",
+		"<b>prune</b>", "1 deleted", "deleted branch feat/x",
+		"<b>exec</b>", "git gc", "1 ok",
+		"<b>schedule</b>", "installed mrm-sync-all",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("activity has no %q", want)
+		}
+	}
+	if strings.Index(body, "<b>schedule</b>") > strings.Index(body, "<b>trash</b>") {
+		t.Error("not newest first")
 	}
 }
 

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/logger"
+	"github.com/adegoodyer/mrm/internal/store"
 	"go.uber.org/zap"
 )
 
@@ -97,16 +99,25 @@ func runPrune(ctx context.Context) error {
 	if err := confirm(flagPruneYes, fmt.Sprintf("Delete %d branches in %s?", len(del), repoCount(len(repoSet)))); err != nil {
 		return err
 	}
+	started := time.Now()
 	deleted, failed := 0, 0
+	var hist []store.RunResult
 	for _, c := range del {
 		if err := a.eng.Prune(ctx, c, flagPruneForce); err != nil {
 			failed++
 			fmt.Fprintf(os.Stderr, "%s %s %s: %v\n", s.Red("✗"), c.Repo.Display(), c.Branch, err)
+			hist = append(hist, store.RepoResult(c.Repo, store.OutcomeFailed, c.Branch+": "+err.Error()))
 			continue
 		}
 		deleted++
 		logger.L.Info("branch deleted", zap.String("repo", c.Repo.Path), zap.String("branch", c.Branch), zap.Bool("merged", c.Merged))
+		hist = append(hist, store.RepoResult(c.Repo, store.OutcomeDeleted, "", "deleted branch "+c.Branch+" ("+c.Reason()+")"))
 	}
+	detail := ""
+	if flagPruneForce {
+		detail = "--force"
+	}
+	record(store.NewEvent(store.OpPrune, detail, started, hist))
 	fmt.Printf("Deleted %d branches", deleted)
 	if failed > 0 {
 		fmt.Printf(", %d kept", failed)

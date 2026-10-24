@@ -13,6 +13,7 @@ import (
 
 	"github.com/adegoodyer/mrm/internal/fleet"
 	"github.com/adegoodyer/mrm/internal/model"
+	"github.com/adegoodyer/mrm/internal/store"
 	"github.com/adegoodyer/mrm/internal/term"
 )
 
@@ -83,6 +84,7 @@ func runExec(ctx context.Context, argv []string) error {
 	})
 
 	var failed []string
+	var hist []store.RunResult
 	for _, r := range results {
 		if !r.OK() {
 			why := fmt.Sprintf("exit %d", r.Code)
@@ -90,8 +92,12 @@ func runExec(ctx context.Context, argv []string) error {
 				why = r.Err.Error()
 			}
 			failed = append(failed, r.Repo.Display()+" ("+why+")")
+			hist = append(hist, store.RepoResult(r.Repo, store.OutcomeFailed, why))
+			continue
 		}
+		hist = append(hist, store.RepoResult(r.Repo, store.OutcomeOK, ""))
 	}
+	record(store.NewEvent(store.OpExec, strings.Join(argv, " "), started, hist))
 	ok := len(results) - len(failed)
 	fmt.Fprintf(os.Stderr, "\nRan in %s in %s: %d ok", repoCount(len(results)), time.Since(started).Round(100*time.Millisecond), ok)
 	if len(failed) > 0 {

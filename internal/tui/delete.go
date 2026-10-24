@@ -5,12 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rivo/tview"
 
 	"github.com/adegoodyer/mrm/internal/engine"
 	"github.com/adegoodyer/mrm/internal/model"
 	"github.com/adegoodyer/mrm/internal/paths"
+	"github.com/adegoodyer/mrm/internal/store"
 	"github.com/adegoodyer/mrm/internal/trash"
 )
 
@@ -66,20 +68,26 @@ func (u *ui) trashTargets() {
 	}()
 }
 
-// doTrash moves the folders in the background, then drops the repos from
-// the view.
+// doTrash moves the folders in the background, records where each went in
+// the history, then drops the repos from the view.
 func (u *ui) doTrash(repos []model.Repo) {
 	u.say("moving " + repoCount(len(repos)) + " to the trash…")
 	go func() {
+		started := time.Now()
 		var moved []string
 		var failed []string
+		var record []store.RunResult
 		for _, r := range repos {
-			if _, err := trash.Move(r.Path); err != nil {
+			dest, err := trash.Move(r.Path)
+			if err != nil {
 				failed = append(failed, r.Display()+": "+err.Error())
+				record = append(record, store.RepoResult(r, store.OutcomeFailed, err.Error()))
 				continue
 			}
 			moved = append(moved, r.Path)
+			record = append(record, store.RepoResult(r, store.OutcomeTrashed, "", "moved "+paths.Tilde(r.Path)+" to "+paths.Tilde(dest)))
 		}
+		histErr := store.AppendRun(u.opts.HistPath, store.NewEvent(store.OpTrash, "", started, record))
 		u.app.QueueUpdateDraw(func() {
 			gone := map[string]bool{}
 			for _, p := range moved {
@@ -97,9 +105,12 @@ func (u *ui) doTrash(repos []model.Repo) {
 			u.repos = kept
 			u.refresh()
 			msg := fmt.Sprintf("moved %s to the trash (%s)", repoCount(len(moved)), paths.Tilde(trash.Dir()))
-			if len(failed) > 0 {
+			switch {
+			case len(failed) > 0:
 				u.warn(msg + "; not moved: " + strings.Join(failed, "; "))
-			} else {
+			case histErr != nil:
+				u.warn(msg + "; not written to the history: " + histErr.Error())
+			default:
 				u.say(msg)
 			}
 		})

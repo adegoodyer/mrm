@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/adegoodyer/mrm/internal/paths"
 	"github.com/adegoodyer/mrm/internal/schedule"
+	"github.com/adegoodyer/mrm/internal/store"
 )
 
 var (
@@ -67,9 +69,13 @@ var scheduleInstallCmd = &cobra.Command{
 		if err := confirm(flagScheduleYes, "Install and start this timer?"); err != nil {
 			return err
 		}
+		started := time.Now()
 		if err := schedule.Install(spec); err != nil {
 			return err
 		}
+		ev := store.NewEvent(store.OpSchedule, "installed "+spec.Name()+": mrm sync for "+what+", "+flagScheduleOn, started, nil)
+		ev.Workspaces = append(ev.Workspaces, flagWorkspaces...)
+		record(ev)
 		fmt.Println("installed - mrm schedule list shows it; journalctl --user -u " + spec.Name() + " shows its runs")
 		if on, ok := schedule.Lingering(); ok && !on {
 			fmt.Fprintln(os.Stderr, "warning: "+schedule.LingerHint)
@@ -107,9 +113,11 @@ var scheduleRemoveCmd = &cobra.Command{
 		if err := confirm(flagScheduleYes, "Remove schedule "+args[0]+"?"); err != nil {
 			return err
 		}
+		started := time.Now()
 		if err := schedule.Remove(args[0]); err != nil {
 			return err
 		}
+		record(store.NewEvent(store.OpSchedule, "removed "+args[0], started, nil))
 		fmt.Println("removed")
 		return nil
 	},

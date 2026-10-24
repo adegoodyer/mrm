@@ -132,13 +132,13 @@
 {{end}}{{template "foot" .}}{{end}}
 
 {{define "activity"}}{{template "head" .}}
-<p class="count">Runs from <span class="mono">{{.HistPath}}</span> - the CLI, the interactive view and this page alike.</p>
+<p class="count">Everything mrm has done, newest first - syncs and fetches, repos moved to the trash, branches pruned, <code>exec</code> runs, schedules and the config - from the CLI, the interactive view and this page alike. Kept in <span class="mono">{{.HistPath}}</span>.</p>
 {{range .Runs}}<details class="run"{{if .Open}} open{{end}}>
-  <summary><b>{{.Op}}</b><span class="meta">{{.When}} · {{.WS}} · {{.Took}}</span>{{range .Pills}}<span class="pill {{.Class}}">{{.N}} {{.Label}}</span>{{end}}</summary>
+  <summary><b>{{.Op}}</b>{{if .Detail}}<span class="mono detail">{{.Detail}}</span>{{end}}<span class="meta">{{.When}}{{if .WS}} · {{.WS}}{{end}} · {{.Took}}</span>{{range .Pills}}<span class="pill {{.Class}}">{{.N}} {{.Label}}</span>{{end}}</summary>
   {{if .Items}}<ul class="list">{{range .Items}}<li><span class="mono">{{.Name}}</span><span class="msg {{.Class}}">{{.Text}}</span></li>{{end}}</ul>
-  {{else}}<p class="empty">Every repo synced or already current.</p>{{end}}
+  {{else if .Empty}}<p class="empty">{{.Empty}}</p>{{end}}
 </details>
-{{else}}<p class="empty">No runs yet. Sync from here, <code>mrm sync</code> or the interactive view, and they appear here.</p>{{end}}
+{{else}}<p class="empty">Nothing yet. Syncs, fetches and anything else mrm changes - from here, the CLI or the interactive view - appear here.</p>{{end}}
 {{template "foot" .}}{{end}}
 
 {{define "settings"}}{{template "head" .}}

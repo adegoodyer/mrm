@@ -124,7 +124,7 @@ td .name:hover { text-decoration: underline; }
 .dim { color: var(--muted); }
 .btn .n { color: var(--muted); font-variant-numeric: tabular-nums; }
 .ci-failed { color: var(--error); } .ci-running { color: var(--dirty); } .ci-passing { color: var(--clean); } .ci-cancelled { color: var(--muted); }
-.o-skipped { color: var(--dirty); } .o-failed { color: var(--error); } .o-synced, .o-fetched { color: var(--clean); }
+.o-skipped, .o-trashed, .o-deleted { color: var(--dirty); } .o-failed { color: var(--error); } .o-synced, .o-fetched, .o-ok { color: var(--clean); }
 .cards { display: none; }
 
 .crumbs { color: var(--muted); font-size: 0.893rem; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -149,6 +149,7 @@ td .name:hover { text-decoration: underline; }
 .run summary::-webkit-details-marker { display: none; }
 .run summary b { font-weight: 600; }
 .run .meta { color: var(--muted); font-size: 0.893rem; }
+.run .detail { overflow-wrap: anywhere; }
 .pill { font-size: 0.857rem; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); font-variant-numeric: tabular-nums; }
 .run[open] summary { border-bottom: 1px solid var(--line); }
 

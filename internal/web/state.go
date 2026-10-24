@@ -129,10 +129,11 @@ type branchVM struct {
 type commitVM struct{ SHA, Subject, Age string }
 
 type runVM struct {
-	Op, When, WS, Took string
-	Pills              []pillVM
-	Items              []runItemVM
-	Open               bool
+	Op, Detail, When string
+	WS, Took, Empty  string
+	Pills            []pillVM
+	Items            []runItemVM
+	Open             bool
 }
 
 type pillVM struct {
@@ -500,35 +501,48 @@ func (s *Server) activity(w http.ResponseWriter, r *http.Request) {
 	d := s.base("activity", "Activity")
 	s.mu.Unlock()
 	d.HistPath = paths.Tilde(s.opts.HistPath)
-	for i, run := range store.Runs(s.opts.HistPath, 30) {
+	for i, run := range store.Runs(s.opts.HistPath, 50) {
 		vm := runVM{
-			Op:   run.Op,
-			When: run.Started.Local().Format("Mon 2 Jan 15:04") + " (" + view.Age(run.Started) + " ago)",
-			WS:   strings.Join(run.Workspaces, ", "),
-			Took: fmt.Sprintf("%.1f s", float64(run.DurationMS)/1000),
-			Open: i == 0,
+			Op:     run.Op,
+			Detail: run.Detail,
+			When:   run.Started.Local().Format("Mon 2 Jan 15:04") + " (" + view.Age(run.Started) + " ago)",
+			WS:     strings.Join(run.Workspaces, ", "),
+			Took:   fmt.Sprintf("%.1f s", float64(run.DurationMS)/1000),
+			Open:   i == 0,
 		}
 		if run.DryRun {
 			vm.Op += " --dry-run"
+		}
+		// A sync or fetch lists only what moved or needs a look; anything
+		// else (the trash, prune, exec) lists every repo it touched.
+		gitRun := run.Op == "sync" || run.Op == "fetch"
+		if gitRun {
+			vm.Empty = "Every repo synced or already current."
 		}
 		counts := map[string]int{}
 		for _, res := range run.Results {
 			counts[res.Outcome]++
 			switch model.Outcome(res.Outcome) {
-			case model.OutcomeSkipped, model.OutcomeFailed, model.OutcomeSynced, model.OutcomeWould:
-				text := res.Outcome
-				if res.Reason != "" {
-					text += ": " + res.Reason
-				} else if len(res.Actions) > 0 {
-					text += ": " + strings.Join(res.Actions, "; ")
+			case model.OutcomeCurrent, model.OutcomeFetched, model.OutcomeExcluded:
+				if gitRun {
+					continue
 				}
-				vm.Items = append(vm.Items, runItemVM{Name: res.Name, Text: text, Class: "o-" + res.Outcome})
 			}
+			text := res.Outcome
+			if res.Reason != "" {
+				text += ": " + res.Reason
+			} else if len(res.Actions) > 0 {
+				text += ": " + strings.Join(res.Actions, "; ")
+			}
+			vm.Items = append(vm.Items, runItemVM{Name: res.Name, Text: text, Class: "o-" + res.Outcome})
 		}
-		for _, o := range []string{"synced", "fetched", "would", "current", "excluded", "skipped", "failed"} {
+		for _, o := range []string{"synced", "fetched", "would", "current", "excluded", store.OutcomeTrashed, store.OutcomeDeleted, store.OutcomeOK, "skipped", "failed"} {
 			if counts[o] > 0 {
 				vm.Pills = append(vm.Pills, pillVM{Label: o, N: counts[o], Class: "o-" + o})
 			}
+		}
+		if len(run.Results) == 0 {
+			vm.Open = false
 		}
 		sort.SliceStable(vm.Items, func(i, j int) bool { return outcomeRank(vm.Items[i].Class) < outcomeRank(vm.Items[j].Class) })
 		d.Runs = append(d.Runs, vm)
