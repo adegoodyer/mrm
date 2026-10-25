@@ -31,6 +31,16 @@
         "digest"
       ],
       "groupName": "Go modules (minor and patch)"
+    },
+    {
+      "description": "tcell stays on v2 until tview moves to v3 - tview's primitives take a tcell v2 Screen, so v3 does not build (reverted 2026-10-25)",
+      "matchPackageNames": [
+        "github.com/gdamore/tcell/v2"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
     }
   ]
 }
