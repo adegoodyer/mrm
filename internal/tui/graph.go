@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/adegoodyer/mrm/internal/git"

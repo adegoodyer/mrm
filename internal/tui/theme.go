@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/rivo/uniseg"
 
