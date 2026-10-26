@@ -132,8 +132,7 @@ Not go.mod's `go` line: it is the minimum Go mrm needs, and Renovate leaves it a
 A PR whose CI fails stays open - the one thing that needs you. Either fix mrm on master (Renovate then rebases the PR, CI runs again and the next run merges it), or push the fix to the PR's branch and merge it yourself - Renovate stops touching a branch someone else has pushed to.
 
 ### Watching It
-- the **Dependency Dashboard** issue: every update Renovate knows about, open PRs, and a checkbox to retry or force one
-- PRs labelled `dependencies`
+- PRs labelled `dependencies` - no Dependency Dashboard issue (`dependencyDashboard: false`). A PR closed without merging is ignored from then on: rename it to get a fresh one
 - the operator UI, https://renovate.talos-cluster.dev (LAN only): runs, logs, **run now** for anything sooner than tomorrow 06:30
 - a run's log: `kubectl -n renovate-operator get jobs`, then `kubectl -n renovate-operator logs job/<name>`
 

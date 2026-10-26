@@ -2,9 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "Self-hosted Renovate (proxmox-three platform/renovate, job mrm, daily 06:30 UK) - every update automerges once CI passes; the Monday Release workflow ships what was merged",
   "extends": [
-    "config:recommended",
-    ":dependencyDashboard"
+    "config:recommended"
   ],
+  "dependencyDashboard": false,
   "timezone": "Europe/London",
   "labels": [
     "dependencies"
