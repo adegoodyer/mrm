@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-26
+
 ### Added
 - The history records everything mrm changes, not only syncs and fetches: repos moved to the trash from the interactive view (and where each went), branches deleted by `mrm prune`, `mrm exec` runs (the command, ok or failed per repo), timers installed or removed by `mrm schedule`, and the config written by `mrm config init` or `edit`. The web UI's Activity page shows them all, newest first, and now lists the last 50 entries (was 30).
 
