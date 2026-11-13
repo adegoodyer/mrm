@@ -2,7 +2,7 @@ name: CI
 
 # Every PR and every push to master: task check (gofmt, vet, race tests), go.mod tidy, and the
 # four release archives built, so a Monday release cannot fail on something a PR could have shown.
-# Renovate merges its PRs only once this passes (renovate.json: automerge).
+# Renovate merges its PRs (majors excepted) only once this passes (renovate.json: automerge).
 on:
   pull_request:
   push:
