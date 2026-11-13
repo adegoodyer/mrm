@@ -102,7 +102,7 @@ UAT criteria marked `[A]` in [docs/02-user-acceptance-tests.md](docs/02-user-acc
 Releases are automatic; nothing here needs doing by hand.
 
 - **CI** ([ci.yml](.github/workflows/ci.yml)) on every PR and push to master: `task check`, `go mod tidy -diff`, `task release:check` and `task release:snapshot` (all four archives). Tools come from [mise.toml](mise.toml) - the same Go, Task and GoReleaser locally and in CI.
-- **Renovate** keeps dependencies current and merges its own PRs once CI passes - see [Renovate](#renovate).
+- **Renovate** keeps dependencies current and merges its own PRs (majors excepted) once CI passes - see [Renovate](#renovate).
 - **Release** ([release.yml](.github/workflows/release.yml)) Mondays 08:00 UTC: if master has anything since the last tag - `[Unreleased]` notes, go.mod versions, the Go version in mise.toml - [release.py](.github/scripts/release.py) picks the version, moves the notes into a dated section (dependency and Go changes added under Changed), commits `release X.Y.Z` and tags `vX.Y.Z`; the workflow pushes both, publishes the GitHub release (linux/darwin amd64/arm64 archives, that version's CHANGELOG section as notes) and tells the Go module proxy.
 
 The version: Added, Changed, Deprecated or Removed notes -> minor; anything else (Fixed, Security, only dependency or Go bumps) -> patch. A major (1.0.0) is never picked for you: run the Release workflow from the Actions tab with a version. The same button releases early, or does a dry run; `task release:next` shows locally what Monday would ship.
@@ -126,7 +126,7 @@ Not go.mod's `go` line: it is the minimum Go mrm needs, and Renovate leaves it a
 ### How a PR Goes
 1. An upstream release is at least 3 days old (`minimumReleaseAge`) - a bad or hijacked release usually gets pulled sooner.
 2. A run opens the PR, labelled `dependencies`; CI runs on it.
-3. The next run merges it (a merge commit) if CI passed, and rebases any other open PR that is now behind.
+3. The next run merges it (a merge commit) if CI passed, and rebases any other open PR that is now behind. A major is the exception: it waits for you - merge it once you have checked it (tcell v3 built and broke the TUI, 2026-10-25).
 4. The Monday [release](#releasing) ships whatever was merged; the CHANGELOG line for it is written then.
 
 A PR whose CI fails stays open - the one thing that needs you. Either fix mrm on master (Renovate then rebases the PR, CI runs again and the next run merges it), or push the fix to the PR's branch and merge it yourself - Renovate stops touching a branch someone else has pushed to.

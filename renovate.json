@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Self-hosted Renovate (proxmox-three platform/renovate, job mrm, daily 06:30 UK) - every update automerges once CI passes; the Monday Release workflow ships what was merged",
+  "description": "Self-hosted Renovate (proxmox-three platform/renovate, job mrm, daily 06:30 UK) - every update but majors automerges once CI passes; majors by hand (tcell v3 broke the build and was reverted, 2026-10-25); the Monday Release workflow ships what was merged",
   "extends": [
     "config:recommended"
   ],
@@ -20,6 +20,13 @@
   "minimumReleaseAge": "3 days",
   "internalChecksFilter": "strict",
   "packageRules": [
+    {
+      "description": "majors by hand - a new major can build and still change behaviour (tcell v3 automerged and broke the build, reverted 2026-10-25)",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+    },
     {
       "description": "one PR for Go module minor and patch updates - they all touch go.mod and go.sum; majors (new import paths) come one PR each",
       "matchManagers": [
