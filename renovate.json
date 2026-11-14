@@ -4,7 +4,9 @@
   "extends": [
     "config:recommended"
   ],
-  "dependencyDashboard": false,
+  "dependencyDashboard": {
+    "enabled": false
+  },
   "timezone": "Europe/London",
   "labels": [
     "dependencies"
