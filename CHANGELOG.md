@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-16
+
+### Changed
+- Dependency updates: `golang.org/x/term` v0.47.0 to v0.48.0, and 1 indirect module.
+- Built with Go 1.27.4 (was 1.27.3).
+
 ## [0.4.0] - 2026-10-26
 
 ### Added
